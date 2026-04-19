@@ -878,5 +878,133 @@
             ],
             "startTrigger": "action_enter_camp"
         }
-    }
+    },
+    "examineSpots": [
+        {
+            "id": "story_apocalypse_cracks_01",
+            "positionParams": {
+                "campOrdinal": 2
+            }
+        },
+        {
+            "id": "world_monument_dictatorship",
+            "positionParams": {
+                "campOrdinal": 4,
+                "sectorType": "public",
+                "environmentTags": [ "nopoor" ]
+            }
+        },
+        {
+            "id": "story_apocalypse_settlement",
+            "positionParams": {
+                "campOrdinal": 5,
+                "environmentTags": [ "residential" ]
+            }
+        },
+        {
+            "id": "story_spirits_shrine_01",
+            "positionParams": {
+                "campOrdinal": 5,
+                "sectorType": "industrial"
+            }
+        },
+        {
+            "id": "story_apocalypse_solar_panels_01",
+            "positionParams": {
+                "campOrdinal": 6,
+                "sunlit": true
+            }
+        },
+        {
+            "id": "story_earthquake_pillars_01",
+            "positionParams": {
+                "campOrdinal": 6,
+                "levelIndex": 0,
+                "environmentTags": [ "uninhabited" ]
+            }
+        },
+        {
+            "id": "story_apocalypse_solar_panels_02",
+            "positionParams": {
+                "campOrdinal": 7,
+                "sectorType": "industrial",
+                "sunlit": true
+            }
+        },
+        {
+            "id": "story_earthquake_pillars_02",
+            "positionParams": {
+                "campOrdinal": 7,
+                "levelIndex": 1,
+                "environmentTags": [ "uninhabited" ]
+            }
+        },
+        {
+            "id": "story_spirits_shrine_02",
+            "positionParams": {
+                "campOrdinal": 7
+            }
+        },
+        {
+            "id": "story_apocalypse_measuring_station",
+            "positionParams": {
+                "campOrdinal": 8,
+                "levelIndex": 0,
+                "environmentTags": [ "uninhabited" ]
+            }
+        },
+        {
+            "id": "story_apocalypse_cracks_02",
+            "positionParams": {
+                "campOrdinal": 9
+            }
+        },
+        {
+            "id": "story_spirits_shrine_03",
+            "positionParams": {
+                "campOrdinal": 11,
+                "sectorType": "slum"
+            }
+        },
+        {
+            "id": "world_fall_tent_village",
+            "positionParams": {
+                "campOrdinal": 13,
+                "environmentTags": [ "inhabited" ]
+            }
+        },
+        {
+            "id": "world_fall_supply_truck",
+            "positionParams": {
+                "campOrdinal": 14,
+                "environmentTags": [ "inhabited" ]
+            }
+        },
+        {
+            "id": "story_fall_escape_pod",
+            "positionParams": {
+                "campOrdinal": 15
+            },
+            "storyTag": "spaceDebris"
+        },
+        {
+            "id": "story_fall_hull_wreckage",
+            "positionParams": {
+                "campOrdinal": 15
+            },
+            "storyTag": "spaceDebris"
+        },
+        {
+            "id": "story_fall_sundome_shards_01",
+            "positionParams": {
+                "campOrdinal": 15
+            }
+        },
+        {
+            "id": "story_fall_sundome_shards_02",
+            "positionParams": {
+                "campOrdinal": 15
+            }
+        }
+    ]
 }

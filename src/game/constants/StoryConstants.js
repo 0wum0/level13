@@ -1,11 +1,12 @@
 define([
 	'ash', 
 	'json!game/data/StoryData.json',
+	'text/Text',
 	'game/vos/StoryVO',
 	'game/vos/StorySegmentVO',
 	'game/vos/StoryEffectVO',
 ], function (
-	Ash, StoryData, StoryVO, StorySegmentVO, StoryEffectVO
+	Ash, StoryData, Text, StoryVO, StorySegmentVO, StoryEffectVO
 ) {
 	
 	let StoryConstants = {
@@ -156,7 +157,6 @@ define([
 			}
 
 			this.sectorExamineSpots = data.examineSpots;
-			debugger
 		},
 
 		parseStoryTrigger: function (data) {
@@ -224,6 +224,7 @@ define([
 					let spotVO =  this.sectorExamineSpots[i];
 					spotVO.nameKey = spotVO.nameKey || "story.spots." + id + "_name";
 					spotVO.shortNameKey = spotVO.shortNameKey || "story.spots." + id + "_name_short";
+					if (!Text.hasKey(spotVO.shortNameKey)) spotVO.shortNameKey = spotVO.nameKey;
 					spotVO.descriptionKey = spotVO.descriptionKey || "story.spots." + id + "_message";
 					spotVO.logMessageKey = spotVO.logMessageKey || "story.spots." + id + "_log_message";
 					return spotVO;

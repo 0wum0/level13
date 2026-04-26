@@ -568,6 +568,7 @@ define(['ash',
 				explorer = GameGlobals.explorerHelper.getNewRandomExplorer(ExplorerConstants.explorerSource.SCOUT, campOrdinal, playerPos.level, options);
 			}
 
+			GameGlobals.playerActionFunctions.unlockFeature("explorers");
 			explorersComponent.addExplorer(explorer);
 		},
 

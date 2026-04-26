@@ -133,17 +133,27 @@ define([
 			this.dialogueNodes.head.dialogue.isStarted = true;
 		},
 
-		startPage: function (pageID) {
+		startPage: function (pageID, selectionParam) {
 			let pageVO = this.dialogueNodes.head.dialogue.activeDialogue.pagesByID[pageID];
 
 			if (!pageVO) return;
 
 			log.i("start dialogue page: " + pageID);
 
+			// performn action if any and save its results (if immediate) to display on page
+			let actionResultVO = null;
+			if (pageVO && pageVO.action) {
+				GameGlobals.playerActionFunctions.startAction(pageVO.action, selectionParam, (resultVO) => {
+					actionResultVO = resultVO;
+				});
+			}
+
 			if (pageVO.resultTemplate) {
 				let currentResultVO = this.getPageResult(pageVO.resultTemplate);
 				GameGlobals.playerActionResultsHelper.preCollectRewards(currentResultVO);
 				this.dialogueNodes.head.dialogue.currentResultVO = currentResultVO;
+			} else if (actionResultVO) {
+				this.dialogueNodes.head.dialogue.currentResultVO = actionResultVO;
 			} else {
 				this.dialogueNodes.head.dialogue.currentResultVO = null;
 			}
@@ -154,7 +164,8 @@ define([
 		endPage: function () {
 			let currentPageVO = GameGlobals.dialogueHelper.getCurrentPageVO();
 			if (!currentPageVO) return;
-			let dialogueID = this.dialogueNodes.head.dialogue.activeDialogue.dialogueID;
+			let dialogueVO = this.dialogueNodes.head.dialogue.activeDialogue;
+			let dialogueID = dialogueVO.dialogueID;
 			
 			if (this.dialogueNodes.head.dialogue.currentResultVO) {
 				let explorerVO = this.dialogueNodes.head.dialogue.explorerVO;
@@ -162,7 +173,9 @@ define([
 
 				let resultVO = this.dialogueNodes.head.dialogue.currentResultVO;
 				let resultContext = { explorerVO: explorerVO };
-				GameGlobals.playerActionResultsHelper.collectRewards(true, resultVO, resultContext);
+
+				// result may have been collected already if part of action
+				if (!resultVO.collected) GameGlobals.playerActionResultsHelper.collectRewards(true, resultVO, resultContext);
 
 				if (resultVO.removeCharacter) {
 					if (characterVO) {
@@ -181,11 +194,16 @@ define([
 				this.dialogueNodes.head.dialogue.currentResultVO = null;
 			}
 
-			this.dialogueNodes.head.dialogue.currentPageID = null;
-
-			if (currentPageVO && currentPageVO.action) {
-				GameGlobals.playerActionFunctions.startAction(currentPageVO.action);
+			if (currentPageVO.logMessageKey) {
+				let textParams = GameGlobals.dialogueHelper.getDialogueTextParams(dialogueVO, currentPageVO, null, false);
+				let msg = {	
+					textKey: currentPageVO.logMessageKey,
+					textParams: textParams
+				};
+				GameGlobals.playerHelper.addLogMessage(null, msg);
 			}
+
+			this.dialogueNodes.head.dialogue.currentPageID = null;
 		},
 
 		selectPendingOption: function () {
@@ -214,6 +232,7 @@ define([
 			// TODO check conditions
 
 			let responsePageID = optionVO.responsePageID;
+			let selectionParam = GameGlobals.dialogueHelper.getCurrentPageSelection();
 
 			this.endPage(); 
 
@@ -222,7 +241,7 @@ define([
 				return;
 			}
 
-			this.startPage(responsePageID);
+			this.startPage(responsePageID, selectionParam);
 		},
 
 		endDialogue: function () {

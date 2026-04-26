@@ -87,6 +87,7 @@ define([
 			this.refreshPageCharacter(explorerVO, characterVO);
 			this.refreshPageText(dialogueVO, pageVO, explorerVO);
 			this.refreshPageResults(pageVO);
+			this.refreshPageSelection(pageVO);
 			this.refreshPageOptions(pageVO);
 
 			this.shownPageID = pageID;
@@ -116,10 +117,9 @@ define([
 		},
 
 		refreshPageText: function (dialogueVO, pageVO, explorerVO) {
-			let staticTextParams = this.dialogueNodes.head.dialogue.textParams;
 			let resultVO = this.dialogueNodes.head.dialogue.currentResultVO;
 			
-			let textParams = GameGlobals.dialogueHelper.getDialogueTextParams(dialogueVO, pageVO, resultVO, explorerVO != null, staticTextParams);
+			let textParams = GameGlobals.dialogueHelper.getDialogueTextParams(dialogueVO, pageVO, resultVO, explorerVO != null);
 
 			if (explorerVO) {
 				textParams.animalType = explorerVO.animalType || explorerVO.name; 
@@ -160,6 +160,20 @@ define([
 			$("#dialogue-module-results").append(rewardDiv);
 		},
 
+		refreshPageSelection: function (pageVO) {
+			let selectionDef = pageVO.selection;
+			let hasSelection = selectionDef && Object.keys(selectionDef).length > 0;
+
+			$("#dialogue-module-selection").empty();
+			GameGlobals.uiFunctions.toggle("#dialogue-module-selection", hasSelection);
+
+			if (!hasSelection) return;
+
+			let selectionDiv = this.getSelectionDiv(selectionDef);
+
+			$("#dialogue-module-selection").append(selectionDiv);
+		},
+
 		refreshPageOptions: function (pageVO) {
 			let hasOptions = pageVO.options.length > 0;
 
@@ -186,12 +200,28 @@ define([
 			GlobalSignals.elementCreatedSignal.dispatch();
 		},
 
+		getSelectionDiv: function (selectionDef) {
+			let type = selectionDef.type;
+			let source = selectionDef.source;
+
+			let options = GameGlobals.dialogueHelper.getSelectionOptions(source);
+
+			let div = "<div>";
+
+			if (type == "DROPDOWN") {
+				div += UIConstants.getDropdown("dialogue-page-selection", options);
+			}
+
+			div += "<div>";
+
+			return div;
+		},
+
 		closeDialogue: function () {
 			GameGlobals.uiFunctions.popupManager.closePopup("dialogue-popup");
 		},
 
 		onDialogueNodeAdded: function () {
-
 		},
 
 		onDialogueNodeRemoved: function () {

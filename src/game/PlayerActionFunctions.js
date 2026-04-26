@@ -127,12 +127,14 @@ define(['ash',
 			GameGlobals.playerHelper.addLogMessage(msgID, msg, options);
 		},
 
-		startAction: function (action, param) {
-			if (GameGlobals.gameState.uiStatus.isTransitioning) return;
+		startAction: function (action, param, cb) {
+			if (GameGlobals.gameState.uiStatus.isTransitioning) {
+				return false;
+			}
 			
 			if (this.currentAction && !this.isSubAction(action)) {
 				log.w("There is an incompleted action: " + this.currentAction + " (tried to start: " + action + ")");
-				return;
+				return false;
 			}
 			
 			let sector = this.getActionSectorOrCurrent(param);
@@ -153,15 +155,16 @@ define(['ash',
 			let duration = PlayerActionConstants.getDuration(action, baseId);
 
 			if (duration > 0) {
-				this.startBusy(action, param, sector, deductedCosts);
+				this.startBusy(action, param, sector, deductedCosts, cb);
 			} else {
-				this.performAction(action, param, sector, deductedCosts);
+				this.performAction(action, param, sector, deductedCosts, cb);
 			}
 			GlobalSignals.actionStartedSignal.dispatch(action, param);
+
 			return true;
 		},
 
-		startBusy: function (action, param, sector, deductedCosts) {
+		startBusy: function (action, param, sector, deductedCosts, cb) {
 			let baseId = GameGlobals.playerActionsHelper.getBaseActionID(action);
 			let duration = PlayerActionConstants.getDuration(action, baseId);
 
@@ -171,7 +174,7 @@ define(['ash',
 				
 				let actionComponent = this.playerStatsNodes.head.entity.get(PlayerActionComponent);
 				
-				actionComponent.addAction(action, duration, sectorPos, param, deductedCosts, isBusy);
+				actionComponent.addAction(action, duration, sectorPos, param, deductedCosts, isBusy, cb);
 
 				switch (baseId) {
 					case "send_caravan":
@@ -199,7 +202,7 @@ define(['ash',
 			}
 		},
 
-		performAction: function (action, param, sector, deductedCosts) {
+		performAction: function (action, param, sector, deductedCosts, cb) {
 			let baseId = GameGlobals.playerActionsHelper.getBaseActionID(action);
 
 			switch (baseId) {
@@ -274,6 +277,8 @@ define(['ash',
 				case "use_item_fight": this.useItemFight(param); break;
 				case "use_explorer_fight": this.useExplorerFight(param); break;
 				case "repair_item": this.repairItem(param); break;
+				case "repair_all_items": this.repairAllItems(param); break;
+				case "disassemble_item": this.disassembleItem(param, cb); break;
 				// Dialogue actions
 				case "start_dialogue": this.startDialogue(param); break;
 				case "end_dialogue": this.endDialogue(param); break;
@@ -900,10 +905,13 @@ define(['ash',
 		scoutLocale: function (i) {
 			if (!this.playerLocationNodes.head) return;
 			
-			let sectorStatus = this.playerLocationNodes.head.entity.get(SectorStatusComponent);
-			let sectorLocalesComponent = this.playerLocationNodes.head.entity.get(SectorLocalesComponent);
-			let sectorFeaturesComponent = this.playerLocationNodes.head.entity.get(SectorFeaturesComponent);
+			let sector = this.playerLocationNodes.head.entity;
+			let sectorStatus = sector.get(SectorStatusComponent);
+			let sectorLocalesComponent = sector.get(SectorLocalesComponent);
+			let sectorFeaturesComponent = sector.get(SectorFeaturesComponent);
+			let isScouted = sectorStatus.isLocaleScouted(i);
 			let localeVO = sectorLocalesComponent.locales[i];
+
 			if (!localeVO) {
 				log.w("no such locale " + i + "/" + sectorLocalesComponent.locales.length);
 				return;
@@ -938,143 +946,20 @@ define(['ash',
 				}
 			}
 
+			let customSuccessCallback = this.getScoutLocaleCustomSuccessCallback(sector, localeVO, tradingPartner, luxuryResource);
+
 			let playerActionFunctions = this;
 			let successCallback = function (cb) {
-				sectorStatus.localesScouted[i] = true;
-				
-				if (tradingPartner) {
-					GameGlobals.gameState.foundTradingPartners.push(tradingPartner);
-					GameGlobals.playerActionFunctions.unlockFeature("trade");
-				}
-				
-				if (luxuryResource) {
-					if (GameGlobals.gameState.foundLuxuryResources.indexOf(luxuryResource) < 0) {
-						GameGlobals.gameState.foundLuxuryResources.push(luxuryResource);
-					}
-				}
-
+				playerActionFunctions.setLocaleScouted(sector, i);	
+				if (customSuccessCallback) customSuccessCallback();
 				cb();
-				
 				playerActionFunctions.save();
-
 				GlobalSignals.localeScoutedSignal.dispatch(localeVO.type);
 			};
-			
-			if (localeType == localeTypes.grove) {
-				let groveSuccessCallback = function (cb) {
-					GameGlobals.playerHelper.addPerk(PerkConstants.perkIds.blessed);
-					playerActionFunctions.playerStatsNodes.head.stamina.stamina += PlayerStatConstants.STAMINA_GAINED_FROM_GROVE;
-					playerActionFunctions.playerStatsNodes.head.entity.get(HopeComponent).hasDeity = true;
-					cb();
-				};
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_grove" },
-					{ type: "custom", f: groveSuccessCallback },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "story.stories.greenhouse_grove_scouted_message" }
-				], localeName);
-				return;
-			}
 
-			if (localeVO.type == localeTypes.greenhouse) {
-				if (!GameGlobals.tribeHelper.hasDeity()) {
-					this.startSequence([
-						{ type: "dialogue", dialogueID: "locale_story_greenhouse" },
-						{ type: "custom", f: successCallback },
-						{ type: "log", textKey: "story.stories.greenhouse_greenhouse_found_message" }
-					], localeName);
-					return;
-				} else {
-					this.startSequence([
-						{ type: "dialogue", dialogueID: "locale_generic_greenhouse_intro_01" },
-						{ type: "custom", f: successCallback },
-						{ type: "log", textKey: "Scouted a Greenhouse." }
-					], localeName);
-					return;
-				}
-			}
-
-			if (localeVO.type == localeTypes.depot) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_depot" },
-					{ type: "storyFlag", flagID: StoryConstants.flags.FALL_SEEN_STOREHOUSE, value: true },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "Scouted a depot." }
-				], localeName);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.spacefactory) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_spacefactory" },
-					{ type: "storyFlag", flagID: StoryConstants.flags.FALL_SEEN_SPACEFACTORY, value: true },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "Scouted a manufacturing plant." }
-				]);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.seedDepot) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_seeddepot" },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "Scouted an old seed depot, but the seeds were dead." }
-				], localeName);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.shelter) {
-				let shelterSuccessCallback = function (cb) {
-					let itemsComponent = playerActionFunctions.playerPositionNodes.head.entity.get(ItemsComponent);
-					let item = itemsComponent.getItem("artefact_rescue_1", null, true, true);
-					if (item) itemsComponent.discardItem(item, false, false);
-					cb();
-				};
-
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_shelter" },
-					{ type: "storyFlag", flagID: StoryConstants.flags.RESCUE_EXPLORER_FOUND, value: true },
-					{ type: "custom", f: successCallback },
-					{ type: "custom", f: shelterSuccessCallback },
-					{ type: "log", textKey: "Scouted the apartment." }
-				], localeName);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.compound) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_compound" },
-					{ type: "storyFlag", flagID: StoryConstants.flags.GANG_COMPOUND_FOUND, value: true },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "Scouted a compound." }
-				], localeName);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.expedition) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_expedition_camp" },
-					{ type: "storyFlag", flagID: StoryConstants.flags.EXPEDITION_FATE_KNOWN, value: true },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "Scouted the campsite." }
-				], localeName);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.isolationCenter) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_story_isolation_center" },
-					{ type: "custom", f: successCallback },
-					{ type: "log", textKey: "Scouted the facility." }
-				], localeName);
-				return;
-			}
-
-			if (localeVO.type == localeTypes.clinic) {
-				this.startSequence([
-					{ type: "dialogue", dialogueID: "locale_generic_clinic" },
-					{ type: "custom", f: successCallback },
-				], localeName);
+			let customSequence = this.getScoutLocaleCustomSequence(localeType, action, successCallback);
+			if (customSequence) {
+				this.startSequence(customSequence, localeName);
 				return;
 			}
 
@@ -1085,8 +970,9 @@ define(['ash',
 			let fightChance = GameGlobals.fightHelper.getRandomEncounterProbability(action);
 			let rewardVO = GameGlobals.playerActionResultsHelper.getResultVOByAction(action, hasCustomReward);
 
-			let rewardTextKey = this.getLocaleRewardTextKey(localeVO);
-			let outroLogKey = "Scouted " +  Text.addArticle(localeName);
+			let rewardTextKey = this.getLocaleRewardTextKey(localeVO, rewardVO);
+			let outroDialogueID = this.getLocaleOutroDialogueID(localeVO);
+			let outroLogKey = this.getLocaleLogKey(localeVO, localeName, isScouted);
 
 			let sequenceSteps = [];
 
@@ -1097,12 +983,141 @@ define(['ash',
 			if (obstacleDialogueID) 
 				sequenceSteps.push({ id: "obstacle", type: "dialogue", dialogueID: obstacleDialogueID, textParams: { explorerName: explorerName }, localeName: localeNameShort });
 			if (fightChance > 0) 
-				sequenceSteps.push({ id: "fight", type: "fight", chance: fightChance, numEnemies: 1, action: action, branches: { "WIN": "outro", "LOSE": "END", "FLEE": "END" } });
-			sequenceSteps.push({ id: "outro", type: "result", result: rewardVO, textKey: rewardTextKey, customRewardTexts: customRewardTexts });
+				sequenceSteps.push({ id: "fight", type: "fight", chance: fightChance, numEnemies: 1, action: action, branches: { "WIN": "NEXT", "LOSE": "END", "FLEE": "END" } });
+			if (rewardTextKey) 
+				sequenceSteps.push({ id: "rewards", type: "result", result: rewardVO, textKey: rewardTextKey, customRewardTexts: customRewardTexts });
+			if (outroDialogueID)
+				sequenceSteps.push({ id: "outro", type: "dialogue", dialogueID: outroDialogueID, textParams: { explorerName: explorerName }, localeName: localeNameShort });
 			sequenceSteps.push({ id: "result", type: "custom", f: successCallback });
-			sequenceSteps.push({ id: "log", type: "log", textKey: outroLogKey });
+			if (outroLogKey) 
+				sequenceSteps.push({ id: "log", type: "log", textKey: outroLogKey });
 
 			this.startSequence(sequenceSteps, localeName);
+		},
+
+		getScoutLocaleCustomSequence: function (localeType, action, successCallback) {
+			if (localeType == localeTypes.grove) {
+				let groveSuccessCallback = function (cb) {
+					GameGlobals.playerHelper.addPerk(PerkConstants.perkIds.blessed);
+					playerActionFunctions.playerStatsNodes.head.stamina.stamina += PlayerStatConstants.STAMINA_GAINED_FROM_GROVE;
+					playerActionFunctions.playerStatsNodes.head.entity.get(HopeComponent).hasDeity = true;
+					cb();
+				};
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_grove" },
+					{ type: "custom", f: groveSuccessCallback },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "story.stories.greenhouse_grove_scouted_message" }
+				];
+			}
+
+			if (localeType == localeTypes.greenhouse) {
+				if (!GameGlobals.tribeHelper.hasDeity()) {
+					return[
+						{ type: "dialogue", dialogueID: "locale_story_greenhouse" },
+						{ type: "custom", f: successCallback },
+						{ type: "log", textKey: "story.stories.greenhouse_greenhouse_found_message" }
+					];
+				} else {
+					return [
+						{ type: "dialogue", dialogueID: "locale_generic_greenhouse_intro_01" },
+						{ type: "custom", f: successCallback },
+						{ type: "log", textKey: "Scouted a Greenhouse." }
+					];
+				}
+			}
+
+			if (localeType == localeTypes.depot) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_depot" },
+					{ type: "storyFlag", flagID: StoryConstants.flags.FALL_SEEN_STOREHOUSE, value: true },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "Scouted a depot." }
+				];
+			}
+
+			if (localeType == localeTypes.spacefactory) {
+				return[
+					{ type: "dialogue", dialogueID: "locale_story_spacefactory" },
+					{ type: "storyFlag", flagID: StoryConstants.flags.FALL_SEEN_SPACEFACTORY, value: true },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "Scouted a manufacturing plant." }
+				];
+			}
+
+			if (localeType == localeTypes.seedDepot) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_seeddepot" },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "Scouted an old seed depot, but the seeds were dead." }
+				];
+			}
+
+			if (localeType == localeTypes.shelter) {
+				let shelterSuccessCallback = function (cb) {
+					let itemsComponent = playerActionFunctions.playerPositionNodes.head.entity.get(ItemsComponent);
+					let item = itemsComponent.getItem("artefact_rescue_1", null, true, true);
+					if (item) itemsComponent.discardItem(item, false, false);
+					cb();
+				};
+
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_shelter" },
+					{ type: "storyFlag", flagID: StoryConstants.flags.RESCUE_EXPLORER_FOUND, value: true },
+					{ type: "custom", f: successCallback },
+					{ type: "custom", f: shelterSuccessCallback },
+					{ type: "log", textKey: "Scouted the apartment." }
+				];
+			}
+
+			if (localeType == localeTypes.compound) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_compound" },
+					{ type: "storyFlag", flagID: StoryConstants.flags.GANG_COMPOUND_FOUND, value: true },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "Scouted a compound." }
+				];
+			}
+
+			if (localeType == localeTypes.expedition) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_expedition_camp" },
+					{ type: "storyFlag", flagID: StoryConstants.flags.EXPEDITION_FATE_KNOWN, value: true },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "Scouted the campsite." }
+				];
+			}
+
+			if (localeType == localeTypes.isolationCenter) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_story_isolation_center" },
+					{ type: "custom", f: successCallback },
+					{ type: "log", textKey: "Scouted the facility." }
+				];
+			}
+
+			if (localeType == localeTypes.clinic) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_generic_clinic" },
+					{ type: "custom", f: successCallback },
+				];
+			}
+
+			if (localeType == localeTypes.butcher) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_generic_butcher" },
+					{ type: "custom", f: successCallback },
+				];
+			}
+
+			if (localeType == localeTypes.repairshop) {
+				return [
+					{ type: "dialogue", dialogueID: "locale_generic_repairshop" },
+					{ type: "custom", f: successCallback },
+				];
+			}
+
+			return null;
 		},
 
 		getLocaleIntroDialogueID: function (localeVO) {
@@ -1111,29 +1126,63 @@ define(['ash',
 			return "locale_generic_" + localeType + "_intro_0" + randomIndex;
 		},
 
-		getLocaleRewardTextKey: function (localeVO) {
+		getLocaleOutroDialogueID: function (localeVO) {
+			let localeType = localeVO.type;
+			let randomIndex = MathUtils.randomIntBetween(1, 3);
+			switch (localeType) {
+				case localeTypes.shortcut:
+					return "locale_generic_" + localeType + "_outro_0" + randomIndex;
+			}
+			return null;
+		},
+
+		getLocaleRewardTextKey: function (localeVO, rewardVO) {
 			let possibleKeys = [];
+
+			if (rewardVO.isVisuallyEmpty() && localeVO.type == localeTypes.shortcut) return null;
 
 			possibleKeys.push("ui.exploration.action_rewards_generic_message_01");
 			possibleKeys.push("ui.exploration.action_rewards_message_locale_generic_01");
 			possibleKeys.push("ui.exploration.action_rewards_message_locale_generic_02");
 			possibleKeys.push("ui.exploration.action_rewards_message_locale_generic_03");
 			possibleKeys.push("ui.exploration.action_rewards_message_locale_generic_04");
+			possibleKeys.push("ui.exploration.action_rewards_message_locale_generic_05");
 
 			switch (localeVO.type) {
 				case localeTypes.bunker:
-				case localeTypes.office:
-				case localeTypes.store:
 				case localeTypes.grocery:
-				case localeTypes.restaurant:
 				case localeTypes.lab:
+				case localeTypes.office:
+				case localeTypes.pharmacy:
+				case localeTypes.restaurant:
+				case localeTypes.store:
 					possibleKeys.push("ui.exploration.action_rewards_message_locale_storeroom_01");
+					break;
+				case localeTypes.garden:
+				case localeTypes.shortcut:
+				case localeTypes.junkyard:
+					possibleKeys.push("ui.exploration.action_rewards_message_locale_walk_01");
 					break;
 				 case localeTypes.camp:
 					possibleKeys = [ "ui.exploration.action_rewards_message_locale_inhabited_01" ];
+					break;
 			}
 
 			return MathUtils.randomElement(possibleKeys);
+		},
+
+		getLocaleLogKey: function (localeVO, localeName, isScouted) {
+			let result = "Scouted " +  Text.addArticle(localeName);
+
+			if (localeVO.type == localeTypes.shortcut) {
+				if (isScouted) {
+					result = "ui.exploration.action_result_used_shortcut_message";
+				} else {
+					result = "ui.exploration.action_result_scouted_shortcut_message";
+				}
+			}
+
+			return result;
 		},
 
 		getScoutLocaleObstacleDialogueID: function (localeVO) {
@@ -1151,31 +1200,39 @@ define(['ash',
 				{ dialogueID: "locale_generic_obstacle_dialect", category: "i" },
 				{ dialogueID: "locale_generic_obstacle_guards", category: "i" },
 				{ dialogueID: "locale_generic_obstacle_inhabitants", category: "i" },
-				{ dialogueID: "locale_generic_obstacle_claustrophobia", category: "u", allowedTypes: [ localeTypes.factory, localeTypes.maintenance, localeTypes.hospital, localeTypes.bunker ] },
-				{ dialogueID: "locale_generic_obstacle_darkness", category: "u", allowedTypes: [ localeTypes.warehouse, localeTypes.library ] },
-				{ dialogueID: "locale_generic_obstacle_draft", category: "u", allowedTypes: [ localeTypes.house, localeTypes.warehouse] },
+
+				{ dialogueID: "locale_generic_obstacle_claustrophobia", category: "u", allowedTypes: [ localeTypes.factory, localeTypes.maintenance, localeTypes.hospital, localeTypes.bunker, localeTypes.shortcut ] },
+				{ dialogueID: "locale_generic_obstacle_container", category: "u", disallowedTypes: [ localeTypes.shortcut ] },
+				{ dialogueID: "locale_generic_obstacle_darkness", category: "u", allowedTypes: [ localeTypes.warehouse, localeTypes.library, localeTypes.shortcut ] },
+				{ dialogueID: "locale_generic_obstacle_door", category: "u", disallowedTypes: [ localeTypes.shortcut ] },
+				{ dialogueID: "locale_generic_obstacle_draft", category: "u", allowedTypes: [ localeTypes.house, localeTypes.warehouse, localeTypes.train ] },
 				{ dialogueID: "locale_generic_obstacle_explorer_curious", category: "u", requiresExplorers: true },
-				{ dialogueID: "locale_generic_obstacle_explorer_lost", category: "u", requiresExplorers: true },
+				{ dialogueID: "locale_generic_obstacle_explorer_lost", category: "u", requiresExplorers: true, disallowedTypes: [ localeTypes.pharmacy, localeTypes.train ] },
 				{ dialogueID: "locale_generic_obstacle_explorer_nervous", category: "u", requiresExplorers: true },
-				{ dialogueID: "locale_generic_obstacle_flooded", category: "u", disallowedTypes: [ localeTypes.junkyard, localeTypes.farm ] },
-				{ dialogueID: "locale_generic_obstacle_glass", category: "u" },
+				{ dialogueID: "locale_generic_obstacle_explorer_stuck", category: "u", requiresExplorers: true, disallowedTypes: [ localeTypes.train ] },
+				{ dialogueID: "locale_generic_obstacle_flooded", category: "u", disallowedTypes: [ localeTypes.junkyard, localeTypes.farm, localeTypes.train, localeTypes.garden ] },
+				{ dialogueID: "locale_generic_obstacle_footsteps", category: "u", requiresAlone: true, disallowedTypes: [ localeTypes.pharmacy, localeTypes.restaurant, localeTypes.grocery ] },
+				{ dialogueID: "locale_generic_obstacle_glass", category: "u", disallowedTypes: [ localeTypes.garden ] },
 				{ dialogueID: "locale_generic_obstacle_identical", category: "u", allowedTypes: [ localeTypes.office, localeTypes.hospital ] },
+				{ dialogueID: "locale_generic_obstacle_indecision", category: "u", allowedTypes: [ localeTypes.pharmacy, localeTypes.restaurant, localeTypes.grocery, localeTypes.hospital, localeTypes.store ] },
 				{ dialogueID: "locale_generic_obstacle_ladder", category: "u", allowedTypes: [ localeTypes.farm, localeTypes.warehouse ] },
 				{ dialogueID: "locale_generic_obstacle_lost", category: "u", allowedTypes: [ localeTypes.office, localeTypes.market, localeTypes.hospital ] },
-				{ dialogueID: "locale_generic_obstacle_pillar", category: "u", disallowedTypes: [ localeTypes.lab, localeTypes.office, localeTypes.maintenance ] },
+				{ dialogueID: "locale_generic_obstacle_pillar", category: "u", disallowedTypes: [ localeTypes.lab, localeTypes.office, localeTypes.maintenance, localeTypes.pharmacy, localeTypes.train, localeTypes.shortcut ] },
 				{ dialogueID: "locale_generic_obstacle_remains", category: "u", disallowedTypes: [ localeTypes.warehouse, localeTypes.maintenance ] },
+				{ dialogueID: "locale_generic_obstacle_rope", category: "u", requiresResource: resourceNames.rope, localeTypes: [ localeTypes.shortcut, localeTypes.warehouse, localeTypes.bunker ] },
 				{ dialogueID: "locale_generic_obstacle_rot", category: "u", allowedTypes: [ localeTypes.restaurant ] },
 				{ dialogueID: "locale_generic_obstacle_rubble", category: "u" },
-				{ dialogueID: "locale_generic_obstacle_shelves", category: "u", disallowedTypes: [ localeTypes.junkyard ] },
-				{ dialogueID: "locale_generic_obstacle_spoiled", category: "u", allowedTypes: [ localeTypes.restaurant, localeTypes.grocery, localeTypes.warehouse, localeTypes.hospital ] },
-				{ dialogueID: "locale_generic_obstacle_stair", category: "u" },
+				{ dialogueID: "locale_generic_obstacle_shelves", category: "u", disallowedTypes: [ localeTypes.junkyard, localeTypes.train, localeTypes.garden, localeTypes.shortcut ] },
+				{ dialogueID: "locale_generic_obstacle_spoiled", category: "u", allowedTypes: [ localeTypes.restaurant, localeTypes.grocery, localeTypes.warehouse, localeTypes.hospital, localeTypes.pharmacy ] },
+				{ dialogueID: "locale_generic_obstacle_stair", category: "u", disallowedTypes: [ localeTypes.pharmacy, localeTypes.train, localeTypes.garden, localeTypes.shortcut ] },
 				{ dialogueID: "locale_generic_obstacle_tight", category: "u", allowedTypes: [ localeTypes.maintenance ] },
 				{ dialogueID: "locale_generic_obstacle_wall", category: "u", allowedTypes: [ localeTypes.farm, localeTypes.factory ] },
-				{ dialogueID: "locale_generic_obstacle_watcher", category: "u", allowedTypes: [ localeTypes.bunker, localeTypes.library ] },
+				{ dialogueID: "locale_generic_obstacle_watcher", category: "u", allowedTypes: [ localeTypes.bunker, localeTypes.library, localeTypes.hospital, localeTypes.train, localeTypes.garden, localeTypes.shortcut ] },
 			];
 
 			let localeType = localeVO.type;
 			let numExplorers = this.playerStatsNodes.head.explorers.getParty().length;
+			let playerResources = GameGlobals.resourcesHelper.getCurrentStorage();
 			
 			let possibleObstacles = [];
 
@@ -1185,10 +1242,58 @@ define(['ash',
 				if (obstacle.allowedTypes && obstacle.allowedTypes.indexOf(localeType) < 0) continue;
 				if (obstacle.disallowedTypes && obstacle.disallowedTypes.indexOf(localeType) >= 0) continue;
 				if (obstacle.requiresExplorers && numExplorers < 1) continue;
+				if (obstacle.requiresAlone && numExplorers > 0) continue;
+				if (obstacle.requiresResource && playerResources.resources.hasResource(obstacle.requiresResource)) continue;
 				possibleObstacles.push(obstacle.dialogueID);
 			}
 
 			return MathUtils.randomElement(possibleObstacles);
+		},
+
+		getScoutLocaleCustomSuccessCallback: function (sector, localeVO, tradingPartner, luxuryResource) {
+			if (tradingPartner) {
+				return () => {
+					GameGlobals.gameState.foundTradingPartners.push(tradingPartner);
+					GameGlobals.playerActionFunctions.unlockFeature("trade");
+				};
+			}
+			
+			if (luxuryResource) {
+				return () => {
+					if (GameGlobals.gameState.foundLuxuryResources.indexOf(luxuryResource) < 0) {
+						GameGlobals.gameState.foundLuxuryResources.push(luxuryResource);
+					}
+				};
+			}
+
+			let playerActionFunctions = this;
+
+			if (localeVO.type == localeTypes.shortcut) {
+				return () => {
+					let pair = GameGlobals.levelHelper.getShortcutPair(sector);
+					if (!pair) {
+						log.e("could not find pair for shortcut sector");
+						return;
+					}
+					
+					// set pair scouted
+					let sectorStatus = pair.get(SectorStatusComponent);
+					let sectorLocalesComponent = sector.get(SectorLocalesComponent);
+					let localeVO2 = sectorLocalesComponent.locales.find(l => l.type == localeTypes.shortcut);
+					if (!localeVO2) {
+						log.e("could not find pair for shortcut locale");
+						return;
+					}
+					let index = sectorLocalesComponent.locales.indexOf(localeVO2);
+					playerActionFunctions.setLocaleScouted(pair, index);
+
+					// teleport to pair
+					let position = pair.get(PositionComponent);
+					GameGlobals.playerHelper.moveTo(position.level, position.sectorX, position.sectorY, false, "scout_locale", false);
+				};
+			}
+
+			return null;
 		},
 
 		useSpring: function () {
@@ -1843,11 +1948,7 @@ define(['ash',
 				function () {
 					explorersComponent.removeExplorer(explorer);
 					GameGlobals.gameState.increaseGameStatSimple("numExplorersDismissed");
-					if (explorer.animalType != null) {
-						GameGlobals.playerHelper.addLogMessage(LogConstants.getUniqueID(), explorer.name + " leaves.");
-					} else {
-						GameGlobals.playerHelper.addLogMessage(LogConstants.getUniqueID(), explorer.name + " leaves.");
-					}
+					GameGlobals.playerHelper.addLogMessage(LogConstants.getUniqueID(), explorer.name + " leaves.");
 					GlobalSignals.explorersChangedSignal.dispatch();
 				}
 			);
@@ -2600,8 +2701,32 @@ define(['ash',
 			if (!itemVO) return;
 			GameGlobals.gameState.increaseGameStatSimple("numItemsRepaired");
 			itemVO.broken = false;
+			log.i("repaired " + itemVO.id);
 			GlobalSignals.equipmentChangedSignal.dispatch();
 			GlobalSignals.inventoryChangedSignal.dispatch();
+		},
+
+		repairAllItems: function () {
+			let isInCamp = GameGlobals.playerHelper.isInCamp();
+			let itemsComponent = this.playerPositionNodes.head.entity.get(ItemsComponent);
+			let brokenItems = itemsComponent.getAll(isInCamp, true);
+			for (let i = 0; i < brokenItems.length; i++) {
+				this.repairItem(brokenItems[i].itemID);
+			}
+		},
+
+		disassembleItem: function (itemInstanceId, cb) {
+			let itemsComponent = this.playerPositionNodes.head.entity.get(ItemsComponent);
+			let itemVO = itemsComponent.getItem(null, itemInstanceId, true, true);
+			if (!itemVO) return;
+			
+			itemsComponent.removeItem(itemVO, false);
+			
+			let rewards = GameGlobals.playerActionResultsHelper.getDisassembleItemRewards(itemVO.id);
+			GameGlobals.playerActionResultsHelper.collectRewards(true, rewards);
+
+			if (cb) cb(rewards);
+			GlobalSignals.equipmentChangedSignal.dispatch();
 		},
 
 		useItem: function (itemId, deductedCosts) {
@@ -3107,6 +3232,18 @@ define(['ash',
 				default: return false;
 			}
 		},
+
+		setLocaleScouted: function (sector, i) {
+			if (!sector) return;
+			let sectorStatus = sector.get(SectorStatusComponent);
+			let sectorLocalesComponent = sector.get(SectorLocalesComponent);
+
+			let localeVO = sectorLocalesComponent.locales[i]; 
+			if (!localeVO) return;
+
+			sectorStatus.localesScouted[i] = true;
+			log.i("set locale scouted: " + i + " " + localeVO.type + " at " + sector.get(PositionComponent));
+		},
 		
 		unlockFeatures: function (featureIDs) {
 			if (!featureIDs) return;
@@ -3120,7 +3257,7 @@ define(['ash',
 						
 			if (GameGlobals.gameState.unlockedFeatures[featureSaveKey]) return;
 			
-			log.i("unlocked feature: " + featureID);
+			log.i("unlocked feature: " + featureID,);
 			
 			GameGlobals.gameState.unlockedFeatures[featureSaveKey] = true;
 			GlobalSignals.featureUnlockedSignal.dispatch(featureID);

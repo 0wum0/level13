@@ -1027,6 +1027,7 @@
         "rarityScavenge": 5,
         "rarityTrade": 2,
         "source": "equipment",
+        "tags": [ "old" ],
         "type": "clothing_head"
     },
     "clothing_head_1": {

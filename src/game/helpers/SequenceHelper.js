@@ -74,8 +74,10 @@ define([
 				let stepBranches = currentStep.branches;
 				if (stepBranches && stepBranches[result]) {
 					let nextStepID = stepBranches[result];
-					moveToStep(nextStepID);
-					return;
+					if (nextStepID !== "NEXT") {
+						moveToStep(nextStepID);
+						return;
+					}
 				}
 
 				i++;

@@ -7,6 +7,7 @@ define(['ash'], function (Ash) {
         responsePageID: null,
 		buttonTextKey: "",
 		costs: {},
+		isPreviewCosts: false,
 		conditions: {},
 
 		constructor: function (optionID) {

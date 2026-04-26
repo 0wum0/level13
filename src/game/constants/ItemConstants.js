@@ -975,6 +975,30 @@ function (Ash, ItemData, Text, MathUtils, PlayerActionConstants, SectorConstants
 			if (baseItemId == "robot_1") return false;
 			return true;
 		},
+
+		isDisassemblable: function (itemVO) {
+			if (!this.isUnselectable(itemVO)) return false;
+			if (itemVO.equipped && itemVO.type == ItemConstants.itemTypes.bag) return false;
+			if (itemVO.craftable) return true;
+			if (itemVO.id.indexOf("potion") >= 0) return false;
+			
+			switch (itemVO.type) {
+				case ItemConstants.itemTypes.light:
+				case ItemConstants.itemTypes.weapon:
+				case ItemConstants.itemTypes.clothing_over:
+				case ItemConstants.itemTypes.clothing_upper:
+				case ItemConstants.itemTypes.clothing_lower:
+				case ItemConstants.itemTypes.clothing_hands:
+				case ItemConstants.itemTypes.clothing_head:
+				case ItemConstants.itemTypes.bag:
+				case ItemConstants.itemTypes.shoes:
+					return true;
+				case ItemConstants.itemTypes.exploration:
+					return true;
+				default: 
+					return false;
+			}
+		},
 	};
 	
 	ItemConstants.init();

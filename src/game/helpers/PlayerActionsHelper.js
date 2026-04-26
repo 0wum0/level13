@@ -103,7 +103,7 @@ define([
 		},
 
 		deductCosts: function (action) {
-			let costs = this.getCosts(action);
+			let costs = this.getCosts(action, 1, null, null, false, true);
 			let result = {};
 			
 			if (!costs) return result;
@@ -112,11 +112,11 @@ define([
 			let itemsComponent = this.playerStatsNodes.head.entity.get(ItemsComponent);
 			let inCamp = this.playerStatsNodes.head.entity.get(PositionComponent).inCamp;
 
-			let costNameParts;
-			let costAmount;
 			for (let costName in costs) {
-				costNameParts = costName.split("_");
-				costAmount = costs[costName] || 0;
+				let costNameParts = costName.split("_");
+				let costNameParam = costName.replace(costNameParts[0] + "_", "");
+				let costAmount = costs[costName] || 0;
+
 				if (costName === "stamina") {
 					this.playerStatsNodes.head.stamina.stamina -= costAmount;
 					result.stamina = costAmount;
@@ -156,12 +156,17 @@ define([
 					}
 					GameGlobals.gameState.increaseGameStatKeyed("numItemsUsedPerId", itemID, costAmount);
 				} else if (costName == "blueprint") {
+				} else if (costNameParts[0] == "explorer") {
+					let explorerVO = this.getExplorerForCost(costNameParam);
+					let explorersComponent = this.playerStatsNodes.head.explorers;
+					explorersComponent.removeExplorer(explorerVO);
 				} else {
 					log.w("unknown cost: " + costName + ", action: " + action);
 				}
 			}
 			
 			GlobalSignals.inventoryChangedSignal.dispatch();
+			GlobalSignals.explorersChangedSignal.dispatch();
 			
 			return result;
 		},
@@ -1614,15 +1619,16 @@ define([
 				}
 
 				if (requirements.party) {
+					let party = this.playerStatsNodes.head.explorers.getParty();
+
 					if (typeof requirements.party.hasInjuredExplorer !== "undefined") {
 						let requiredValue = requirements.party.hasInjuredExplorer;
 						let currentValue = false;
-						let party = this.playerStatsNodes.head.explorers.getParty();
 						for (let i = 0; i < party.length; i++) {
 							let explorerVO = party[i];
 							if (explorerVO.injuredTimer >= 0) currentValue = true;
 						}
-						let result = this.checkRequirementsBoolean(requiredValue, currentValue, "an explorer is injured.", "required an injured explorer");
+						let result = this.checkRequirementsBoolean(requiredValue, currentValue, "an explorer is injured.", "requires an injured explorer");
 						if (result) return result;
 					}
 
@@ -1636,6 +1642,14 @@ define([
 							let result = this.checkRequirementsBoolean(requiredValue, currentValue, explorerName + " wants to go with you.", "");
 							if (result) return result;
 						}
+					}
+
+					if (typeof requirements.party.explorerAbility !== "undefined") {
+						let requiredValue = requirements.party.explorerAbility;
+						let explorerVO = party.filter(explorerVO => explorerVO.abilityType == requiredValue);
+						let hasExplorer = explorerVO != null;
+						let result = this.checkRequirementsBoolean(true, hasExplorer, "", "no valid party member");
+						if (result) return result;
 					}
 				}
 
@@ -1812,6 +1826,7 @@ define([
 			let globalStorage = GameGlobals.resourcesHelper.getGlobalStorage();
 			
 			let costNameParts = name.split("_");
+			let costNameParam = name.replace(costNameParts[0] + "_", "");
 			
 			if (costNameParts[0] === "resource") {
 				let resourceName = costNameParts[1];
@@ -1823,8 +1838,17 @@ define([
 					return playerResources.resources.getResource(resourceName);
 				}
 			} else if (costNameParts[0] === "item") {
-				let itemId = name.replace(costNameParts[0] + "_", "");
-				return itemsComponent.getCountById(itemId, inCamp | anyInventory);
+				let itemID = name.replace(costNameParts[0] + "_", "");
+				if (itemID == "broken") {
+					return itemsComponent.getCountBroken(inCamp | anyInventory);
+				} else if (itemID == "item_disassemblable") {
+					return itemsComponent.getAll(inCamp | anyInventory).filter(itemVO => ItemConstants.isDisassemblable(itemVO)).length;
+				} else {
+					return itemsComponent.getCountById(itemID, inCamp | anyInventory);
+				}
+			} else if (costNameParts[0] === "explorer") {
+				let explorerVO = this.getExplorerForCost(costNameParam);
+				return explorerVO ? 1 : 0;
 			} else {
 				switch (name) {
 					case "stamina":
@@ -1907,6 +1931,7 @@ define([
 			let costs = this.getCosts(action);
 
 			let costNameParts = name.split("_");
+			let costNameParam = name.replace(costNameParts[0] + "_", "");
 			let costAmount = costs[name] || 0;
 			
 			if (costAmount <= 0) return 1;
@@ -1915,6 +1940,9 @@ define([
 				return playerResources.storageCapacity / costAmount;
 			} else if (costNameParts[0] === "item") {
 				return 1;
+			} else if (costNameParts[0] === "explorer") {
+				let explorerVO = this.getExplorerForCost(costNameParam);
+				return explorerVO ? 1 : 0;
 			} else {
 				switch (name) {
 					case "stamina":
@@ -1961,6 +1989,18 @@ define([
 				}
 			}
 			return resourcesVO;
+		},
+
+		getExplorerForCost: function (costNameParam) {
+			let explorersComponent = this.playerStatsNodes.head.explorers;
+			let inCamp = GameGlobals.playerHelper.isInCamp();
+			let availableExplorers = inCamp ? explorersComponent.getAll() : explorersComponent.getParty();
+
+			if (costNameParam == "animal") {
+				return availableExplorers.find(explorerVO => ExplorerConstants.isAnimal(explorerVO.abilityType));
+			}
+
+			return null;
 		},
 
 		// Return the current ordinal of an action (depending on action, level ordinal / camp ordinal / num of existing buildings)
@@ -2177,12 +2217,8 @@ define([
 			switch (baseActionID) {
 				case "scout_locale_i":
 				case "scout_locale_u":
-					let localeVO;
-					let localei = parseInt(action.split("_")[3]);
-					if (sector) {
-						let sectorLocalesComponent = sector.get(SectorLocalesComponent);
-						localeVO = sectorLocalesComponent.locales[localei];
-					}
+					let localeVO = this.getLocaleForScoutAction(sector, action);
+					let localei = GameGlobals.playerActionsHelper.getActionIDParam(action);
 					requirements = localeVO == null ? {} : localeVO.requirements;
 					requirements.sector = {};
 					requirements.sector.scouted = true;
@@ -2331,7 +2367,7 @@ define([
 		// NOTE: this should always return all possible costs as keys (even if value currently is 0)
 		// NOTE: if you change this mess, keep GDD up to date
 		// multiplier: simple multiplier applied to ALL of the costs
-		getCosts: function (action, multiplier, otherSector, actionOrdinal, ignoreModifiers) {
+		getCosts: function (action, multiplier, otherSector, actionOrdinal, ignoreModifiers, ignorePreviewCosts) {
 			if (!action) return null;
 			if (!multiplier) multiplier = 1;
 
@@ -2341,14 +2377,14 @@ define([
 			var ordinal = actionOrdinal || this.getActionOrdinal(action, sector);
 			var isOutpost = levelComponent ? levelComponent.habitability < 1 : false;
 			
-			return this.getCostsByOrdinal(action, multiplier, ordinal, isOutpost, sector, ignoreModifiers);
+			return this.getCostsByOrdinal(action, multiplier, ordinal, isOutpost, sector, ignoreModifiers, ignorePreviewCosts);
 		},
 
 		getCostsWithoutBonuses: function (action) {
 			return this.getCosts(action, 1, null, null, true);
 		},
 		
-		getCostsByOrdinal: function (action, multiplier, ordinal, isOutpost, sector, ignoreModifiers) {
+		getCostsByOrdinal: function (action, multiplier, ordinal, isOutpost, sector, ignoreModifiers, ignorePreviewCosts) {
 			let result = {};
 
 			let baseActionID = this.getBaseActionID(action);
@@ -2361,7 +2397,7 @@ define([
 				result = this.getCostsFromData(action, multiplier, ordinal, isOutpost, sector, costs);
 			}
 			
-			this.addDynamicCosts(action, multiplier, ordinal, isOutpost, sector, result);
+			this.addDynamicCosts(action, multiplier, ordinal, isOutpost, sector, ignorePreviewCosts, result);
 
 			if (!ignoreModifiers) {
 				this.addCostModifiers(action, multiplier, ordinal, isOutpost, sector, result);
@@ -2438,7 +2474,7 @@ define([
 			return result;
 		},
 		
-		addDynamicCosts: function (action, multiplier, ordinal, isOutpost, sector, result) {
+		addDynamicCosts: function (action, multiplier, ordinal, isOutpost, sector, ignorePreviewCosts, result) {
 			// costs that are dynamic but should be now shown as buffs/modifiers in UI
 
 			if (action.startsWith("move_sector_grit_")) {
@@ -2481,9 +2517,7 @@ define([
 
 				case "scout_locale_i":
 				case "scout_locale_u":
-					var localei = parseInt(action.split("_")[3]);
-					var sectorLocalesComponent = sector.get(SectorLocalesComponent);
-					var localeVO = sectorLocalesComponent.locales[localei];
+					let localeVO = this.getLocaleForScoutAction(sector, action);
 					if (localeVO) this.addCosts(result, localeVO.costs);
 					break;
 				
@@ -2521,7 +2555,7 @@ define([
 					let currentPageVO = GameGlobals.dialogueHelper.getCurrentPageVO();
 					if (currentPageVO) {
 						let optionVO = currentPageVO.optionsByID[optionID];
-						if (optionVO) {
+						if (optionVO && (!optionVO.isPreviewCosts || !ignorePreviewCosts)) {
 							Object.assign(result, optionVO.costs);
 						}
 					}
@@ -2686,6 +2720,12 @@ define([
 			return false;
 		},
 
+		isWarningCost: function (costName) {
+			let costNameParts = costName.split("_");
+			if (costNameParts[0] === "explorer") return true;
+			return false;
+		},
+
 		getCostCountdownSeconds: function (costName, amount, otherSector) {
 			let sector = otherSector || (this.playerLocationNodes.head && this.playerLocationNodes.head.entity);
 			let costAmountOwned = this.getCostAmountOwned(sector, costName);
@@ -2703,6 +2743,31 @@ define([
 			
 			let baseAction = this.getBaseActionID(action);
 			let sector = this.playerLocationNodes.head ? this.playerLocationNodes.head.entity : null;
+
+			switch(baseAction) {
+				case "craft":
+					var item = this.getItemForCraftAction(action);
+					if (!item) return "";
+					var itemDescription = ItemConstants.getItemDescription(item);
+					return itemDescription + (item.getBaseTotalBonus() === 0 ? "" : "<hr/>" + UIConstants.getItemBonusDescription(item, true));
+				case "use_item":
+				case "use_item_fight":
+					var item = this.getItemForCraftAction(action);
+					if (!item) return "";
+					var itemDescription = ItemConstants.getItemDescription(item);
+					return itemDescription;
+				case "improve_in":
+					return this.getImproveActionDescription(action);
+				case "dismantle": 
+					return "Dismantle building";
+				case "scout_locale_u":
+				case "scout_locale_i":
+					let localeVO = this.getLocaleForScoutAction(sector, action);
+					if (localeVO.type == localeTypes.shortcut) return Text.t("game.actions.scout_locale_shortcut_desctiption");
+					if (localeVO.type == localeTypes.butcher) return Text.t("game.actions.scout_locale_shop_desctiption");
+					if (localeVO.type == localeTypes.repairshop) return Text.t("game.actions.scout_locale_shop_desctiption");
+					break;
+			}
 			
 			if (baseAction.indexOf("build_in_") == 0) {
 				let buildingKey = baseAction.replace("build_in_", "");
@@ -2733,23 +2798,6 @@ define([
 			} else if (action.indexOf("move_sector_") >= 0) {
 				// no need for description
 				return "";
-			} else {
-				switch(baseAction) {
-					case "craft":
-						var item = this.getItemForCraftAction(action);
-						if (!item) return "";
-						var itemDescription = ItemConstants.getItemDescription(item);
-						return itemDescription + (item.getBaseTotalBonus() === 0 ? "" : "<hr/>" + UIConstants.getItemBonusDescription(item, true));
-					case "use_item":
-					case "use_item_fight":
-						var item = this.getItemForCraftAction(action);
-						if (!item) return "";
-						var itemDescription = ItemConstants.getItemDescription(item);
-						return itemDescription;
-					case "improve_in":
-						return this.getImproveActionDescription(action);
-					case "dismantle": return "Dismantle building";
-				}
 			}
 			
 			if (GameConstants.isDebugVersion) log.w("no description defined for action: " + action)
@@ -2914,16 +2962,24 @@ define([
 			}
 		},
 
+		getLocaleForScoutAction: function (sector, action) {
+			let sectorLocalesComponent = sector.get(SectorLocalesComponent);
+			let i = GameGlobals.playerActionsHelper.getActionIDParam(action);
+			return sectorLocalesComponent.locales[i];
+		},
+
 		getEncounterFactor: function (action) {
-			var baseActionID = this.getBaseActionID(action);
+			let baseActionID = this.getBaseActionID(action);
 			switch (baseActionID) {
 				case "scout_locale_i":
 				case "scout_locale_u":
 					// depending on locale
-					var sectorLocalesComponent = this.playerLocationNodes.head.entity.get(SectorLocalesComponent);
-					let i = GameGlobals.playerActionsHelper.getActionIDParam(action);
-					var localeVO = sectorLocalesComponent.locales[i];
+					let sector = this.playerLocationNodes.head.entity;
+					let sectorStatusComponent = sector.get(SectorStatusComponent);
+					let localeVO = this.getLocaleForScoutAction(sector, action);
 					if (!localeVO) return 1;
+					let localeIndex = GameGlobals.playerActionsHelper.getActionIDParam(action);
+					let isScouted = sectorStatusComponent.isLocaleScouted(localeIndex);
 					switch (localeVO.type) {
 						case localeTypes.tradingPartner:
 						case localeTypes.grove:
@@ -2934,6 +2990,10 @@ define([
 						case localeTypes.seedDepot:
 						case localeTypes.compound:
 							return 0;
+						case localeTypes.shortcut:
+							return isScouted ? 0.75 : 0.25;
+						case localeTypes.shortcut:
+							return 0.5;
 					}
 					return 1;
 				default:

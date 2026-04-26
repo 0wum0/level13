@@ -113,6 +113,12 @@ define([
 			return this.playerStatsNodes.head.vision.isAwake;
 		},
 
+		getAllAvailableItems: function () {
+			let isInCamp = this.isInCamp();
+			let itemsComponent = this.playerStatsNodes.head.items;
+			return itemsComponent.getAll(isInCamp);
+		},
+
 		hasForcedDialogue: function () {
 			let explorers = this.getExplorers();
 			for (let i = 0; i < explorers.length; i++) {

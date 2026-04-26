@@ -50,26 +50,13 @@ define([
 				
 				this.generateLevel(seed, worldVO, levelTemplateVO, levelVO);
 			}
-			
-			// debug
-			// WorldCreatorDebug.printWorld(worldVO, [ "isCampAdditional"], "red" );
-			// WorldCreatorDebug.printWorld(worldVO, [ "possibleEnemies.length" ]);
-			// WorldCreatorDebug.printWorld(worldVO, [ "enemyDifficulty" ]);
-			// WorldCreatorDebug.printWorld(worldVO, [ "hazards.radiation" ], "red");
-			// WorldCreatorDebug.printWorld(worldVO, [ "hazards.flooded" ], "blue");
-			// WorldCreatorDebug.printWorld(worldVO, [ "resourcesScavengable.food" ], "#ee8822");
-			// WorldCreatorDebug.printWorld(worldVO, [ "resourcesScavengable.metal" ], "#000");
-			// WorldCreatorDebug.printWorld(worldVO, [ "workshopResource" ]);
-			// WorldCreatorDebug.printWorld(worldVO, [ "criticalPathTypes.length" ], "red" );
-			// WorldCreatorDebug.printWorld(worldVO, [ "requiredResources.food" ], "red" );
-			// WorldCreatorDebug.printWorld(worldVO, [ "requiredResources.water" ], "blue" );
-			// WorldCreatorDebug.printWorld(worldVO, [ "scavengeDifficulty" ] );
 		},
 
 		generateLevel: function (seed, worldVO, levelTemplateVO, levelVO) {
 			// level-wide features 1 (required stuff)
 			this.generateRequiredFeatures(seed, worldVO, levelTemplateVO, levelVO);
 			this.generateWorkshops(seed, worldVO, levelTemplateVO, levelVO);
+			this.generateLocalesForShortcuts(seed, worldVO, levelTemplateVO, levelVO);
 			
 			// sector features 1 
 			for (let s = 0; s < levelVO.sectors.length; s++) {
@@ -114,6 +101,7 @@ define([
 			this.generateLocalesForTradingPartners(seed, worldVO, levelTemplateVO, levelVO);	
 			this.generateLocalesForLuxuryResources(seed, worldVO, levelTemplateVO, levelVO);
 			this.generateLocalesForBlueprints(seed, worldVO, levelTemplateVO, levelVO);
+			this.generateLocalesForSectorFeatures(seed, worldVO, levelTemplateVO, levelVO);
 			this.generateMovementBlockers(seed, worldVO, levelVO);
 			this.generateHeaps(seed, worldVO, levelVO);
 			this.generateItems(seed, worldVO, levelVO);
@@ -986,6 +974,69 @@ define([
 			
 		},
 
+		generateLocalesForShortcuts: function (seed, worldVO, levelTemplateVO, levelVO) {
+			let num = 1;
+
+			if (levelVO.isHard) num = 0;
+			if (levelVO.levelStyle == SectorConstants.STYLE_MODERN) num = 0;
+			if (levelVO.levelStyle == SectorConstants.STYLE_INDUSTRIAL) num++;
+			if (levelVO.sectors.length < 80) num = 0;
+			if (levelVO.level >= worldVO.topLevel - 1) num = 0;
+			if (levelVO.level == worldVO.bottomLevel) num = 0;
+			if (levelVO.level == 14) num = 0;
+
+			if (num <= 0) return;
+
+			let isValidShortcutSector = function (sectorVO, pair) {
+				if (!SectorGeneratorHelper.isValidSectorForLocale(sectorVO)) return false;
+				if (WorldCreatorHelper.getQuickMinDistanceToCamp(levelVO, sectorVO) < 5) return false;
+				if (pair) {
+					let distanceToPair = PositionConstants.getDistanceTo(sectorVO.position, pair.position);
+					if (distanceToPair < 2) return false;
+					if (distanceToPair > 10) return false;
+					let pathToPair = WorldCreatorRandom.findPath(worldVO, sectorVO.position, pair.position);
+					if (pathToPair.length < 6) return false;
+					if (pathToPair.length < distanceToPair + 3) return false;
+				}
+				return true;
+			};
+
+			let getShortcutSectorScore = function (sectorVO, pair) {
+				let score = 0;
+				score -= levelVO.getNeighbourCount(sectorVO.position.sectorX, sectorVO.position.sectorY);
+				if (pair) {
+					let distanceToPair = PositionConstants.getDistanceTo(sectorVO.position, pair.position);
+					let pathToPair = WorldCreatorRandom.findPath(worldVO, sectorVO.position, pair.position);
+					score += pathToPair.length / distanceToPair * 5; 
+					if (sectorVO.position.sectorX == pair.position.sectorX) score++;
+					if (sectorVO.position.sectorY == pair.position.sectorY) score++;
+				}
+				return score;
+			};
+
+			let findShortcutSector = function (i, pair) {
+				let s = seed % 29 + i * 3;
+				if (pair) s++;
+				let isValid = sectorVO => isValidShortcutSector(sectorVO, pair);
+				let getScore = sectorVO => getShortcutSectorScore(sectorVO, pair);
+				return WorldCreatorRandom.randomSectorScored(s, worldVO, levelVO, { filter: isValid }, getScore);
+			};
+
+			for (let i = 0; i < num; i++) {
+				let sectors = [];
+				let isEarly = i % 2 == 1;
+				sectors.push(findShortcutSector(i));
+				sectors.push(findShortcutSector(i, sectors[0]));
+
+				if (!sectors[0] || !sectors[1]) continue;
+
+				for (let s = 0; s < sectors.length; s++) {
+					let localeVO = new LocaleVO(localeTypes.shortcut, true, isEarly);
+					SectorGeneratorHelper.addLocale(levelVO, sectors[s], localeVO);
+				}
+			}
+		},
+
 		generateHeaps: function (seed, worldVO, levelVO) {
 			let heapResource = resourceNames.metal;
 
@@ -1072,9 +1123,11 @@ define([
 			let maxStepsWater = MathUtils.clamp(Math.floor(bagSize / (levelVO.isHard ? 2.25 : 2.85)), 12, 50);
 			let maxStepsFood = MathUtils.clamp(Math.floor(bagSize / (levelVO.isHard ? 2.75 : 3.15)), 10, 40);
 
-			let requireResource = function (i, count, sectorVO, steps, maxSteps) {
+			let requireResource = function (i, resourceName, count, sectorVO, steps, maxSteps) {
 				let isDeadEnd = levelVO.getNeighbourCount(sectorVO.position.sectorX, sectorVO.position.sectorY) == 1;
 				let isPathEnd = i == count - 1;
+
+				if (sectorVO.hasLocaleOfType(localeTypes.butcher)) return false;
 
 				// not too often
 				let minSteps = isDeadEnd ? 3 : isPathEnd ? Math.floor(maxSteps * 0.5) : Math.floor(maxSteps * 0.75);
@@ -1103,14 +1156,14 @@ define([
 
 					if (sectorVO.requiredResources.water) {
 						stepsWater = -1;
-					} else if (requireResource(i, path.length, sectorVO, stepsWater, maxStepsWater)) {
+					} else if (requireResource(i, resourceNames.water, path.length, sectorVO, stepsWater, maxStepsWater)) {
 						sectorVO.requiredResources.water = true;
 						stepsWater = -1;
 					}
 
 					if (sectorVO.requiredResources.food) {
 						stepsFood = -1;
-					} else if (requireResource(9000 + i, path.length, sectorVO, stepsFood, maxStepsFood)) {
+					} else if (requireResource(9000 + i, resourceNames.food, path.length, sectorVO, stepsFood, maxStepsFood)) {
 						sectorVO.requiredResources.food = true;
 						stepsFood = -1;
 					}
@@ -1635,6 +1688,11 @@ define([
 					}
 				}
 			}
+
+			if (sectorVO.hasLocaleOfType(localeTypes.butcher)) {
+				sca.food = 0;
+				col.food = 0;
+			}
 			
 			// adjustments for required resources
 			if (sectorVO.requiredResources) {
@@ -1919,6 +1977,21 @@ define([
 				let maxLate = WorldCreatorConstants.getMaxLocales(numLateBlueprints);
 				let countLate = WorldCreatorRandom.randomInt((seed % 84) * l * l * l + 1, minLate, maxLate + 1);
 				createLocales(worldVO, levelVO, false, countLate - numExistingLate, minLate - numExistingLate);
+			}
+		},
+
+		generateLocalesForSectorFeatures: function (seed, worldVO, levelTemplateVO, levelVO) {
+			let trainSectors = levelVO.sectors.filter(s => s.hasLocaleOfType(localeTypes.train));
+
+			if (trainSectors.length == 0) {
+				let trackSectors = levelVO.sectors.filter(s => s.hasFeature(WorldConstants.FEATURE_TRAIN_TRACKS_NEW));
+				if (trackSectors.length > 0) {
+					let sectorVO = WorldCreatorRandom.randomItemFromArray(seed + levelVO.level, trackSectors);
+					if (SectorGeneratorHelper.isValidSectorForLocale(sectorVO)) {
+						let localeVO = new LocaleVO(localeTypes.train, false, false);
+						SectorGeneratorHelper.addLocale(levelVO, sectorVO, localeVO);
+					}
+				}
 			}
 		},
 		

@@ -1,7 +1,7 @@
 // Current sector control status & wins needed
 define(['ash', 'game/constants/MovementConstants'], function (Ash, MovementConstants) {
 
-	var SectorStatusComponent = Ash.Class.extend({
+	let SectorStatusComponent = Ash.Class.extend({
 		
 		NUM_SCAVENGES_PER_SECTOR: 30,
 		NUM_HEAP_SCAVENGES_PER_SECTOR: 5,

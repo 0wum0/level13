@@ -10,6 +10,7 @@ define([
 	'game/constants/TradeConstants', 
 	'game/components/common/PositionComponent',
 	'game/components/sector/SectorFeaturesComponent',
+	'game/components/sector/SectorLocalesComponent',
 	'game/components/sector/SectorStatusComponent',
 	'game/nodes/NearestCampNode',
 	'game/vos/CharacterVO'
@@ -24,6 +25,7 @@ define([
 	TradeConstants, 
 	PositionComponent, 
 	SectorFeaturesComponent, 
+	SectorLocalesComponent,
 	SectorStatusComponent, 
 	NearestCampNode,
 	CharacterVO
@@ -240,6 +242,7 @@ define([
 
 				let sectorPosition = sector.get(PositionComponent);
 				let sectorFeaturesComponent = sector.get(SectorFeaturesComponent);
+				let sectorLocalesComponent = sector.get(SectorLocalesComponent);
 				let neighbours = GameGlobals.levelHelper.getSectorNeighboursList(sector);
 
 				score -= Math.abs(Math.floor(sectorPosition.sectorX / 5)) * weightX;
@@ -252,6 +255,7 @@ define([
 				if (sectorFeaturesComponent.hasSpring) score += 3 * weightSpring;
 				if (sectorFeaturesComponent.examineSpots.length > 1) score -= 1;
 				if (sectorFeaturesComponent.heapResource) score -= 1;
+				if (sectorLocalesComponent.hasLocale(localeTypes.butcher)) score -= 2;
 				if (neighbours.count < 2) score -= 1;
 
 				return score;

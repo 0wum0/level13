@@ -608,7 +608,7 @@ define(['ash',
 
 		getItemBonusName: function (bonusType, short) {
 			switch (bonusType) {
-				case ItemConstants.itemBonusTypes.light: return "max vision";
+				case ItemConstants.itemBonusTypes.light: return "light";
 				case ItemConstants.itemBonusTypes.fight_att: return "attack";
 				case ItemConstants.itemBonusTypes.fight_def: return "defence";
 				case ItemConstants.itemBonusTypes.fight_shield: return "shield";
@@ -1179,8 +1179,30 @@ define(['ash',
 				return Text.t("game.stats.evidence_name");
 			}
 
+			if (name == "explorer_animal") {
+				return Text.t("ui.actions.action_cost_explorer_animal_name");
+			}
+
+			if (name == "item_disassemblable") {
+				return Text.t("ui.actions.action_cost_item_disassemblable_name");
+			}
+
 			log.w("no cost display name defined for cost [" + name + "]");
 			return name;
+		},
+
+		getDropdown: function (id, options) {
+			let result = "<select id='" + id + "'>";
+
+			for (let i = 0; i < options.length; i++) {
+				let option = options[i];
+				let label = option.label;
+				result += "<option value='" + option.id + "'>" + label + "</option>";
+			}
+			
+			result += "</select>";
+			
+			return result;
 		},
 
 		roundValue: function (value, showDecimalsWhenSmall, showDecimalsAlways, decimalDivisor) {

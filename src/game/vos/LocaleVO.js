@@ -4,38 +4,44 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 
 	localeTypes = {
 		// uninhabited
-		factory: "factory",
-		house: "house",
-		lab: "lab",
-		market: "market",
-		maintenance: "maintenance",
-		transport: "transport",
-		junkyard: "junkyard",
-		warehouse: "warehouse",
-		library: "library",
-		farm: "farm",
 		bunker: "bunker",
-		restaurant: "restaurant",
+		factory: "factory",
+		farm: "farm",
+		garden: "garden",
 		grocery: "grocery",
-		store: "store",
-		office: "office",
 		hospital: "hospital",
+		house: "house",
+		junkyard: "junkyard",
+		lab: "lab",
+		library: "library",
+		maintenance: "maintenance",
+		market: "market",
+		office: "office",
+		pharmacy: "pharmacy",
+		restaurant: "restaurant",
+		shortcut: "shortcut",
+		store: "store",
+		train: "train",
+		transport: "transport",
+		warehouse: "warehouse",
 		
 		// inhabited
+		butcher: "butcher",
 		camp: "camp",
-		tradingpartner: "tradingpartner",
 		clinic: "clinic",
+		tradingpartner: "tradingpartner",
+		workshop: "workshop",
 
 		// unique
-		grove: "grove",
-		greenhouse: "greenhouse", // x2
+		compound: "compound",
 		depot: "depot", // x2
-		spacefactory: "spacefactory",
+		expedition: "expedition",
+		greenhouse: "greenhouse", // x2
+		grove: "grove",
+		isolationCenter: "isolationCenter",
 		seedDepot: "seedDepot",
 		shelter: "shelter",
-		compound: "compound",
-		expedition: "expedition",
-		isolationCenter: "isolationCenter"
+		spacefactory: "spacefactory",
 	};
 	
 	let LocaleVO = Ash.Class.extend({
@@ -65,10 +71,13 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 			this.costs.stamina = this.getStaminaRequirement();
 			
 			switch (this.type) {
+				case localeTypes.butcher:
+				case localeTypes.camp:
+				case localeTypes.clinic:
 				case localeTypes.grove:
 				case localeTypes.tradingpartner:
-				case localeTypes.clinic:
-				case localeTypes.camp:
+				case localeTypes.repairshop:
+				case localeTypes.shortcut:
 					break;
 				default:
 					this.costs.item_exploration_1 = 1;
@@ -81,38 +90,46 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 		},
 
 		getStaminaRequirement: function () {
-			var maxCost = PlayerStatConstants.MAX_SCOUT_LOCALE_STAMINA_COST;
-			var minCost = 100;
-			var difficulty = 0.5;
+			let maxCost = PlayerStatConstants.MAX_SCOUT_LOCALE_STAMINA_COST;
+			let minCost = 100;
+			let difficulty = 0.5;
+
 			switch (this.type) {
-				case localeTypes.bunker: difficulty = 0.6; break;
+				case localeTypes.bunker: difficulty = 1; break;
+				case localeTypes.butcher: return 3;
 				case localeTypes.camp: difficulty = 0.15; break;
 				case localeTypes.clinic: return 3;
 				case localeTypes.depot: difficulty = 1; break;
 				case localeTypes.expedition: difficulty = 0.1; break;
-				case localeTypes.isolationCenter: difficulty = 1; break;
 				case localeTypes.factory: difficulty = 1; break;
 				case localeTypes.farm: difficulty = 0.4; break;
+				case localeTypes.garden: difficulty = 0.2; break;
 				case localeTypes.greenhouse: difficulty = 0.2; break;
 				case localeTypes.grocery: difficulty = 0.4; break;
 				case localeTypes.grove: difficulty = 0; break;
-				case localeTypes.hospital: difficulty = 0.25; break;
-				case localeTypes.house: difficulty = 0.15; break;
+				case localeTypes.hospital: difficulty = 0.5; break;
+				case localeTypes.house: difficulty = 0.2; break;
+				case localeTypes.isolationCenter: difficulty = 1; break;
+				case localeTypes.junkyard: difficulty = 0.75; break;
 				case localeTypes.lab: difficulty = 0.85; break;
 				case localeTypes.library: difficulty = 0.3; break;
-				case localeTypes.maintenance: difficulty = 1; break;
+				case localeTypes.maintenance: difficulty = 0.75; break;
 				case localeTypes.market: difficulty = 0.15; break;
-				case localeTypes.office: difficulty = 0.25; break;
+				case localeTypes.office: difficulty = 0.35; break;
+				case localeTypes.pharmacy: difficulty = 0.35; break;
 				case localeTypes.restaurant: difficulty = 0.25; break;
-				case localeTypes.seedDepot: difficulty = 0.5; break;
-				case localeTypes.junkyard: difficulty = 1; break;
+				case localeTypes.seedDepot: difficulty = 0.6; break;
 				case localeTypes.shelter: difficulty = 0.15; break;
+				case localeTypes.shortcut: difficulty = 0.25; break;
 				case localeTypes.spacefactory: difficulty = 1; break;
 				case localeTypes.store: difficulty = 0.3; break;
 				case localeTypes.tradingpartner: difficulty = 0.15; break;
+				case localeTypes.train: difficulty = 0.6; break;
 				case localeTypes.transport: difficulty = 0.5; break;
-				case localeTypes.warehouse: difficulty = 0; break;
+				case localeTypes.warehouse: difficulty = 0.4; break;
+				case localeTypes.repairshop: return 3;
 			}
+
 			return Math.floor((minCost + (maxCost - minCost) * difficulty) / 100) * 100;
 		},
 		
@@ -150,6 +167,7 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 					break;
 				case localeTypes.hospital:
 				case localeTypes.lab:
+				case localeTypes.pharmacy:
 					res.addResource(resourceNames.water, defaultAmount);
 					if (campOrdinal > 3) res.addResource(resourceNames.medicine, abundant);
 					break;
@@ -179,6 +197,7 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 					break;
 				case localeTypes.maintenance:
 				case localeTypes.transport:
+				case localeTypes.train:
 					res.addResource(resourceNames.water, defaultAmount);
 					res.addResource(resourceNames.fuel, defaultAmount);
 					res.addResource(resourceNames.metal, abundant);
@@ -204,7 +223,6 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 		getCurrencyFindProbabilityModifier: function () {
 			switch (this.type) {
 				case localeTypes.bunker:
-				case localeTypes.clinic:
 				case localeTypes.depot:
 				case localeTypes.expedition:
 				case localeTypes.factory:
@@ -217,15 +235,21 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 				case localeTypes.library:
 				case localeTypes.maintenance:
 				case localeTypes.seedDepot:
+				case localeTypes.shortcut:
 				case localeTypes.spacefactory:
+				case localeTypes.train:
 				case localeTypes.warehouse:
 					return 0;
+				case localeTypes.butcher:
 				case localeTypes.camp:
+				case localeTypes.clinic:
 				case localeTypes.tradingpartner:
+				case localeTypes.repairshop:
 					return 0;
 				case localeTypes.grocery:
 				case localeTypes.lab:
 				case localeTypes.office:
+				case localeTypes.pharmacy:
 				case localeTypes.restaurant:
 				case localeTypes.transport:
 					return 0.5;
@@ -249,6 +273,8 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 					return [ ItemConstants.itemTags.industrial, ItemConstants.itemTags.clothing ];
 				case localeTypes.farm:
 					return [ ItemConstants.itemTags.nature, ItemConstants.itemTags.old ];
+				case localeTypes.garden:
+					return [ ItemConstants.itemTags.nature, ItemConstants.itemTags.community ];
 				case localeTypes.grove:
 					return [ ItemConstants.itemTags.nature ];
 				case localeTypes.greenhouse:
@@ -274,9 +300,12 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 				case localeTypes.spacefactory:
 					return [ ItemConstants.itemTags.science, ItemConstants.itemTags.industrial ];
 				case localeTypes.hospital:
+				case localeTypes.pharmacy:
 					return [ ItemConstants.itemTags.medical, ItemConstants.itemTags.science ];
 				case localeTypes.restaurant:
 					return [ ItemConstants.itemTags.perishabl, ItemConstants.itemTags.community ];
+				case localeTypes.train:
+					return [ ItemConstants.itemTags.maintenance, ItemConstants.itemTags.industrial ];
 				case localeTypes.transport:
 					return [ ItemConstants.itemTags.maintenance, ItemConstants.itemTags.community ];
 				case localeTypes.house:
@@ -285,6 +314,8 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 					return [ ItemConstants.itemTags.clothing, ItemConstants.itemTags.community ];
 				case localeTypes.store:
 					return [ ItemConstants.itemTags.clothing, ItemConstants.itemTags.valuable ];
+				case localeTypes.shortcut:
+					return [ ItemConstants.itemTags.equipment, ItemConstants.itemTags.weapon ];
 				default: return [];
 			}
 		},
@@ -302,10 +333,12 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 
 		getStressedProbability: function () {
 			switch (this.type) {
-				case localeTypes.house: return 0.1;
 				case localeTypes.bunker: return 0.1;
-				case localeTypes.lab: return 0.2;
+				case localeTypes.butcher: return 0.25;
+				case localeTypes.house: return 0.1;
 				case localeTypes.junkyard: return 0.3;
+				case localeTypes.lab: return 0.2;
+				case localeTypes.shortcut: return 0.25;
 				default: return 0;
 			}
 		},

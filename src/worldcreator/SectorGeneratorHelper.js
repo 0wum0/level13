@@ -19,12 +19,12 @@ define([
 			sectorVO.locales.push(localeVO);
 			levelVO.localeSectors.push(sectorVO);
 
-			// let localeFeatures = [];
+			let localeFeatures = [];
 			// if (localeVO.hasBlueprints) localeFeatures.push("blueprints");
 			// if (localeVO.explorerID) localeFeatures.push("explorer:" + localeVO.explorerID);
 			// if (localeVO.luxuryResource) localeFeatures.push("resource:" + localeVO.luxuryResource);
 
-			// WorldCreatorLogger.i("add locale " + sectorVO.position + ": " + localeVO.type + " (" + localeFeatures.join(",") +")");
+			WorldCreatorLogger.i("add locale " + sectorVO.position + ": " + localeVO.type + " (" + localeFeatures.join(",") +")");
 		},
 
 		getLevelBlockerTypes: function (worldVO, levelVO, campStage) {
@@ -36,6 +36,7 @@ define([
 
 			let blockerTypes = [];
 
+			// TODO not on first level?
 			blockerTypes.push(MovementConstants.BLOCKER_TYPE_DEBRIS);
 			blockerTypes.push(MovementConstants.BLOCKER_TYPE_DEBRIS);
 
@@ -173,6 +174,11 @@ define([
 			let sectorType = sectorVO.sectorType;
 			let distanceToCamp = WorldCreatorHelper.getQuickMinDistanceToCamp(levelVO, sectorVO);
 
+			// feature based
+			if (sectorVO.hasFeature(WorldConstants.FEATURE_TRAIN_TRACKS_NEW)) {
+				return [ localeTypes.train ];
+			}
+
 			// always possible
 			possibleTypes.push(localeTypes.transport);
 
@@ -186,6 +192,7 @@ define([
 			// sector type based
 			switch (sectorType) {
 				case SectorConstants.SECTOR_TYPE_RESIDENTIAL:
+					possibleTypes.push(localeTypes.garden);
 					possibleTypes.push(localeTypes.grocery);
 					possibleTypes.push(localeTypes.grocery);
 					possibleTypes.push(localeTypes.house);
@@ -222,12 +229,14 @@ define([
 					possibleTypes.push(localeTypes.office);
 					possibleTypes.push(localeTypes.office);
 					possibleTypes.push(localeTypes.restaurant);
+					possibleTypes.push(localeTypes.pharmacy);
 					possibleTypes.push(localeTypes.store);
 					possibleTypes.push(localeTypes.store);
 					possibleTypes.push(localeTypes.warehouse);
 					break;
 					
 				case SectorConstants.SECTOR_TYPE_PUBLIC:
+					possibleTypes.push(localeTypes.garden);
 					possibleTypes.push(localeTypes.lab);
 					possibleTypes.push(localeTypes.library);
 					possibleTypes.push(localeTypes.office);
@@ -246,6 +255,7 @@ define([
 			// other
 			if (sectorVO.sunlit) {
 				possibleTypes.push(localeTypes.farm);
+				possibleTypes.push(localeTypes.garden);
 			}
 
 			if (sectorVO.wealth < 4) {				
@@ -278,6 +288,7 @@ define([
 			score -= sectorVO.locales.length;
 			let numNeighours = levelVO.getNeighbourCount(sectorVO.position.sectorX, sectorVO.position.sectorY);
 			if (numNeighours == 1) score++;
+			if (sectorVO.hasFeature(WorldConstants.FEATURE_TRAIN_TRACKS_NEW)) score++;
 			return score;
 		},
 

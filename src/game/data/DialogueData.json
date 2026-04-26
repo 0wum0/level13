@@ -4311,10 +4311,10 @@
 		},
 		"explorer_generic_interact_forced_01": {
 			"conditions": {
-				"inCamp": true,
 				"explorer": {
 					"isForced": true
-				}
+				},
+				"inCamp": true
 			},
 			"isPriority": true,
 			"pages": [
@@ -8624,6 +8624,82 @@
 				"locale_generic_bunker_intro_02_p1"
 			]
 		},
+		"locale_generic_butcher": {
+			"pages": [
+				{
+					"id": "intro",
+					"key": "story.dialogue.locale_generic_butcher_intro"
+				},
+				{
+					"id": "offer",
+					"key": "story.dialogue.locale_generic_butcher_offer",
+					"options": [
+						{
+							"buttonKey": "npc_request_agree",
+							"costs": {
+								"explorer_animal": 1
+							},
+							"isPreviewCosts": true,
+							"response": "confirmation"
+						},
+						{
+							"buttonKey": "npc_request_buy",
+							"costs": {
+								"silver": 1
+							},
+							"response": "buy"
+						},
+						{
+							"buttonKey": "npc_request_reject",
+							"response": "reject"
+						}
+					]
+				},
+				{
+					"id": "confirmation",
+					"metaKey": "story.dialogue.locale_generic_butcher_confirmation",
+					"options": [
+						{
+							"buttonKey": "npc_request_agree",
+							"costs": {
+								"explorer_animal": 1
+							},
+							"response": "accept"
+						},
+						{
+							"buttonKey": "npc_request_reject",
+							"response": "reject"
+						}
+					]
+				},
+				{
+					"id": "accept",
+					"key": "story.dialogue.locale_generic_butcher_accept",
+					"logMessageKey": "ui.log.explorer_butchered_message",
+					"options": "END",
+					"result": {
+						"gainedResources": {
+							"food": 20
+						}
+					}
+				},
+				{
+					"id": "buy",
+					"key": "story.dialogue.locale_generic_butcher_buy",
+					"options": "END",
+					"result": {
+						"gainedResources": {
+							"food": 10
+						}
+					}
+				},
+				{
+					"id": "reject",
+					"key": "story.dialogue.locale_generic_butcher_reject",
+					"options": "END"
+				}
+			]
+		},
 		"locale_generic_camp_intro_01": {
 			"pages": [
 				"locale_generic_camp_intro_01_p1"
@@ -8710,6 +8786,21 @@
 				"locale_generic_farm_intro_02_p1"
 			]
 		},
+		"locale_generic_garden_intro_01": {
+			"pages": [
+				"locale_generic_garden_intro_01_p1"
+			]
+		},
+		"locale_generic_garden_intro_02": {
+			"pages": [
+				"locale_generic_garden_intro_02_p1"
+			]
+		},
+		"locale_generic_greenhouse_intro_01": {
+			"pages": [
+				"locale_generic_greenhouse_intro_01_p1"
+			]
+		},
 		"locale_generic_grocery_intro_01": {
 			"pages": [
 				"locale_generic_grocery_intro_01_p1"
@@ -8738,11 +8829,6 @@
 		"locale_generic_house_intro_02": {
 			"pages": [
 				"locale_generic_house_intro_02_p1"
-			]
-		},
-		"locale_generic_greenhouse_intro_01": {
-			"pages": [
-				"locale_generic_greenhouse_intro_01_p1"
 			]
 		},
 		"locale_generic_junkyard_intro_01": {
@@ -8803,6 +8889,14 @@
 				}
 			]
 		},
+		"locale_generic_obstacle_container": {
+			"pages": [
+				{
+					"buttonKey": "locale_interaction_persist",
+					"key": "locale_generic_obstacle_container_p1"
+				}
+			]
+		},
 		"locale_generic_obstacle_darkness": {
 			"pages": [
 				{
@@ -8816,6 +8910,14 @@
 				{
 					"buttonKey": "ui.common.continue_button_label",
 					"key": "locale_generic_obstacle_dialect_p1"
+				}
+			]
+		},
+		"locale_generic_obstacle_door": {
+			"pages": [
+				{
+					"buttonKey": "locale_interaction_push",
+					"key": "locale_generic_obstacle_door_p1"
 				}
 			]
 		},
@@ -8851,11 +8953,27 @@
 				}
 			]
 		},
+		"locale_generic_obstacle_explorer_stuck": {
+			"pages": [
+				{
+					"buttonKey": "locale_interaction_dig",
+					"key": "locale_generic_obstacle_explorer_stuck_p1"
+				}
+			]
+		},
 		"locale_generic_obstacle_flooded": {
 			"pages": [
 				{
 					"buttonKey": "locale_interaction_wade",
 					"key": "locale_generic_obstacle_flooded_p1"
+				}
+			]
+		},
+		"locale_generic_obstacle_footsteps": {
+			"pages": [
+				{
+					"buttonKey": "locale_interaction_keep_going",
+					"key": "locale_generic_obstacle_footsteps_p1"
 				}
 			]
 		},
@@ -8880,6 +8998,14 @@
 				{
 					"buttonKey": "locale_interaction_keep_going",
 					"key": "locale_generic_obstacle_identical_p1"
+				}
+			]
+		},
+		"locale_generic_obstacle_indecision": {
+			"pages": [
+				{
+					"buttonKey": "locale_interaction_guess",
+					"key": "locale_generic_obstacle_indecision_p1"
 				}
 			]
 		},
@@ -8920,6 +9046,14 @@
 				{
 					"buttonKey": "locale_interaction_keep_going",
 					"key": "locale_generic_obstacle_remains_p1"
+				}
+			]
+		},
+		"locale_generic_obstacle_rope": {
+			"pages": [
+				{
+					"buttonKey": "locale_interaction_keep_going",
+					"key": "locale_generic_obstacle_rope_p1"
 				}
 			]
 		},
@@ -8997,6 +9131,16 @@
 				"locale_generic_office_intro_02_p1"
 			]
 		},
+		"locale_generic_pharmacy_intro_01": {
+			"pages": [
+				"locale_generic_pharmacy_intro_01_p1"
+			]
+		},
+		"locale_generic_pharmacy_intro_02": {
+			"pages": [
+				"locale_generic_pharmacy_intro_02_p1"
+			]
+		},
 		"locale_generic_restaurant_intro_01": {
 			"pages": [
 				"locale_generic_restaurant_intro_01_p1"
@@ -9005,6 +9149,26 @@
 		"locale_generic_restaurant_intro_02": {
 			"pages": [
 				"locale_generic_restaurant_intro_02_p1"
+			]
+		},
+		"locale_generic_shortcut_intro_01": {
+			"pages": [
+				"locale_generic_shortcut_intro_01_p1"
+			]
+		},
+		"locale_generic_shortcut_intro_02": {
+			"pages": [
+				"locale_generic_shortcut_intro_02_p1"
+			]
+		},
+		"locale_generic_shortcut_outro_01": {
+			"pages": [
+				"locale_generic_shortcut_outro_01_p1"
+			]
+		},
+		"locale_generic_shortcut_outro_02": {
+			"pages": [
+				"locale_generic_shortcut_outro_02_p1"
 			]
 		},
 		"locale_generic_store_intro_01": {
@@ -9027,6 +9191,16 @@
 				"locale_generic_tradingpartner_intro_02_p1"
 			]
 		},
+		"locale_generic_train_intro_01": {
+			"pages": [
+				"locale_generic_train_intro_01_p1"
+			]
+		},
+		"locale_generic_train_intro_02": {
+			"pages": [
+				"locale_generic_train_intro_02_p1"
+			]
+		},
 		"locale_generic_transport_intro_01": {
 			"pages": [
 				"locale_generic_transport_intro_01_p1"
@@ -9045,6 +9219,86 @@
 		"locale_generic_warehouse_intro_02": {
 			"pages": [
 				"locale_generic_warehouse_intro_02_p1"
+			]
+		},
+		"locale_generic_repairshop": {
+			"pages": [
+				{
+					"id": "intro",
+					"key": "story.dialogue.locale_generic_repairshop_intro"
+				},
+				{
+					"id": "offer",
+					"key": "story.dialogue.locale_generic_repairshop_offer",
+					"options": [
+						{
+							"buttonKey": "npc_request_disassemble",
+							"response": "disassemble",
+							"costs": {
+								"item_disassemblable": [ 1, -1 ]
+							},
+							"isPreviewCosts": true
+						},
+						{
+							"buttonKey": "npc_request_repair",
+							"costs": {
+								"silver": 1
+							},
+							"conditions": {
+								"playerInventory": {
+									"item_broken": [
+										1,
+										-1
+									]
+								}
+							},
+							"response": "repair"
+						},
+						{
+							"buttonKey": "npc_request_reject",
+							"response": "reject"
+						}
+					]
+				},
+				{
+					"id": "disassemble",
+					"key": "story.dialogue.locale_generic_repairshop_disassemble_choose",
+					"options": [
+						{
+							"buttonKey": "npc_request_disassemble",
+							"response": "disassemble_done",
+							"costs": {
+								"item_disassemblable": [ 1, -1 ]
+							},
+							"isPreviewCosts": true
+						},
+						{
+							"buttonKey": "npc_request_cancel",
+							"response": "reject"
+						}
+					],
+					"selection": {
+						"type": "DROPDOWN",
+						"source": "item_disassemblable"
+					}
+				},
+				{
+					"id": "disassemble_done",
+					"action": "disassemble_item",
+					"key": "story.dialogue.locale_generic_repairshop_disassemble_done",
+					"options": "END"
+				},
+				{
+					"id": "repair",
+					"action": "repair_all_items",
+					"key": "story.dialogue.locale_generic_repairshop_repair_done",
+					"options": "END"
+				},
+				{
+					"id": "reject",
+					"key": "story.dialogue.locale_generic_repairshop_reject",
+					"options": "END"
+				}
 			]
 		},
 		"locale_story_compound": {

@@ -9,8 +9,9 @@ define(['ash'], function (Ash) {
 		deductedCosts: {},
 		startTime: null,
 		isBusy: false,
+		cb: null,
 	
-		constructor: function (action, position, param, deductCosts, startTime, isBusy) {
+		constructor: function (action, position, param, deductCosts, startTime, isBusy, cb) {
 			this.action = action;
 			this.position = position;
 			this.level = position.level;
@@ -18,6 +19,7 @@ define(['ash'], function (Ash) {
 			this.deductedCosts = deductCosts;
 			this.startTime = startTime;
 			this.isBusy = isBusy;
+			this.cb = cb;
 		},
 		
 	});

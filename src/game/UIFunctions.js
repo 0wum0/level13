@@ -1416,6 +1416,7 @@ define(['ash',
 					let valueWithoutBonuses = costsWithoutBonuses[key];
 					let isNegatedByBonus = value === 0 && valueWithoutBonuses !== 0;
 					let isAccumulatingCost = GameGlobals.playerActionsHelper.isAccumulatingCost(key, false);
+					let isWarning = GameGlobals.playerActionsHelper.isWarningCost(key);
 
 					if (isAccumulatingCost && !hasNonAccumulatingCost) {
 						let costCountdown = GameGlobals.playerActionsHelper.getCostCountdownSeconds(key, value);
@@ -1454,6 +1455,7 @@ define(['ash',
 					}
 					$costSpan.toggleClass("action-cost-blocker", costFraction < 1);
 					$costSpan.toggleClass("action-cost-blocker-storage", isFullCostBlocker);
+					$costSpan.toggleClass("warning", isWarning);
 
 					let displayValue = UIConstants.getDisplayValue(value);
 					if (isNegatedByBonus) {

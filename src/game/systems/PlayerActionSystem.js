@@ -64,7 +64,7 @@ define([
 				let actionVO = actionsToPerform[i];
 				if (actionVO.action) {
 					let sector = GameGlobals.levelHelper.getSectorByPositionVO(actionVO.position);
-					this.playerActionFunctions.performAction(actionVO.action, actionVO.param, sector, actionVO.deductedCosts);
+					this.playerActionFunctions.performAction(actionVO.action, actionVO.param, sector, actionVO.deductedCosts, actionVO.cb);
 				}
 			}
 		},

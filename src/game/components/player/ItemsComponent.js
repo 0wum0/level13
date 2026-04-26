@@ -396,6 +396,22 @@ function (Ash, ItemVO, ItemConstants) {
 			return result;
 		},
 
+		getCountBroken: function (includeNotCarried) {
+			let result = 0;
+			
+			for (let key in this.items) {
+				for (let i = 0; i < this.items[key].length; i++) {
+					let item = this.items[key][i];
+					if (!includeNotCarried && !item.carried) continue;
+					if (item.broken) {
+						result++;
+					}
+				}
+			}
+								
+			return result;
+		},
+
 		getCountByType: function (type) {
 			return this.items[type] ? this.items[type].length : 0;
 		},

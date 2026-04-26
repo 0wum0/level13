@@ -504,8 +504,10 @@ define([
 			}
 		},
 
-		forEverySectorFromLocation: function (pos, func, limitToCurrentLevel) {
+		forEverySectorFromLocation: function (pos, func, limitToCurrentLevel, excludeStartPos) {
 			// TODO go by path distance, not distance in coordinates / make that an option
+
+			if (limitToCurrentLevel !== false) limitToCurrentLevel = true;
 
 			let startLevel = pos.level;
 
@@ -519,6 +521,7 @@ define([
 				});
 				for (let i = 0; i < sectors.length; i++) {
 					let sector = sectors[i];
+					if (excludeStartPos && sector.get(PositionComponent).equals(pos)) continue;
 					let done = func(sector);
 					if (done) {
 						return true;
@@ -629,6 +632,11 @@ define([
 			}
 
 			return result;
+		},
+
+		getShortcutPair: function (sector) {
+			let pos = sector.get(PositionComponent);
+			return this.findNearestLocaleSector(pos, localeTypes.shortcut, true);
 		},
 
 		getLevelStatsGlobal: function () {
@@ -1452,7 +1460,7 @@ define([
 			return result;
 		},
 
-		findNearestLocaleSector: function (pos, localeType) {
+		findNearestLocaleSector: function (pos, localeType, excludeStartPos) {
 			let result = null;
 			this.forEverySectorFromLocation(pos, (sector) => {
 				let sectorLocalesComponent = sector.get(SectorLocalesComponent);
@@ -1463,7 +1471,7 @@ define([
 					}
 				}
 				return false;
-			}, true);
+			}, true, excludeStartPos);
 			return result;
 		},
 		

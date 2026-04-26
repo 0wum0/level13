@@ -1170,6 +1170,7 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 			// TODO TRANSLATION figure out how to structure these for translation
 
 			let condition = sectorFeatures.getCondition();
+			let sectorType = sectorFeatures.sectorType;
 			let modifier = "";
 			let noun = "";
 			
@@ -1270,6 +1271,11 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 						default:
 					}
 					break;
+				case localeTypes.shortcut:
+					noun = "tunnel";
+					if (sectorType == SectorConstants.SECTOR_TYPE_MAINTENANCE) noun = "sewer";
+					if (sectorFeatures.level > 20 || sectorFeatures.sunlit) noun = "storm drain";
+					break;
 				case localeTypes.transport:
 					noun = "station";
 					if (condition === SectorConstants.SECTOR_CONDITION_RUINED) noun = "train depot";
@@ -1295,6 +1301,14 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 				case localeTypes.clinic:
 					modifier = "provisional";
 					noun = "clinic";
+					break;
+				case localeTypes.butcher:
+					modifier = "strange";
+					noun = "butcher shop";
+					break;
+				case localeTypes.repairshop:
+					modifier = "";
+					noun = "repair shop";
 					break;
 				case localeTypes.library:
 					modifier = "abandoned";
@@ -1322,6 +1336,18 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 					break;
 				case localeTypes.office:
 					noun = "office";
+					break;
+				case localeTypes.pharmacy:
+					if (sectorFeatures.level > 14) modifier = "looted";
+					noun = "pharmacy";
+					break;
+				case localeTypes.train:
+					modifier = "stranded";
+					noun = "train";
+					break;
+				case localeTypes.garden:
+					modifier = "wilted";
+					noun = "garden";
 					break;
 				default:
 					log.w("unknown locale type: " + locale.type);

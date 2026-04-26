@@ -98,13 +98,15 @@ define([
 			// NOTE: keep texts referring to fall story facilities up to date if changing levels here
 
 			let storyLocales = [
-				{ type: localeTypes.grove, level: worldVO.bottomLevel, isEasy: true, sectorTypes: [ SectorConstants.SECTOR_TYPE_PUBLIC ], activity: 0 },
+				{ type: localeTypes.repairshop, level: WorldCreatorHelper.getFirstLevelForCamp(seed, 3), isEarly: true, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL, SectorConstants.SECTOR_TYPE_RESIDENTIAL ], activity: 4 },
 				{ type: localeTypes.compound, level: WorldCreatorHelper.getLastLevelForCamp(seed, 4), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL, SectorConstants.SECTOR_TYPE_PUBLIC ], activity: 3 },
 				{ type: localeTypes.depot, level: WorldCreatorHelper.getLastLevelForCamp(seed, 5), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL ], activity: 3 },
 				{ type: localeTypes.seedDepot, level: WorldCreatorHelper.getLastLevelForCamp(seed, 6), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL ], activity: 1 },
 				{ type: localeTypes.depot, level: WorldCreatorHelper.getLastLevelForCamp(seed, 7), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL ], activity: 3 },
+				{ type: localeTypes.grove, level: worldVO.bottomLevel, isEasy: true, sectorTypes: [ SectorConstants.SECTOR_TYPE_PUBLIC ], activity: 0 },
 				{ type: localeTypes.clinic, level: WorldCreatorHelper.getLastLevelForCamp(seed, 9), isEarly: true, sectorTypes: [ SectorConstants.SECTOR_TYPE_RESIDENTIAL, SectorConstants.SECTOR_TYPE_PUBLIC ], activity: 10 },
 				{ type: localeTypes.spacefactory, level: WorldCreatorHelper.getLastLevelForCamp(seed, 10), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL ], activity: 1 },
+				{ type: localeTypes.butcher, level: WorldCreatorHelper.getLastLevelForCamp(seed, 11), isEarly: true, sectorTypes: [ SectorConstants.SECTOR_TYPE_INDUSTRIAL ], activity: 4 },
 				{ type: localeTypes.shelter, level: WorldCreatorHelper.getLastLevelForCamp(seed, 12), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_RESIDENTIAL ], activity: 8 },
 				{ type: localeTypes.clinic, level: WorldCreatorHelper.getFirstLevelForCamp(seed, 13), isEarly: true, sectorTypes: [ SectorConstants.SECTOR_TYPE_RESIDENTIAL, SectorConstants.SECTOR_TYPE_PUBLIC ], activity: 10 },
 				{ type: localeTypes.isolationCenter, level: WorldCreatorHelper.getLastLevelForCamp(seed, 14), isEarly: false, sectorTypes: [ SectorConstants.SECTOR_TYPE_PUBLIC ], activity: 1 },

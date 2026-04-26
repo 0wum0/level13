@@ -5,8 +5,10 @@ define(['ash'], function (Ash) {
         pageID: null,
 		titleTextKey: null,
         textKey: null,
+		logMessageKey: null,
 		action: null,
 		resultTemplate: null,
+		selection: {}, // type, source 
 	
 		constructor: function (pageID) {
 			this.pageID = pageID;

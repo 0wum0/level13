@@ -105,6 +105,10 @@ define([
 				pageVO.metaTextKey = this.parseTextKey(pageData.metaKey);
 			}
 
+			if (pageData.logMessageKey) {
+				pageVO.logMessageKey = this.parseTextKey(pageData.logMessageKey);
+			}
+
 			let optionsData = pageData.options;
 
 			if (!optionsData) {
@@ -133,6 +137,7 @@ define([
 			}
 
 			pageVO.resultTemplate = this.parsePageResult(pageData.result);
+			pageVO.selection = pageData.selection;
 			pageVO.action = pageData.action || null;
 
 			return pageVO;
@@ -241,6 +246,7 @@ define([
 			} else {
 				optionVO.buttonTextKey = this.parseTextKey(optionData.buttonKey);
 				optionVO.costs = optionData.costs || {};
+				optionVO.isPreviewCosts = optionData.isPreviewCosts || false;
 				optionVO.conditions = PlayerActionConstants.getRequirementsFromRaw(optionData.conditions);
 				optionVO.responsePageID = optionData.response || null;
 			}

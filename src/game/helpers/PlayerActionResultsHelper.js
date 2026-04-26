@@ -17,6 +17,7 @@ define([
 	'game/constants/ItemConstants',
 	'game/constants/PerkConstants',
 	'game/constants/UpgradeConstants',
+	'game/constants/TradeConstants',
 	'game/constants/UIConstants',
 	'game/constants/WorldConstants',
 	'game/nodes/player/PlayerStatsNode',
@@ -58,6 +59,7 @@ define([
 	ItemConstants,
 	PerkConstants,
 	UpgradeConstants,
+	TradeConstants,
 	UIConstants,
 	WorldConstants,
 	PlayerStatsNode,
@@ -135,10 +137,7 @@ define([
 					break;
 				case "scout_locale_i":
 				case "scout_locale_u":
-					// TODO global helper to get locale vo from action?
-					var localei = parseInt(action.split("_")[3]) || 0;
-					var sectorLocalesComponent = this.playerLocationNodes.head.entity.get(SectorLocalesComponent);
-					var localeVO = sectorLocalesComponent.locales[localei];
+					var localeVO = GameGlobals.playerActionsHelper.getLocaleForScoutAction(this.playerLocationNodes.head.entity, action);
 					resultVO = this.getScoutLocaleRewards(localeVO);
 					break;
 				case "investigate":
@@ -203,6 +202,74 @@ define([
 					// robots wear out so if we gave just 1 it would instantly become 0.999
 					rewards.gainedResources.addResource(resourceNames.robots, 1.25);
 					break;
+			}
+
+			return rewards;
+		},
+
+		getDisassembleItemRewards: function (itemID) {
+			let rewards = new ResultVO("dissassemble_item");
+
+			debugger
+
+			let craftAction = "craft_" + itemID;
+			let craftCosts = GameGlobals.playerActionsHelper.getCosts(craftAction);
+
+			if (!craftCosts || Object.keys(craftCosts).length == 0) {
+				let itemDef = ItemConstants.getItemDefinitionByID(itemID);
+				let value = MathUtils.map(TradeConstants.getItemValue(itemDef), 0, 5, 1, 10);
+
+				switch (itemDef.type) {
+					case ItemConstants.itemTypes.weapon:
+						craftCosts["item_res_bands"] = value;
+						craftCosts["resource_metal"] = value * 3;
+						break;
+					case ItemConstants.itemTypes.light:
+						craftCosts["item_res_hairpin"] = value / 2;
+						break;
+					case ItemConstants.itemTypes.bag:
+						craftCosts["item_res_leather"] = value * 2;
+						break;
+					case ItemConstants.itemTypes.shoes:
+						craftCosts["item_res_leather"] = value / 2;
+						break;
+					case ItemConstants.itemTypes.clothing_over:
+					case ItemConstants.itemTypes.clothing_upper:
+					case ItemConstants.itemTypes.clothing_lower:
+					case ItemConstants.itemTypes.clothing_hands:
+					case ItemConstants.itemTypes.clothing_head:
+						craftCosts["resource_rope"] = value * 3;
+						break;
+					default:
+						craftCosts["item_res_silk"] = value;
+				}
+
+				let tags = itemDef.tags;
+				let addCostBasedOnTag = function (tag, cost, v) {
+					if (tags.indexOf(tag) < 0) return;
+					let oldValue = craftCosts[cost] || 0;
+					craftCosts[cost] = Math.max(oldValue, v);
+				}
+
+				addCostBasedOnTag("industrial", "item_res_hairpin", value / 2);
+				addCostBasedOnTag("old", "item_res_silk", value / 2);
+				addCostBasedOnTag("medical", "item_res_bands", value / 2);
+			}
+
+			for (let key in craftCosts) {
+				let value = craftCosts[key];
+
+				if (key.indexOf("resource_") >= 0) {
+					let rewardValue = Math.ceil(value * 0.5);
+					let resourceName = key.split("_")[1];
+					rewards.gainedResources.addResource(resourceName, rewardValue);
+				}
+
+				if (key.indexOf("item_res") >= 0) {
+					let rewardValue = Math.ceil(value * 0.75);
+					let itemID = key.replace("item_", "");
+					rewards.gainedItems.push(ItemConstants.getNewItemInstanceByID(itemID));
+				}
 			}
 
 			return rewards;
@@ -350,15 +417,16 @@ define([
 			let localeDifficulty = (localeVO.requirements.vision[0] + localeVO.costs.stamina / 10) / 100;
 			let itemTags = this.getSectorItemTags().concat(localeVO.getItemTags());
 
+			// tribe stats (almost always)
 			let evidenceAmount = ExplorationConstants.getScoutLocaleEvidenceReward(localeVO.type, campOrdinal);
-
-			// tribe stats (always)
 			if (localeVO.type == localeTypes.grove) {
 				rewards.gainedHope = 2;
 			} else if (localeVO.type == localeTypes.tradingpartner) {
 				rewards.gainedHope = 1;
 			} else if (localeVO.type == localeTypes.depot || localeVO.type == localeTypes.spacefactory) {
 				rewards.gainedEvidence = evidenceAmount;
+			} else if (localeVO.type == localeTypes.shortcut) {
+				// (none)
 			} else {
 				this.addCovertibleTribeStatRewards(rewards, "evidence", evidenceAmount);
 			}
@@ -381,6 +449,8 @@ define([
 					hasMaterialRewards = false;
 					hasMiscRewards = false;
 					break;
+				case localeTypes.shortcut:
+					hasMaterialRewards = false;
 				case localeTypes.depot:
 				case localeTypes.spacefactory:
 					hasMiscRewards = false;
@@ -596,6 +666,7 @@ define([
 			return result;
 		},
 		
+		// translates dynamic / template rewards into final values
 		preCollectRewards: function (rewards) {
 			if (!rewards) return;
 
@@ -1134,25 +1205,7 @@ define([
 			}
 
 			if (showInventoryManagement) {
-				var baghtml = "<div id='resultlist-inventorymanagement' class='unselectable'>";
-
-				baghtml += "<h3 class='hide-from-visual-layout'>Inventory management</h3>";
-
-				baghtml += "<div id='resultlist-inventorymanagement-found' class='infobox inventorybox'>";
-				baghtml += "<h4 class='hide-from-visual-layout'>Found</h4>";
-				baghtml += "<ul></ul>";
-				baghtml += "<p class='msg-empty p-meta'></p>";
-				baghtml += "</div>"
-
-				baghtml += "<div id='resultlist-inventorymanagement-kept' class='infobox inventorybox'>";
-				baghtml += "<h4 class='hide-from-visual-layout'>Bag</h4>";
-				baghtml += "<ul></ul>";
-				baghtml += "<p class='msg-empty p-meta'></p>";
-				baghtml += "</div>"
-
-				baghtml += "<div id='inventory-popup-bar' class='progress-wrap progress centered' style='margin-top: 10px'><div class='progress-bar progress'></div><span class='progress-label progress'>?/?</span></div>";
-				baghtml += "</div>"
-				div += baghtml;
+				div += this.getInventoryManagementDiv();
 			} else if (hasGainedBagStuff) {
 				var baghtml = "<div id='resultlist-static-inventory' class='unselectable'>";
 				baghtml += "<ul class='resultlist'>"
@@ -1250,6 +1303,29 @@ define([
 
 			div += "</div>";
 			return div;
+		},
+
+		getInventoryManagementDiv: function () {			
+			let html = "<div id='resultlist-inventorymanagement' class='unselectable'>";
+
+			html += "<h3 class='hide-from-visual-layout'>Inventory management</h3>";
+
+			html += "<div id='resultlist-inventorymanagement-found' class='infobox inventorybox'>";
+			html += "<h4 class='hide-from-visual-layout'>Found</h4>";
+			html += "<ul></ul>";
+			html += "<p class='msg-empty p-meta'></p>";
+			html += "</div>"
+
+			html += "<div id='resultlist-inventorymanagement-kept' class='infobox inventorybox'>";
+			html += "<h4 class='hide-from-visual-layout'>Bag</h4>";
+			html += "<ul></ul>";
+			html += "<p class='msg-empty p-meta'></p>";
+			html += "</div>"
+
+			html += "<div id='inventory-popup-bar' class='progress-wrap progress centered' style='margin-top: 10px'><div class='progress-bar progress'></div><span class='progress-label progress'>?/?</span></div>";
+			html += "</div>"
+
+			return html;
 		},
 
 		addExplorerBonusesToRewardDiv: function (resultVO) {
@@ -2529,16 +2605,20 @@ define([
 				case localeTypes.clinic: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
 				case localeTypes.factory: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
 				case localeTypes.farm: return UpgradeConstants.UPGRADE_TYPE_HOPE;
+				case localeTypes.garden: return UpgradeConstants.UPGRADE_TYPE_HOPE;
 				case localeTypes.grocery: return UpgradeConstants.UPGRADE_TYPE_HOPE;
+				case localeTypes.hospital: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
 				case localeTypes.house: return UpgradeConstants.UPGRADE_TYPE_RUMOURS;
+				case localeTypes.junkyard: return UpgradeConstants.UPGRADE_TYPE_RUMOURS;
 				case localeTypes.lab: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
+				case localeTypes.library: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
 				case localeTypes.market: return UpgradeConstants.UPGRADE_TYPE_RUMOURS;
 				case localeTypes.office: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
+				case localeTypes.pharmacy: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
 				case localeTypes.restaurant: return UpgradeConstants.UPGRADE_TYPE_HOPE;
-				case localeTypes.hospital: return UpgradeConstants.UPGRADE_TYPE_EVIDENCE;
-				case localeTypes.junkyard: return UpgradeConstants.UPGRADE_TYPE_RUMOURS;
 				case localeTypes.store: return UpgradeConstants.UPGRADE_TYPE_HOPE;
 				case localeTypes.tradingpartner: return UpgradeConstants.UPGRADE_TYPE_RUMOURS;
+				case localeTypes.train: return UpgradeConstants.UPGRADE_TYPE_RUMOURS;
 			}
 
 			return null;

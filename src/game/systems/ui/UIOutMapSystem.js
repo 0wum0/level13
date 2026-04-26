@@ -184,6 +184,7 @@ define([
 				this.updateMap();
 				this.updateSector();
 				this.centerMap();
+				this.updateMapCompletionHint();
 			});
 		},
 
@@ -890,7 +891,6 @@ define([
 			let level = parseInt($("#select-header-level").val());
 			if (this.selectedLevel === level) return;
 			this.selectLevel(level);
-			this.updateMapCompletionHint();
 		},
 		
 		onMapModeSelectorChanged: function () {

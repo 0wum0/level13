@@ -1095,11 +1095,12 @@ define([
 
 		getDirectionToFeature: function (sector, featureType) {
 			let result = null;
-			let neighbours = GameGlobals.levelHelper.getSectorNeighboursMap(sectorEntity);
+			let neighbours = GameGlobals.levelHelper.getSectorNeighboursMap(sector);
 			for (let direction in neighbours) {
 				let neighbour = neighbours[direction];
+				if (!neighbour) continue;
 				let featuresComponent = neighbour.get(SectorFeaturesComponent);				
-				if (!featuresComponent.hasLevelFeature(featureType)) continue;
+				if (!featuresComponent.hasFeature(featureType)) continue;
 
 				let isBetterDirection = PositionConstants.isDiagonal(result) && !PositionConstants.isDiagonal(direction);
 				
@@ -1337,7 +1338,10 @@ define([
 		},
 		
 		getLevelLocales: function (level, includeScouted, localeBracket, excludeLocaleVO, requireBlueprints) {
-			var locales = [];
+			let locales = [];
+			
+			this.saveSectorsForLevel(level);
+
 			for (let i = 0; i < this.sectorEntitiesByLevel[level].length; i++) {
 				var sectorEntity = this.sectorEntitiesByLevel[level][i];
 				locales = locales.concat(this.getSectorLocales(sectorEntity, includeScouted, localeBracket, excludeLocaleVO, requireBlueprints));

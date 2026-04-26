@@ -1,6 +1,7 @@
 // generates the structure of levels and creates (mostly empty) SectorVOs
 define([
 	'ash',
+	'utils/ArrayUtils',
 	'utils/ObjectUtils',
 	'utils/MathUtils',
 	'game/constants/SectorConstants',
@@ -13,7 +14,7 @@ define([
 	'worldcreator/WorldCreatorLogger',
 	'worldcreator/SectorVO',
 	'worldcreator/CriticalPathVO',
-], function (Ash, ObjectUtils, MathUtils, SectorConstants, PositionConstants, WorldConstants, PositionVO, WorldCreatorConstants, WorldCreatorHelper, WorldCreatorRandom, WorldCreatorLogger, SectorVO, CriticalPathVO) {
+], function (Ash, ArrayUtils, ObjectUtils, MathUtils, SectorConstants, PositionConstants, WorldConstants, PositionVO, WorldCreatorConstants, WorldCreatorHelper, WorldCreatorRandom, WorldCreatorLogger, SectorVO, CriticalPathVO) {
 	
 	let LevelStructureGenerator = {
 		
@@ -4105,12 +4106,7 @@ define([
 		},
 		
 		filterIfSomethingLeft: function (arr, filter) {
-			if (!arr || arr.length < 1) return arr;
-			
-			let filtered = arr.filter(filter);
-			if (filtered.length > 0) return filtered;
-			
-			return arr;
+			return ArrayUtils.filterIfAny(arr, filter);
 		},
 		
 		getDefaultStage: function (levelVO, sectorPos) {

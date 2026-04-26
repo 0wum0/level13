@@ -1,5 +1,6 @@
 // generates an overall stucture for the world, independent of specific levels or sectors, first step in world gen
 define([
+	'utils/ArrayUtils',
 	'worldcreator/WorldCreatorConstants',
 	'worldcreator/WorldCreatorHelper',
 	'worldcreator/WorldCreatorRandom',
@@ -11,7 +12,7 @@ define([
 	'game/constants/PositionConstants',
 	'game/constants/WorldConstants',
 ], function (
-	WorldCreatorConstants, WorldCreatorHelper, WorldCreatorRandom, 
+	ArrayUtils, WorldCreatorConstants, WorldCreatorHelper, WorldCreatorRandom, 
 	WorldFeatureVO, StageVO, AreaVO, PositionVO, 
 	MovementConstants, PositionConstants, WorldConstants) {
 	
@@ -163,6 +164,8 @@ define([
 					if (stationPositions.length == 0) {
 						stationPositions.push(new PositionVO(level, WorldCreatorRandom.randomInt(sX, -4, 5) * 5, WorldCreatorRandom.randomInt(sY, -4, 5) * 5));
 					}
+
+					stationPositions = ArrayUtils.filterIfAny(stationPositions, (pos) => PositionConstants.getDistanceTo(levelCenter, pos) <= 20);
 
 					let station = WorldCreatorRandom.randomItemFromArray(seed % 11 + level + i, stationPositions);
 					sectorX = station.sectorX;		

@@ -15,7 +15,17 @@ define(['ash',
 ],
 function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstants, ItemConstants, SectorConstants, PositionConstants, MovementConstants, TradeConstants, WorldConstants) {
 	
-	var TextConstants = {
+	let TextConstants = {
+
+		getTextKey: function (trunk, modifiers) {
+			for (let i = 0; i < modifiers.length; i++) {
+				let modifier = modifiers[i];
+				let key = trunk + "_" + modifier;
+				if (Text.hasKey(key)) return key;
+			}
+
+			return trunk;
+		},
 		
 		sentencify: function (s) {
 			s = s.trim();
@@ -1167,195 +1177,24 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 		},
 		
 		getLocaleName: function (locale, sectorFeatures, isShort) {
-			// TODO TRANSLATION figure out how to structure these for translation
-
 			let condition = sectorFeatures.getCondition();
-			let sectorType = sectorFeatures.sectorType;
-			let modifier = "";
-			let noun = "";
-			
-			// default modifiers
-			switch (condition) {
-				case SectorConstants.SECTOR_CONDITION_RUINED:
-					modifier = "ruined";
-					break;
-				case SectorConstants.SECTOR_CONDITION_DAMAGED:
-					modifier = "damaged";
-					break;
-				case SectorConstants.SECTOR_CONDITION_ABANDONED:
-					modifier = "abandoned";
-					break;
-				case SectorConstants.SECTOR_CONDITION_WORN:
-					modifier = "neglected";
-					break;
-				case SectorConstants.SECTOR_CONDITION_RECENT:
-					modifier = "empty";
-					break;
-				case SectorConstants.SECTOR_CONDITION_MAINTAINED:
-					modifier = "pristine";
-					break;
+
+			let modifiers = [];
+			if (isShort) {
+				modifiers = "short";
+			} else {
+				modifiers = SectorConstants.getSectorEnvironmentTags(null, null, null, sectorFeatures);
 			}
+
+			let localeType = locale.type;
+			if (localeType == localeTypes.shelter) localeType = localeTypes.house;
+			if (localeType == localeTypes.tradingpartner) localeType = localeTypes.camp;
+
+			let textKey = this.getTextKey("game.locales." + localeType + "_name", modifiers);
+
+			let defaultModifier = "game.locales.condition_" + condition + "_modifier";
 			
-			// nouns and special modifiers
-			switch (locale.type) {
-				case localeTypes.compound:
-					modifier = "mysterious";
-					noun = "compound";
-					break;
-				case localeTypes.factory:
-					noun = sectorFeatures.surface ? "office" : "factory";
-					break;
-				case localeTypes.house:
-				case localeTypes.shelter:
-					if (condition === SectorConstants.SECTOR_CONDITION_DAMAGED) modifier = "destroyed";
-					if (condition === SectorConstants.SECTOR_CONDITION_WORN) modifier = "derelict";
-					noun = "house";
-					break;
-				case localeTypes.lab:
-					noun = "laboratory";
-					break;
-				case localeTypes.grove:
-					modifier = "flourishing";
-					noun = "grove";
-					break;
-				case localeTypes.greenhouse:
-					modifier = "abandoned";
-					noun = "greenhouse";
-					break;
-				case localeTypes.depot:
-					modifier = "locked";
-					noun = "depot";
-					break;
-				case localeTypes.expedition:
-					modifier = "expedition";
-					noun = "camp";
-					break;
-				case localeTypes.isolationCenter:
-					modifier = "haughty";
-					noun = "facility";
-					break;
-				case localeTypes.seedDepot:
-					modifier = "government";
-					noun = "depot";
-					break;
-				case localeTypes.spacefactory:
-					modifier = "arcane";
-					noun = "facility";
-					break;
-				case localeTypes.market:
-					noun = sectorFeatures.level > 15 ? "shopping center" : "market";
-					break;
-				case localeTypes.maintenance:
-					switch (condition) {
-						case SectorConstants.SECTOR_CONDITION_RUINED:
-							noun = "control unit";
-							break;
-						case SectorConstants.SECTOR_CONDITION_DAMAGED:
-							noun = "control unit";
-							break;
-						case SectorConstants.SECTOR_CONDITION_ABANDONED:
-							modifier = "ancient";
-							noun = "network switch";
-							break;
-						case SectorConstants.SECTOR_CONDITION_WORN:
-							modifier = "old";
-							noun = "water tower";
-							break;
-						case SectorConstants.SECTOR_CONDITION_RECENT:
-							modifier = "defunct";
-							noun = "control unit";
-							break;
-						case SectorConstants.SECTOR_CONDITION_MAINTAINED:
-							noun = "firehouse";
-							break;
-						default:
-					}
-					break;
-				case localeTypes.shortcut:
-					noun = "tunnel";
-					if (sectorType == SectorConstants.SECTOR_TYPE_MAINTENANCE) noun = "sewer";
-					if (sectorFeatures.level > 20 || sectorFeatures.sunlit) noun = "storm drain";
-					break;
-				case localeTypes.transport:
-					noun = "station";
-					if (condition === SectorConstants.SECTOR_CONDITION_RUINED) noun = "train depot";
-					if (condition === SectorConstants.SECTOR_CONDITION_WORN) modifier = "defunct tram";
-					if (condition === SectorConstants.SECTOR_CONDITION_RECENT) modifier = "cable car";
-					if (condition === SectorConstants.SECTOR_CONDITION_MAINTAINED) modifier = "train";
-					break;
-				case localeTypes.junkyard:
-					if (condition === SectorConstants.SECTOR_CONDITION_RECENT) modifier = "quiet";
-					if (condition === SectorConstants.SECTOR_CONDITION_MAINTAINED) modifier = "quiet";
-					noun = "junkyard";
-					break;
-				case localeTypes.warehouse:
-					if (condition === SectorConstants.SECTOR_CONDITION_RECENT) modifier = "sturdy";
-					if (condition === SectorConstants.SECTOR_CONDITION_MAINTAINED) modifier = "sturdy";
-					noun = "warehouse";
-					break;
-				case localeTypes.camp:
-				case localeTypes.tradingpartner:
-					modifier = "foreign";
-					noun = "camp";
-					break;
-				case localeTypes.clinic:
-					modifier = "provisional";
-					noun = "clinic";
-					break;
-				case localeTypes.butcher:
-					modifier = "strange";
-					noun = "butcher shop";
-					break;
-				case localeTypes.repairshop:
-					modifier = "";
-					noun = "repair shop";
-					break;
-				case localeTypes.library:
-					modifier = "abandoned";
-					if (sectorFeatures.level < 10) modifier = "old";
-					noun = "library";
-					break;
-				case localeTypes.farm:
-					modifier = "overgrown";
-					if (sectorFeatures.level < 10) modifier = "ancient";
-					noun = "farm";
-					break;
-				case localeTypes.bunker:
-					modifier = "empty";
-					noun = "bunker";
-					break;
-				case localeTypes.restaurant:
-					noun = "restaurant";
-					break;
-				case localeTypes.hospital:
-					noun = "hospital";
-					break;
-				case localeTypes.grocery:
-				case localeTypes.store:
-					noun = "store";
-					break;
-				case localeTypes.office:
-					noun = "office";
-					break;
-				case localeTypes.pharmacy:
-					if (sectorFeatures.level > 14) modifier = "looted";
-					noun = "pharmacy";
-					break;
-				case localeTypes.train:
-					modifier = "stranded";
-					noun = "train";
-					break;
-				case localeTypes.garden:
-					modifier = "wilted";
-					noun = "garden";
-					break;
-				default:
-					log.w("unknown locale type: " + locale.type);
-					noun = "building";
-					break;
-			}
-			
-			return isShort ? noun : (modifier + " " + noun).trim();
+			return Text.t(textKey, defaultModifier);
 		},
 		
 		getWorkshopName: function (resource) {

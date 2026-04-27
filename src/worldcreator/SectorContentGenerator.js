@@ -673,45 +673,6 @@ define([
 			let y = sectorVO.position.sectorY;
 			let districtVO = levelVO.districts[sectorVO.districtIndex];
 
-			let tags = [];
-
-			let isPollutedLevel = levelVO.notCampableReason === LevelConstants.UNCAMPABLE_LEVEL_TYPE_POLLUTION;
-			let isRadiatedLevel = levelVO.notCampableReason === LevelConstants.UNCAMPABLE_LEVEL_TYPE_RADIATION;
-
-			let sectorTypeMatches = (type) => sectorVO.sectorType == type || districtVO.type == type;
-			
-			tags.push("nogang")
-			if (levelVO.level == worldVO.bottomLevel) tags.push("ground");
-			if (levelVO.level == worldVO.topLevel) tags.push("surface");
-			if (levelVO.level < 14) tags.push("lowlevels");
-			if (levelVO.level > 14) tags.push("highlevels");
-			if (!isPollutedLevel && !isRadiatedLevel && !sectorVO.hazards.hasHazards()) tags.push("nohazard");
-			if (sectorVO.hazards.cold > 0) tags.push("cold");
-			if (isPollutedLevel || sectorVO.hazards.poison > 0) tags.push("toxic");
-			if (isRadiatedLevel || sectorVO.hazards.radiation > 0) tags.push("radiation");
-			if (sectorVO.sunlit) tags.push("sunlit");
-			if (!sectorVO.sunlit) tags.push("dark");
-			if (sectorVO.buildingDensity > 5) tags.push("dense");
-			if (sectorVO.buildingDensity < 5) tags.push("sparse");
-			if (sectorVO.activity < 4) tags.push("quiet");
-			if (sectorVO.activity > 6) tags.push("busy");
-			if (Math.max(sectorVO.wealth, districtVO.wealth) >= 8) tags.push("rich");
-			if (Math.max(sectorVO.wealth, districtVO.wealth) >= 4) tags.push("nopoor");
-			if (Math.min(sectorVO.wealth, districtVO.wealth) <= 6) tags.push("norich");
-			if (Math.min(sectorVO.wealth, districtVO.wealth) <= 3) tags.push("poor");
-			if (levelVO.habitability > 0) tags.push("inhabited");
-			if (levelVO.habitability <= 0) tags.push("uninhabited");
-			if (sectorTypeMatches(SectorConstants.SECTOR_TYPE_MAINTENANCE)) tags.push("uninhabited");
-			if (sectorTypeMatches(SectorConstants.SECTOR_TYPE_EMPTY)) tags.push("uninhabited");
-			if (sectorVO.hazards.flooded > 0) tags.push("flooded");
-			if (sectorVO.hazards.territory > 0) tags.push("territory");
-			if (sectorVO.hazards.flooded === 0) tags.push("noflood");
-			if (sectorTypeMatches(SectorConstants.SECTOR_TYPE_RESIDENTIAL)) tags.push("residential");
-			if (sectorTypeMatches(SectorConstants.SECTOR_TYPE_INDUSTRIAL)) tags.push("industrial");
-			if (sectorVO.wear > 5 || districtVO.wear > 5) tags.push("worn");
-			if (sectorVO.wear < 5 || districtVO.wear < 5) tags.push("new");
-			if (sectorVO.wear > 5 || districtVO.wear > 5 || sectorTypeMatches(SectorConstants.SECTOR_TYPE_PUBLIC) || sectorTypeMatches(SectorConstants.SECTOR_TYPE_RESIDENTIAL) || sectorVO.sunlit) tags.push("nature");
-
 			let hasWater = sectorVO.hasWater();
 			let directions = PositionConstants.getLevelDirections();
 			let neighbours = levelVO.getNeighbours(x, y);
@@ -723,7 +684,9 @@ define([
 				}
 			}
 
-			if (!isPollutedLevel && !isRadiatedLevel && hasWater) tags.push("water");
+			let tags = SectorConstants.getSectorEnvironmentTags(worldVO, levelVO, districtVO, sectorVO, hasWater);
+
+			tags.push("nogang")
 
 			return tags;
 		},

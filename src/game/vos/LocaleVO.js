@@ -30,7 +30,7 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 		camp: "camp",
 		clinic: "clinic",
 		tradingpartner: "tradingpartner",
-		workshop: "workshop",
+		repairshop: "repairshop",
 
 		// unique
 		compound: "compound",

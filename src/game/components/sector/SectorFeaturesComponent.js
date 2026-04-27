@@ -89,17 +89,7 @@ define(
 		},
 		
 		getCondition: function () {
-			if (this.damage > 7 || this.wear > 9)
-				return SectorConstants.SECTOR_CONDITION_RUINED;
-			if (this.damage > 0)
-				return SectorConstants.SECTOR_CONDITION_DAMAGED;
-			if (this.wear > 7)
-				return SectorConstants.SECTOR_CONDITION_ABANDONED;
-			if (this.wear > 4)
-				return SectorConstants.SECTOR_CONDITION_WORN;
-			if (this.wear > 0)
-				return SectorConstants.SECTOR_CONDITION_RECENT;
-			return SectorConstants.SECTOR_CONDITION_MAINTAINED;
+			return SectorConstants.getCondition(this.wear, this.damage);
 		},
 		
 		isEarlyZone: function () {

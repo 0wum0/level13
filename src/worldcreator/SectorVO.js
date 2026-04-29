@@ -121,6 +121,10 @@ function (Ash, WorldConstants, WorldCreatorConstants, WorldCreatorLogger, Resour
 			return false;
 		},
 
+		hasPassage: function () {
+			return this.isPassageDown || this.isPassageUp;
+		},
+
 		hasStashWithLocaleType: function (localeType) {
 			for (let i = 0; i < this.stashes.length; i++) {
 				if (this.stashes[i].localeType == localeType) return true;

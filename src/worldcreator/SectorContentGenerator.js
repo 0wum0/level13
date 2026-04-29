@@ -438,17 +438,17 @@ define([
 			
 			// find waymarkSectors (possible sectors where waymarks are found)
 			let waymarkSectors = [];
-			for (var s = 0; s < levelVO.sectors.length; s++) {
-				var sectorVO = levelVO.sectors[s];
+			for (let s = 0; s < levelVO.sectors.length; s++) {
+				let sectorVO = levelVO.sectors[s];
 				if (sectorVO.isCamp) continue;
 				if (sectorVO.isPassageUp) continue;
 				if (sectorVO.isPassageDown) continue;
 				if (sectorVO.zone == WorldConstants.ZONE_ENTRANCE) continue;
 				if (sectorVO.hazards.radiation > 0) continue;
 				if (sectorVO.hazards.poison > 0) continue;
-				var distanceToCamp = WorldCreatorHelper.getQuickMinDistanceToCamp(levelVO, sectorVO);
+				let distanceToCamp = WorldCreatorHelper.getQuickMinDistanceToCamp(levelVO, sectorVO);
 				if (distanceToCamp < 2) continue;
-				var neighbours = levelVO.getNeighbourList(sectorVO.position.sectorX, sectorVO.position.sectorY);
+				let neighbours = levelVO.getNeighbourList(sectorVO.position.sectorX, sectorVO.position.sectorY);
 				if (neighbours.length < 2) continue;
 				waymarkSectors.push(sectorVO);
 			}
@@ -548,7 +548,7 @@ define([
 						return getFallbackOrderNumber(a) - getFallbackOrderNumber(b);
 				});
 				
-				// select pairs (avoid too many involveing the same /neighbouring sectors)
+				// select pairs (avoid too many involving the same /neighbouring sectors)
 				let numWaymarks = Math.min(waymarkCandidates.length, maxNum);
 				let numSelected = 0;
 				for (let i = 0; i < waymarkCandidates.length; i++) {
@@ -573,6 +573,7 @@ define([
 				}
 				return numNeighboursWithHazard > 0 && numNeighboursWithoutHazard > 0;
 			};
+
 			let isValidHazardCandidate = function (candidate, hazard) {
 				if (candidate.waymark.hazards[hazard]) return false;
 				let neighbours = levelVO.getNeighbourList(candidate.waymark.position.sectorX, candidate.waymark.position.sectorY);
@@ -582,6 +583,16 @@ define([
 				}
 				return true;
 			};
+
+			let isValidDistrictCandiate = function (candidate) {
+				if (candidate.waymark.districtIndex == candidate.poi.districtIndex) return false;
+				if (candidate.waymark.sectorType == candidate.poi.sectorType) return false;
+				let districtVO1 = levelVO.districts[candidate.waymark.districtIndex];
+				let districtVO2 = levelVO.districts[candidate.poi.districtIndex];
+				if (districtVO1.type == districtVO2.type) return false;
+				if (candidate.poi.sectorType != districtVO2.type) return false;
+				return true;
+			};
 			
 			// select waymarks by type
 			let maxNumWaymarksCommon = levelVO.habitability >= 1 ? 3 : 2;
@@ -589,15 +600,18 @@ define([
 			if (levelVO.isCampable && levelVO.campOrdinal > 1) {
 				selectWaymarks(SectorConstants.WAYMARK_TYPE_CAMP, false, 1, 5, 3, sectorVO => sectorVO.isCamp);
 			}
+			selectWaymarks(SectorConstants.WAYMARK_TYPE_CLINIC, false, 1, 4, 3, sectorVO => sectorVO.hasLocaleOfType(localeTypes.clinic));
+			selectWaymarks(SectorConstants.WAYMARK_TYPE_SETTLEMENT, false, 1, 5, 3, sectorVO => sectorVO.hasLocaleOfType(localeTypes.tradingpartner));
+			selectWaymarks(SectorConstants.WAYMARK_TYPE_PASSAGE, false, 1, 3, 2, sectorVO => sectorVO.hasPassage());
 			selectWaymarks(SectorConstants.WAYMARK_TYPE_SPRING, false, maxNumWaymarksCommon, 5, 3, sectorVO => sectorVO.hasSpring, candidate => !candidate.waymark.hasWater());
-			selectWaymarks(SectorConstants.WAYMARK_TYPE_RADIATION, false, 1, 3, 2, sectorVO => isValidHazardPOI(sectorVO, "radiation"), candidate => isValidHazardCandidate(candidate, "radiation"));
-			selectWaymarks(SectorConstants.WAYMARK_TYPE_POLLUTION, false, 1, 3, 2, sectorVO => isValidHazardPOI(sectorVO, "poison"), candidate => isValidHazardCandidate(candidate, "poison"));
-			selectWaymarks(SectorConstants.WAYMARK_TYPE_SETTLEMENT, false, 1, 5, 3, sectorVO => sectorVO.locales.filter(localeVO => localeVO.type == localeTypes.tradingpartner).length > 0);
+			selectWaymarks(SectorConstants.WAYMARK_TYPE_RADIATION, true, 1, 3, 2, sectorVO => isValidHazardPOI(sectorVO, "radiation"), candidate => isValidHazardCandidate(candidate, "radiation"));
+			selectWaymarks(SectorConstants.WAYMARK_TYPE_POLLUTION, true, 1, 3, 2, sectorVO => isValidHazardPOI(sectorVO, "poison"), candidate => isValidHazardCandidate(candidate, "poison"));
+			selectWaymarks(SectorConstants.WAYMARK_TYPE_DISTRICT, false, maxNumWaymarksCommon, 3, 2, sectorVO => sectorVO.sectorType != SectorConstants.SECTOR_TYPE_MAINTENANCE && sectorVO.sectorType != SectorConstants.SECTOR_TYPE_EMPTY, candidate => isValidDistrictCandiate(candidate));
 			
 			// mark selected
 			for (let i = 0; i < selectedWaymarks.length; i++) {
 				let waymark = selectedWaymarks[i];
-				//WorldCreatorLogger.i("selected waymark: " + waymark.type + " " + waymark.waymark + " (" + waymark.waymark.zone + ") -> " + waymark.poi + "(" + waymark.poi.zone + ")");
+				WorldCreatorLogger.i("selected waymark: " + waymark.type + " " + waymark.waymark + " (" + waymark.waymark.zone + ") -> " + waymark.poi + "(" + waymark.poi.zone + ")");
 				waymark.waymark.waymarks.push(new WaymarkVO(waymark.waymark.position, waymark.poi.position, waymark.type))
 			}
 		},

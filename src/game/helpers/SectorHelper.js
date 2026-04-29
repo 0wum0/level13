@@ -107,8 +107,11 @@ define([
 					hasGrove = true;
 				}
 			}
+
+			let sectorFeatures = sector.get(SectorFeaturesComponent);
+			let districtVO = levelComponent.districts[sectorFeatures.districtIndex];
 			
-			var features = Object.assign({}, featuresComponent);
+			let features = Object.assign({}, featuresComponent);
 			features.level = position.level;
 			features.sectorX = position.sectorX;
 			features.sectorY = position.sectorY;
@@ -125,6 +128,8 @@ define([
 			features.poison = featuresComponent.hazards.poison;
 			features.debris = featuresComponent.hazards.debris;
 			features.flooded = featuresComponent.hazards.flooded;
+			features.districtType = districtVO.type;
+
 			return features;
 		},
 		

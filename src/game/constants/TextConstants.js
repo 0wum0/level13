@@ -1066,19 +1066,24 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 			
 			let tradePartner = TradeConstants.getTradePartner(features.campOrdinal);
 			
-			result["n-target"] = "<span class='hl-functionality'>" + this.getWaymarkTargetName(waymarkVO) + "</span>";
+			result["n-target"] = "<span class='hl-functionality'>" + this.getWaymarkTargetName(waymarkVO, features) + "</span>";
 			result["direction"] = PositionConstants.getDirectionName(features.direction, false);
 			result["n-settlement-name"] = tradePartner ? tradePartner.name : null;
+			result["n-district-type"] = features.districtType;
+			
 			return result;
 		},
 		
-		getWaymarkTargetName: function (waymarkVO) {
+		getWaymarkTargetName: function (waymarkVO, features) {
 			switch (waymarkVO.type) {
 				case SectorConstants.WAYMARK_TYPE_SPRING: return "water";
 				case SectorConstants.WAYMARK_TYPE_CAMP: return "safety";
+				case SectorConstants.WAYMARK_TYPE_CLINIC: return "clinic";
 				case SectorConstants.WAYMARK_TYPE_RADIATION: return "hazard";
 				case SectorConstants.WAYMARK_TYPE_POLLUTION: return "hazard";
 				case SectorConstants.WAYMARK_TYPE_SETTLEMENT: return "trade";
+				case SectorConstants.WAYMARK_TYPE_DISTRICT: return features.districtType + " district";
+				case SectorConstants.WAYMARK_TYPE_PASSAGE: return "passage";
 				default:
 					log.w("unknown waymark type: " + waymarkVO.type);
 					return "safe";
@@ -1613,37 +1618,40 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 		var t_M = SectorConstants.SECTOR_TYPE_MAINTENANCE;
 		var t_C = SectorConstants.SECTOR_TYPE_COMMERCIAL;
 		var t_P = SectorConstants.SECTOR_TYPE_PUBLIC;
-
-		// TODO use wealth and reuse slum descriptions
-		var t_S = SectorConstants.SECTOR_TYPE_SLUM;
 		
-		var wt_C = SectorConstants.WAYMARK_TYPE_CAMP;
-		var wt_W = SectorConstants.WAYMARK_TYPE_SPRING;
-		var wt_P = SectorConstants.WAYMARK_TYPE_POLLUTION;
-		var wt_R = SectorConstants.WAYMARK_TYPE_RADIATION;
-		var wt_S = SectorConstants.WAYMARK_TYPE_SETTLEMENT;
+		let wt_CL = SectorConstants.WAYMARK_TYPE_CLINIC;
+		let wt_CM = SectorConstants.WAYMARK_TYPE_CAMP;
+		let wt_DS = SectorConstants.WAYMARK_TYPE_DISTRICT;
+		let wt_PO = SectorConstants.WAYMARK_TYPE_POLLUTION;
+		let wt_PS = SectorConstants.WAYMARK_TYPE_PASSAGE;
+		let wt_RD = SectorConstants.WAYMARK_TYPE_RADIATION;
+		let wt_SS = SectorConstants.WAYMARK_TYPE_SETTLEMENT;
+		let wt_WW = SectorConstants.WAYMARK_TYPE_SPRING;
 		
 		// brackets for values like building density, wear, damage
 		var b0 = [0, 0];
 		var b12 = [0, 5];
 		var b22 = [5, 10];
 		
-		var lt1 = [ 0, 0.999 ];
-		var gte1 = [ 1, 100 ];
-		
 		DescriptionMapper.add("waymark", { sectorType: wildcard }, "A wall by a corridor leading [direction] has been painted with a big [n-target] symbol");
 		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There is a graffiti with the word [n-target] and an arrow pointing [direction]");
-		DescriptionMapper.add("waymark", { buildingDensity: b12 }, "Some bricks have been arranged in the shape of an arrow pointing [direction] and a crude symbol that might mean [n-target]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_C }, "You spot a few graffiti with arrows pointing [direction] and words like 'safe' and 'shelter'");
-		DescriptionMapper.add("waymark", { waymarkType: wt_R }, "There are multiple skull signs on walls when heading towards [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_P }, "There are multiple skull signs on walls when heading towards [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_S }, "There is a metal plaque on a wall by a passage leading [direction] with the name '[n-settlement-name]'");
-		DescriptionMapper.add("waymark", { waymarkType: wt_W }, "A blue arrow painted on the street is pointing [direction]");
+		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There is a small sign for a {n-target} pointing [direction]");
+		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There are a few worn posters indicating there is [n-target] to the [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_CL }, "Someone has put up a sign pointing to [a] [n-target] to the [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_CM }, "You spot a few graffiti with arrows pointing [direction] and words like 'safe' and 'shelter'");
+		DescriptionMapper.add("waymark", { waymarkType: wt_CM }, "Graffiti pointing towards [direction] promises shelter");
+		DescriptionMapper.add("waymark", { waymarkType: wt_DS }, "An old sign points to [a] [n-district-type] district to the [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_DS }, "Official signage points to a [n-district-type] district to the [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_PO }, "There are multiple skull signs on walls when heading towards [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_PS }, "An orange emergency exit sign points [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_RD }, "There are multiple skull signs on walls when heading towards [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_SS }, "There is a metal plaque on a wall by a passage leading [direction] with the name '[n-settlement-name]'");
+		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "A blue arrow painted on the street is pointing [direction]");
+		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "Helpful graffiti is pointing [direction] for water");
+		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "Some bricks have been arranged in the shape of an arrow pointing [direction] and a crude symbol that might mean [n-target]");
 		DescriptionMapper.add("waymark", { sectorType: t_C }, "A store billboard has been painted over with the an arrow pointing [direction] and the word [n-target]");
 		DescriptionMapper.add("waymark", { sectorType: t_I }, "A street sign with directions has been painted over. Towards [direction] it says [n-target]");
 		DescriptionMapper.add("waymark", { sectorType: t_M }, "Pipes near the ceiling have arrows painted on them. One pointing [direction] is next to a symbol for [n-target]");
-		DescriptionMapper.add("waymark", { sectorType: t_P }, "A statue is holding a crude sign saying there is [n-target] to the [direction]");
-		DescriptionMapper.add("waymark", { sectorType: t_S }, "There are a few worn posters indicating there is [n-target] to the [direction]");
 	}
 	
 	function initBookTexts() {

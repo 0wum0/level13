@@ -40,12 +40,14 @@ define(['ash', 'game/constants/LevelConstants'], function (Ash, LevelConstants) 
 		STYLE_SLUM_HUN: "slum-hun",	
 		STYLE_WESTERN: "western",
 		
-		// TODO add locales?
-		WAYMARK_TYPE_SPRING: "spring",
 		WAYMARK_TYPE_CAMP: "camp",
-		WAYMARK_TYPE_RADIATION: "radiation",
+		WAYMARK_TYPE_CLINIC: "clinic",
+		WAYMARK_TYPE_DISTRICT: "district",
+		WAYMARK_TYPE_PASSAGE: "camp",
 		WAYMARK_TYPE_POLLUTION: "pollution",
+		WAYMARK_TYPE_RADIATION: "radiation",
 		WAYMARK_TYPE_SETTLEMENT: "settlement",
+		WAYMARK_TYPE_SPRING: "spring",
 		
 		HAZARD_TYPE_RADIATION: "radiation",
 		HAZARD_TYPE_POLLUTION: "poison",

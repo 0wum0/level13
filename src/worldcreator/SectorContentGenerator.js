@@ -420,10 +420,60 @@ define([
 		},
 
 		generateGraffiti: function (seed, worldVO, levelVO, sectorVO) {
+			if (sectorVO.activity < 2) return;
+			if (sectorVO.activity > 8) return;
+			if (sectorVO.damage > 5) return;
+			if (sectorVO.buildingDensity < 2) return;
+			if (sectorVO.buildingDensity > 8) return;
+			if (sectorVO.sectorStyle == SectorConstants.STYLE_KIEVAN) return;
+			if (sectorVO.sectorStyle == SectorConstants.STYLE_CITTADINIAN) return;
+			if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_EMPTY) return;
+			if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_MAINTENANCE) return;
+
+			let districtVO = levelVO.districts[sectorVO.districtIndex];
+			let districtType = districtVO.type;
+			let sectorType = sectorVO.sectorType;
+			let neighbours = levelVO.getNeighbourList(sectorVO.position.sectorX, sectorVO.position.sectorY);
+
+			let s = seed - sectorVO.position.sectorX * 2 - sectorVO.position.sectorY * 3;
+			let rand = WorldCreatorRandom.random(s);
+
+			// gang territory
 			if (sectorVO.hazards.territory > 0) {
-				let neighbours = levelVO.getNeighbourList(sectorVO.position.sectorX, sectorVO.position.sectorY);
 				if (neighbours && neighbours.length > 1 && neighbours.every(neighbourVO => neighbourVO.hazards.territory > 0 && neighbourVO.graffiti == null)) {
-					return "Red Hats";
+					return "story.graffiti.gang_red_hats";
+				}
+			}
+
+			// sector affiliation and religion
+			if (neighbours.length != 2 && sectorVO.wealth < 8 && sectorVO.wear < 8 && rand < 0.25) {
+				if (districtVO.affiliation == SectorConstants.SECTOR_AFFILIATION_MINECORP) {
+					if (sectorType == SectorConstants.SECTOR_TYPE_INDUSTRIAL) {
+						return "story.graffiti.corp_mining";
+					}
+				}
+
+				if (districtVO.affiliation == SectorConstants.SECTOR_AFFILIATION_HANSA) {
+					if (sectorType == SectorConstants.SECTOR_TYPE_COMMERCIAL) {
+						return "story.graffiti.gang_hansa";
+					}
+				}
+
+				if (districtVO.affiliation == SectorConstants.SECTOR_AFFILIATION_DONBALISM) {
+					if (sectorType == SectorConstants.SECTOR_TYPE_RESIDENTIAL) {
+						return "story.graffiti.faction_donbalism";
+					}
+				}
+			}
+
+			// pre-fall religions and politics
+			if (levelVO.level > 14 && sectorVO.wear < 6 && rand < 0.1) {
+				if (sectorVO.wealth < 5 && sectorType == SectorConstants.SECTOR_TYPE_PUBLIC) {
+					return WorldCreatorRandom.randomBool(s, 0.5) ? "story.graffiti.anti_government_01" : "story.graffiti.anti_government_02";
+				}
+				
+				if (sectorType == SectorConstants.SECTOR_TYPE_COMMERCIAL) {
+					return "story.graffiti.faction_ugurism";
 				}
 			}
 

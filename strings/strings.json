@@ -964,6 +964,15 @@
 		}
 	},
 	"story": {
+		"graffiti": {
+			"anti_government_01": "STOP HUMANISM",
+			"anti_government_02": "DIRECT DEMOCRACY",
+			"corp_mining": "(logo with a big G)",
+			"faction_donbalism": "(stylized waves)",
+			"faction_ugurism": "(the mechanical eye)",
+			"gang_hansa": "Hansa",
+			"gang_red_hats": "Red Hats"
+		},
 		"dialogue": {
 			"character_bard_default_event_01_p1": "I go from settlement to settlement and play music. I will play at the inn tonight.",
 			"character_bard_default_event_02_p1": "Music used to be everywhere. Now it is a kind of magic again.",

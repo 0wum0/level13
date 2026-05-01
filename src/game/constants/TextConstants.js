@@ -1211,23 +1211,27 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 		},
 		
 		getSpringName: function (featuresComponent) {
+			let key = "";
+
 			let hasHazards = featuresComponent.hazards.hasHazards();
 			let type = featuresComponent.sectorType;
-			if (featuresComponent.ground && featuresComponent.buildingDensity < 6
-				 && !hasHazards && type != SectorConstants.SECTOR_TYPE_INDUSTRIAL) {
-				return "stream";
-			}
-			if (featuresComponent.damage < 3 && featuresComponent.buildingDensity < 8) {
-				return "old well";
-			}
-			if (type != SectorConstants.SECTOR_TYPE_MAINTENANCE && featuresComponent.wear < 5 && featuresComponent.damage < 3) {
-				return "drinking fountain";
-			}
-			if (featuresComponent.wear > 6 || featuresComponent.damage > 3) {
-				return "leaking water pipe";
+			let style = featuresComponent.sectorStyle;
+
+			if (featuresComponent.ground && featuresComponent.buildingDensity < 6  && !hasHazards && type != SectorConstants.SECTOR_TYPE_INDUSTRIAL) {
+				key = "ui.exploration.spring_name_natural";
+			} else if (featuresComponent.wear > 7 || featuresComponent.damage > 3) {
+				key = "ui.exploration.spring_name_damaged";
+			} else if (type == SectorConstants.SECTOR_TYPE_PUBLIC || style == SectorConstants.STYLE_CITTADINIAN) {
+				key = "ui.exploration.spring_name_public"
+			} else if (type == SectorConstants.SECTOR_TYPE_INDUSTRIAL || style == SectorConstants.STYLE_INDUSTRIAL) {
+				key = "ui.exploration.spring_name_industrial";
+			} else if (type == SectorConstants.STYLE_SLUM_GENERAL || type == SectorConstants.STYLE_SLUM_HUN) {
+				key = "ui.exploration.spring_name_slum";
+			} else {
+				key = "ui.exploration.spring_name"
 			}
 			
-			return "water tower";
+			return Text.t(key);
 		},
 		
 		getEnemyText: function (enemyList, sectorControlComponent) {

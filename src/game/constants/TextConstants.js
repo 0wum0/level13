@@ -1094,23 +1094,9 @@ function (Ash, DescriptionMapper, Text, TextBuilder, GameConstants, EnemyConstan
 			return Text.t("game.resources." + resourceName + "_name");
 		},
 
-		getHeapDisplayName: function (resourceName, features) {
-			let sectorType = features.sectorType;
-			let condition = features.getCondition();
-			let isBadCondition = condition == SectorConstants.SECTOR_CONDITION_RUINED || condition == SectorConstants.SECTOR_CONDITION_DAMAGED;
-			let isHumbleSectorType = sectorType == features.SECTOR_TYPE_MAINTENANCE || sectorType == SectorConstants.SECTOR_TYPE_INDUSTRIAL;
-			let isLivable = !features.hasHazards() && !features.sunlit && features.buildingDensity > 1 && features.buildingDensity < 8;
-
-			switch (resourceName) {
-				case resourceNames.metal:
-					if (features.buildingDensity > 3 && isBadCondition) return "collapsed building";
-					if (sectorType == SectorConstants.SECTOR_TYPE_MAINTENANCE) return "wrecked vehicle";
-					if (features.buildingDensity < 7 && isHumbleSectorType) return "landfill";
-					if (isLivable && !features.ground && condition == SectorConstants.SECTOR_CONDITION_ABANDONED) return "ruined camp";
-					return "metal heap";
-					
-			}
-			return "resource heap (" + resourceName + ")";
+		getHeapDisplayName: function (resourceName, features) {			
+			let modifiers = SectorConstants.getSectorEnvironmentTags(null, null, null, features);
+			return Text.t(this.getTextKey("ui.exploration.heap_" + resourceName + "_name", modifiers));
 		},
 
 		getResourcesTextVO: function (resourcesVO, currency) {

@@ -1038,10 +1038,8 @@ define([
 		},
 
 		generateHeaps: function (seed, worldVO, levelVO) {
-			let heapResource = resourceNames.metal;
-
-			let getHeapSectorScore = function (sectorVO) {
-				let score = sectorVO.resourcesScavengable.getResource(heapResource);
+			let getHeapSectorScore = function (sectorVO, resourceName) {
+				let score = sectorVO.resourcesScavengable.getResource(resourceName);
 				score -= WorldCreatorHelper.getQuickMinDistanceToCamp(levelVO, sectorVO);
 				score -= sectorVO.locales.length;
 				if (sectorVO.hasLocaleOfType(localeTypes.grove)) score -= 100;
@@ -1052,31 +1050,51 @@ define([
 				if (sectorVO.resourcesCollectable.getTotal() > 0) score -= 1;
 				if (sectorVO.hasWater()) score -= 1;
 				if (sectorVO.damage > 0) score += sectorVO.damage;
-				if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_MAINTENANCE) score += 1;
-				if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_PUBLIC) score -= 1;
-				if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_COMMERCIAL) score -= 2;
+
+				if (resourceName == resourceNames.metal && sectorVO.sectorType == SectorConstants.SECTOR_TYPE_MAINTENANCE) score += 1;
+				if (resourceName == resourceNames.metal && sectorVO.sectorType == SectorConstants.SECTOR_TYPE_PUBLIC) score -= 1;
+				if (resourceName == resourceNames.metal && sectorVO.sectorType == SectorConstants.SECTOR_TYPE_COMMERCIAL) score -= 2;
+
+				if (resourceName == resourceNames.rope && sectorVO.sectorType == SectorConstants.SECTOR_TYPE_INDUSTRIAL) score += 1;
+				if (resourceName == resourceNames.rope && sectorVO.sectorType == SectorConstants.SECTOR_TYPE_RESIDENTIAL) score -= 1;
+				if (resourceName == resourceNames.rope && sectorVO.sectorType == SectorConstants.SECTOR_TYPE_PUBLIC) score -= 1;
+
 				if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_EMPTY) score -= 3;
 				return score;
 			};
 
-			let count = 2;
-			if (levelVO.level == 13) count++;
-			if (!levelVO.isCampable) count--;
+			let resourceCounter = 0;
+			let generateHeapSectors = function (resourceName, num) {
+				if (num <= 0) return;
+				
+				let excludedZones = [ WorldConstants.ZONE_EXTRA_CAMPABLE, WorldConstants.ZONE_EXTRA_UNCAMPABLE ];
+				if (levelVO.campOrdinal == 1) {
+					excludedZones.push(WorldConstants.ZONE_POI_2);
+				}
+				let excludedFeatures = [ "isCamp", "isPassageUp", "isPassageDown", "hasWorkshop" ];
+				let options = { excludingFeature: excludedFeatures, excludedZones: excludedZones };
+				let heapSectors = WorldCreatorRandom.randomSectorsScored(seed / 6 + resourceCounter, worldVO, levelVO, num, num + 1, options, (sectorVO) => getHeapSectorScore(sectorVO, resourceName));
+
+				for (let i = 0; i < heapSectors.length; i++) {
+					heapSectors[i].hasHeap = true;
+					heapSectors[i].heapResource = resourceName;
+					WorldCreatorLogger.i("heap [" +  resourceName + "]: " + heapSectors[i].position);
+				}
+
+				resourceCounter++;
+			}
+
+			let numRope = 1;
+			let numMetal = 2;
+
+			if (levelVO.level == 13) numMetal++;
+			if (!levelVO.isCampable) numMetal--;
+			if (!levelVO.isCampable) numRope--;
 			if (levelVO.isHard) count--;
+			if (levelVO.isHard) numRope--;
 
-			let excludedZones = [ WorldConstants.ZONE_EXTRA_CAMPABLE, WorldConstants.ZONE_EXTRA_UNCAMPABLE ];
-			if (levelVO.campOrdinal == 1) {
-				excludedZones.push(WorldConstants.ZONE_POI_2);
-			}
-			let excludedFeatures = [ "isCamp", "isPassageUp", "isPassageDown", "hasWorkshop" ];
-			let options = { excludingFeature: excludedFeatures, excludedZones: excludedZones };
-			let heapSectors = WorldCreatorRandom.randomSectorsScored(seed, worldVO, levelVO, count, count + 1, options, getHeapSectorScore);
-
-			for (let i = 0; i < heapSectors.length; i++) {
-				heapSectors[i].hasHeap = true;
-				heapSectors[i].heapResource = heapResource;
-				WorldCreatorLogger.i("heap [" +  heapResource + "]: " + heapSectors[i].position);
-			}
+			generateHeapSectors(resourceNames.rope, numRope);
+			generateHeapSectors(resourceNames.metal, numMetal);
 		},
 		
 		generateRequiredResources: function (seed, worldVO, levelVO, paths) {

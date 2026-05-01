@@ -282,7 +282,7 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 				case localeTypes.library:
 					return [ ItemConstants.itemTags.science, ItemConstants.itemTags.history, ItemConstants.itemTags.book ];
 				case localeTypes.maintenance:
-					return [ ItemConstants.itemTags.maintenance, ItemConstants.itemTags.indutrial ];
+					return [ ItemConstants.itemTags.maintenance, ItemConstants.itemTags.indutrial, ItemConstants.itemTags.electric ];
 				case localeTypes.junkyard:
 					return [ ItemConstants.itemTags.maintenance, ItemConstants.itemTags.valuable ];
 				case localeTypes.warehouse:
@@ -295,10 +295,10 @@ function (Ash, WorldConstants, ItemConstants, ResourcesVO, LocaleConstants, Play
 				case localeTypes.grocery:
 					return [ ItemConstants.itemTags.perishable, ItemConstants.itemTags.medical ];
 				case localeTypes.office:
-					return [ ItemConstants.itemTags.science, ItemConstants.itemTags.valuable, ItemConstants.itemTags.community ];
+					return [ ItemConstants.itemTags.science, ItemConstants.itemTags.valuable, ItemConstants.itemTags.community, ItemConstants.itemTags.electric ];
 				case localeTypes.lab:
 				case localeTypes.spacefactory:
-					return [ ItemConstants.itemTags.science, ItemConstants.itemTags.industrial ];
+					return [ ItemConstants.itemTags.science, ItemConstants.itemTags.industrial, ItemConstants.itemTags.electric ];
 				case localeTypes.hospital:
 				case localeTypes.pharmacy:
 					return [ ItemConstants.itemTags.medical, ItemConstants.itemTags.science ];

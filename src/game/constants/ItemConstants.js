@@ -105,12 +105,13 @@ function (Ash, ItemData, Text, MathUtils, PlayerActionConstants, SectorConstants
 			book: "book", // books, found in residential areas and libraries, not in flooded sectors
 			clothing: "clothing", // clothing items, found in resdiential and industrial sectors, stores, factories etc
 			community: "community", // items related to news or propaganda or gossip, found in places where people lived and worked relatively recently
+			electric: "electric", // items that require electricity to function, found in high tech areas
 			equipment: "equipment", // equipment related to surviving in the City, found in industrial areas and areas inhabited since the Fall
 			history: "history", // from before the Government, found in public sectors, museums, libraries 
 			industrial: "industrial", // related to industry, found in industrial sectors and factories
 			keepsake: "keepsake", // something with sentimental value, found in residential sectors and locales
+			maintenance: "maintenance", // related to the maintenance and infrastructure of the City, found in maintenance areas
 			medical: "medical", // related to healthcare, found in labs and hospitals
-			maintenance: "maintenance", // related to the maintenance and infrastructure of the City, foundin maintenance areas
 			nature: "nature", // nature related, found on the ground, on sunlit sectors, greenhouses etc
 			new: "new", // manufactured after the Fall, found in places inhabited since
 			old: "old", // manufactured before the Fall, found in warehouses and depots and homes
@@ -245,6 +246,7 @@ function (Ash, ItemData, Text, MathUtils, PlayerActionConstants, SectorConstants
 					tags.push(ItemConstants.itemTags.equipment);
 					tags.push(ItemConstants.itemTags.maintenance);
 					tags.push(ItemConstants.itemTags.weapon);
+					if (wear < 5) tags.push(ItemConstants.itemTags.electric);
 					break;
 				case SectorConstants.SECTOR_TYPE_PUBLIC:
 					tags.push(ItemConstants.itemTags.book);

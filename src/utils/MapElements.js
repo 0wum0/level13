@@ -392,6 +392,7 @@ define([
 			let shapesByDistrict = {};
 
 			let sortByAngle = (a, b, c) => {
+				if (!c) return 0;
 				let angleA = Math.atan2(a.pos.sectorY - c.sectorY, a.pos.sectorX - c.sectorX);
 				let angleB = Math.atan2(b.pos.sectorY - c.sectorY, b.pos.sectorX - c.sectorX);
 				return angleA - angleB;

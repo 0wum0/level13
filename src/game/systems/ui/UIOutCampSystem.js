@@ -1127,57 +1127,60 @@
 
 		getWorkerDescription: function (def) {
 			let workerLevel = GameGlobals.upgradeEffectsHelper.getWorkerLevel(def.id, this.tribeUpgradesNodes.head.upgrades);
-			var improvements = this.playerLocationNodes.head.entity.get(SectorImprovementsComponent);
-			var productionS = "";
-			var generalConsumptionS =
+			let improvements = this.playerLocationNodes.head.entity.get(SectorImprovementsComponent);
+			let workerFactors = GameGlobals.campHelper.getWorkerFactors(this.playerPosNodes.head.position.level);
+			let isWorkedBuffed = workerFactors[def.id] && workerFactors[def.id] > 1;
+
+			let productionS = "";
+			let generalConsumptionS =
 				"<br/><span class='warning'>water -" + UIConstants.roundValue(GameGlobals.campHelper.getWaterConsumptionPerSecond(1), true, true) + "/s</span>" +
 				"<br/><span class='warning'>food -" + UIConstants.roundValue(GameGlobals.campHelper.getFoodConsumptionPerSecond(1), true, true) + "/s</span>";
-			var specialConsumptionS = "";
+			let specialConsumptionS = "";
 			switch (def.id) {
 				case CampConstants.workerTypes.scavenger.id:
-					productionS = "metal +" + UIConstants.roundValue(GameGlobals.campHelper.getMetalProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "metal +" + UIConstants.roundValue(GameGlobals.campHelper.getMetalProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.trapper.id:
-					productionS = "food +" + UIConstants.roundValue(GameGlobals.campHelper.getFoodProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "food +" + UIConstants.roundValue(GameGlobals.campHelper.getFoodProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.water.id:
-					productionS = "water +" + UIConstants.roundValue(GameGlobals.campHelper.getWaterProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "water +" + UIConstants.roundValue(GameGlobals.campHelper.getWaterProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.ropemaker.id:
-					productionS = "rope +" + UIConstants.roundValue(GameGlobals.campHelper.getRopeProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "rope +" + UIConstants.roundValue(GameGlobals.campHelper.getRopeProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.chemist.id:
-					productionS = "fuel +" + UIConstants.roundValue(GameGlobals.campHelper.getFuelProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "fuel +" + UIConstants.roundValue(GameGlobals.campHelper.getFuelProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.rubbermaker.id:
-					productionS = "rubber +" + UIConstants.roundValue(GameGlobals.campHelper.getRubberProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "rubber +" + UIConstants.roundValue(GameGlobals.campHelper.getRubberProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.gardener.id:
-					productionS = "herbs +" + UIConstants.roundValue(GameGlobals.campHelper.getHerbsProductionPerSecond(1, improvements), true, true) + "/s";
+					productionS = "herbs +" + UIConstants.roundValue(GameGlobals.campHelper.getHerbsProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.apothecary.id:
-					productionS = "medicine +" + UIConstants.roundValue(GameGlobals.campHelper.getMedicineProductionPerSecond(1, improvements), true, true) + "/s";
-					specialConsumptionS = "<br/><span class='warning'>herbs -" + GameGlobals.campHelper.getWorkerHerbsConsumptionPerSecond(1) + "/s</span>";
+					productionS = "medicine +" + UIConstants.roundValue(GameGlobals.campHelper.getMedicineProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
+					specialConsumptionS = "<br/><span class='warning'>herbs -" + GameGlobals.campHelper.getWorkerHerbsConsumptionPerSecond(1, workerFactors) + "/s</span>";
 					break;
 				case CampConstants.workerTypes.concrete.id:
-					productionS = "concrete +" + UIConstants.roundValue(GameGlobals.campHelper.getConcreteProductionPerSecond(1, improvements), true, true) + "/s";
-					specialConsumptionS = "<br/><span class='warning'>metal -" + GameGlobals.campHelper.getMetalConsumptionPerSecondConcrete(1) + "/s</span>";
+					productionS = "concrete +" + UIConstants.roundValue(GameGlobals.campHelper.getConcreteProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
+					specialConsumptionS = "<br/><span class='warning'>metal -" + GameGlobals.campHelper.getMetalConsumptionPerSecondConcrete(1, workerFactors) + "/s</span>";
 					break;
 				case CampConstants.workerTypes.toolsmith.id:
-					productionS = "tools +" + UIConstants.roundValue(GameGlobals.campHelper.getToolsProductionPerSecond(1, improvements), true, true) + "/s";
-					specialConsumptionS = "<br/><span class='warning'>metal -" + GameGlobals.campHelper.getMetalConsumptionPerSecondSmith(1) + "/s</span>";
+					productionS = "tools +" + UIConstants.roundValue(GameGlobals.campHelper.getToolsProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
+					specialConsumptionS = "<br/><span class='warning'>metal -" + GameGlobals.campHelper.getMetalConsumptionPerSecondSmith(1, workerFactors) + "/s</span>";
 					break;
 				case CampConstants.workerTypes.robotmaker.id:
-					let robotVal = GameGlobals.campHelper.getRobotsProductionPerSecond(1, improvements);
+					let robotVal = GameGlobals.campHelper.getRobotsProductionPerSecond(1, improvements, workerFactors);
 					let robotValDivisor = robotVal < 0.01 ? 10000 : null;
 					productionS = "robots +" + UIConstants.roundValue(robotVal, true, true, robotValDivisor) + "/s";
-					specialConsumptionS = "<br/><span class='warning'>tools -" + GameGlobals.campHelper.getToolsConsumptionPerSecondRobots(1) + "/s</span>";
+					specialConsumptionS = "<br/><span class='warning'>tools -" + GameGlobals.campHelper.getToolsConsumptionPerSecondRobots(1, workerFactors) + "/s</span>";
 					break;
 				case CampConstants.workerTypes.scientist.id:
-					productionS = "evidence +" + UIConstants.roundValue(GameGlobals.campHelper.getEvidenceProductionPerSecond(1, improvements), true, true, 1000) + "/s";
+					productionS = "evidence +" + UIConstants.roundValue(GameGlobals.campHelper.getEvidenceProductionPerSecond(1, improvements, workerFactors), true, true, 1000) + "/s";
 					break;
 				case CampConstants.workerTypes.cleric.id:
-					productionS = "hope +" + UIConstants.roundValue(GameGlobals.campHelper.getHopeProductionPerSecond(1, improvements), true, true, 100000) + "/s";
+					productionS = "hope +" + UIConstants.roundValue(GameGlobals.campHelper.getHopeProductionPerSecond(1, improvements, workerFactors), true, true, 100000) + "/s";
 					break;
 				case CampConstants.workerTypes.soldier.id:
 					var soldierLevel = GameGlobals.upgradeEffectsHelper.getWorkerLevel("soldier", this.tribeUpgradesNodes.head.upgrades);
@@ -1188,7 +1191,12 @@
 					log.w("no description defined for worker type: " + def.id);
 					break;
 			}
-			return "Level " + workerLevel + "<br/>" + productionS + generalConsumptionS + specialConsumptionS;
+
+			let result = "Level " + workerLevel + "<br/>";			
+			if (isWorkedBuffed && GameGlobals.gameState.numCamps > 1) result += "Level factor: +" + Math.round((workerFactors[def.id] - 1) * 100) + "%<br/>";
+			result += productionS + generalConsumptionS + specialConsumptionS;
+
+			return result;
 		},
 
 		getPopulationDecreaseHint: function () {

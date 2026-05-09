@@ -126,78 +126,105 @@ define([
 			return campComponent.availableLuxuryResources || [];
 		},
 
+		getWorkerFactors: function (level) {
+			let levelComponent = GameGlobals.levelHelper.getLevelComponentForPosition(level);
+
+			let result = {};
+
+			result[CampConstants.workerTypes.scavenger.id] = levelComponent.workerMetalFactor || 1;
+			result[CampConstants.workerTypes.trapper.id] = levelComponent.workerFoodFactor || 1;
+			result[CampConstants.workerTypes.water.id] = levelComponent.workerWaterFactor || 1;
+
+			result[CampConstants.workerTypes.ropemaker.id] = levelComponent.workerArtisanFactor || 1;
+			result[CampConstants.workerTypes.toolsmith.id] = levelComponent.workerArtisanFactor || 1;
+
+			result[CampConstants.workerTypes.scientist.id] = levelComponent.workerAcademicFactor || 1;
+			result[CampConstants.workerTypes.cleric.id] = levelComponent.workerHopeFactor || 1;
+
+			return result;
+		},
+
 		getCampProductionMultiplier: function () {
-			let result = GameConstants.gameSpeedCamp;
+			let result = 1;
+			result *= GameConstants.gameSpeedCamp;
 			if (GameConstants.cheatModeCampProduction) result *= 2;
 			return result;
 		},
+
+		getCampWorkerProductionMultiplier: function (workerFactors, workerType) {
+			if (!workerType || !workerFactors) {
+				debugger
+				return 1;
+			}
+			return workerFactors[workerType] || 1;
+		},
 		
-		getMetalProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getMetalProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.scavenger.id);
 			return GameGlobals.campBalancingHelper.getMetalProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getFoodProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getFoodProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.trapper.id);
 			return GameGlobals.campBalancingHelper.getFoodProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getWaterProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getWaterProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.water.id);
 			return GameGlobals.campBalancingHelper.getWaterProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getRopeProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getRopeProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.ropemaker.id);
 			return GameGlobals.campBalancingHelper.getRopeProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getFuelProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getFuelProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.chemist.id);
 			return GameGlobals.campBalancingHelper.getFuelProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getRubberProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getRubberProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.rubbermaker.id);
 			return GameGlobals.campBalancingHelper.getRubberProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getHerbsProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getHerbsProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.gardener.id);
 			return GameGlobals.campBalancingHelper.getHerbsProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getMedicineProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getMedicineProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.apothecary.id);
 			return GameGlobals.campBalancingHelper.getMedicineProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getToolsProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getToolsProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.toolsmith.id);
 			return GameGlobals.campBalancingHelper.getToolsProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getConcreteProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getConcreteProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.concrete.id);
 			return GameGlobals.campBalancingHelper.getConcreteProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getRobotsProductionPerSecond: function (workers, improvementsComponent, robots) {
-			let multiplier = this.getCampProductionMultiplier();
+		getRobotsProductionPerSecond: function (workers, improvementsComponent, workerFactors, robots) {
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.robotmaker.id);
 			return GameGlobals.campBalancingHelper.getRobotsProductionPerSecond(workers, improvementsComponent, this.tribeUpgradesNodes.head.upgrades, robots) * multiplier;
 		},
 		
-		getEvidenceProductionPerSecond: function (workers, improvementComponent) {
+		getEvidenceProductionPerSecond: function (workers, improvementComponent, workerFactors) {
 			workers = workers || 0;
 			let evidenceUpgradeBonus = this.getUpgradeBonus("scientist");
-			let multiplier = this.getCampProductionMultiplier();
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.scientist.id);
 			return workers * CampConstants.PRODUCTION_EVIDENCE_PER_WORKER_PER_S * evidenceUpgradeBonus * multiplier;
 		},
 		
-		getHopeProductionPerSecond: function (workers, improvementComponent) {
+		getHopeProductionPerSecond: function (workers, improvementComponent, workerFactors) {
 			workers = workers || 0;
 			let upgradeBonus = this.getUpgradeBonus("cleric");
-			let multiplier = this.getCampProductionMultiplier();
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.cleric.id);
 			return workers * CampConstants.PRODUCTION_HOPE_PER_WORKER_PER_S * upgradeBonus * multiplier;
 		},
 		
@@ -221,27 +248,27 @@ define([
 			return CampConstants.CONSUMPTION_MEDICINE_PER_WORKER_PER_S * Math.floor(population) * speed;
 		},
 		
-		getWorkerHerbsConsumptionPerSecond: function (workers) {
+		getWorkerHerbsConsumptionPerSecond: function (workers, workerFactors) {
 			workers = workers || 0;
-			let multiplier = this.getCampProductionMultiplier();
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.apothecary.id);
 			return workers * CampConstants.CONSUMPTION_HERBS_PER_MEDICINE_WORKER_PER_S * multiplier;
 		},
 		
-		getMetalConsumptionPerSecondSmith: function (workers) {
+		getMetalConsumptionPerSecondSmith: function (workers, workerFactors) {
 			workers = workers || 0;
-			let multiplier = this.getCampProductionMultiplier();
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.toolsmith.id);
 			return workers * CampConstants.CONSUMPTION_METAL_PER_TOOLSMITH_PER_S * multiplier;
 		},
 		
-		getMetalConsumptionPerSecondConcrete: function (workers) {
+		getMetalConsumptionPerSecondConcrete: function (workers, workerFactors) {
 			workers = workers || 0;
-			let multiplier = this.getCampProductionMultiplier();
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.concrete.id);
 			return workers * CampConstants.CONSUMPTION_METAL_PER_CONCRETE_PER_S * multiplier;
 		},
 		
-		getToolsConsumptionPerSecondRobots: function (workers) {
+		getToolsConsumptionPerSecondRobots: function (workers, workerFactors) {
 			workers = workers || 0;
-			let multiplier = this.getCampProductionMultiplier();
+			let multiplier = this.getCampProductionMultiplier() * this.getCampWorkerProductionMultiplier(workerFactors, CampConstants.workerTypes.robotmaker.id);
 			return workers * CampConstants.CONSUMPTION_TOOLS_PER_ROBOT_MAKER_PER_S * multiplier;
 		},
 		

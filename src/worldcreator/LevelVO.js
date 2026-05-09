@@ -42,6 +42,12 @@ function (Ash, VOCache, WorldCreatorConstants, WorldCreatorLogger, LevelConstant
 			this.signatureDisaster = null;
 			this.stageCenterPositions = {}; // e/l -> list of PositionVO
 			this.traderFrequencyFactor = 1;
+			this.workerMetalFactor = 1;
+			this.workerFoodFactor = 1;
+			this.workerWaterFactor = 1;
+			this.workerArtisanFactor = 1;
+			this.workerAcademicFactor = 1;
+			this.workerHopeFactor = 1;
 			this.workshopPositions = [];
 			this.workshopResource = null;
 

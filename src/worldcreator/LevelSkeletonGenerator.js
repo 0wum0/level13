@@ -52,7 +52,8 @@ define([
 			levelVO.raidDangerFactor = isCampableLevel ? WorldCreatorConstants.getRaidDangerFactor(campOrdinal) : 0;
 			levelVO.diseaseFrequecyFactor = WorldCreatorConstants.getDiseaseFrequencyFactor(campOrdinal);
 			levelVO.traderFrequencyFactor = isCampableLevel ? WorldCreatorConstants.getTraderFrequencyFactor(campOrdinal) : 0;
-			levelVO.signatureDisaster = WorldCreatorConstants.getSignatureDisaster(campOrdinal);
+
+			this.generateWorkerFactors(seed, worldVO, levelTemplateVO, levelVO);
 
 			let numSectors = WorldCreatorHelper.getNumSectorsForLevel(seed, l);
 			levelVO.numSectors = numSectors;
@@ -82,6 +83,17 @@ define([
 			levelVO.districts = this.getDistricts(worldVO, levelVO);
 			levelVO.numInvestigateSectors = this.getNumInvestigateSectors(seed, l);
 			levelVO.luxuryResources = this.getLuxuryResources(seed, l, campOrdinal, worldVO.levels);
+		},
+
+		generateWorkerFactors: function (seed, worldVO, levelTemplateVO, levelVO) {
+			let campOrdinal = levelVO.campOrdinal;
+		
+			levelVO.workerMetalFactor = WorldCreatorConstants.getWorkerMetalFactor(campOrdinal);
+			levelVO.workerFoodFactor = WorldCreatorConstants.getWorkerFoodFactor(campOrdinal);
+			levelVO.workerWaterFactor = WorldCreatorConstants.getWorkerWaterFactor(campOrdinal);
+			levelVO.workerArtisanFactor = WorldCreatorConstants.getWorkerArtisanFactor(campOrdinal);
+			levelVO.workerAcademicFactor = WorldCreatorConstants.getWorkerAcademicFactor(campOrdinal);
+			levelVO.workerHopeFactor = WorldCreatorConstants.getWorkerHopeFactor(campOrdinal);
 		},
 		
 		getStageCenterPositions: function (worldVO, levelVO) {

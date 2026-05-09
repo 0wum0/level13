@@ -36,6 +36,12 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			this.passageUpType = levelVO.passageUpType;
 			this.predefinedExplorers = levelVO.predefinedExplorers;
 			this.seed = levelVO.seed;
+			this.workerMetalFactor = levelVO.workerMetalFactor;
+			this.workerFoodFactor = levelVO.workerFoodFactor;
+			this.workerWaterFactor = levelVO.workerWaterFactor;
+			this.workerArtisanFactor = levelVO.workerArtisanFactor;
+			this.workerAcademicFactor = levelVO.workerAcademicFactor;
+			this.workerHopeFactor = levelVO.workerHopeFactor;
 			this.workshopPositions = levelVO.workshopPositions;
 			this.workshopResource = levelVO.workshopResource;
 			
@@ -80,6 +86,12 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			copy.seed = this.seed;
 			if (this.workshopResource) copy.workshopResource = this.workshopResource;
 			if (this.workshopPositions) copy.workshopPositions = this.workshopPositions;
+			copy.workerMetalFactor = this.workerMetalFactor;
+			copy.workerFoodFactor = this.workerFoodFactor;
+			copy.workerWaterFactor = this.workerWaterFactor;
+			copy.workerArtisanFactor = this.workerArtisanFactor;
+			copy.workerAcademicFactor = this.workerAcademicFactor;
+			copy.workerHopeFactor = this.workerHopeFactor;
 
 			copy.sectors = [];
 
@@ -138,6 +150,14 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 
 			this.predefinedExplorers = saveObject.predefinedExplorers || [];
 			this.seed = saveObject.seed;
+
+			this.workerMetalFactor = saveObject.workerMetalFactor || 1;
+			this.workerFoodFactor = saveObject.workerFoodFactor || 1;
+			this.workerWaterFactor = saveObject.workerWaterFactor || 1;
+			this.workerArtisanFactor = saveObject.workerArtisanFactor || 1;
+			this.workerAcademicFactor = saveObject.workerAcademicFactor || 1;
+			this.workerHopeFactor = saveObject.workerHopeFactor || 1;
+
 			this.workshopResource = saveObject.workshopResource || null;
 			this.workshopPositions = saveObject.workshopPositions || null;
 			

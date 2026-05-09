@@ -237,6 +237,56 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 					return null;
 			}
 		},
+
+		getWorkerMetalFactor: function (campOrdinal) {
+			switch (campOrdinal) {
+				// greenhouses
+				case 1: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case 3: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+			}
+			return 1;
+		},
+
+		getWorkerFoodFactor: function (campOrdinal) {
+			switch (campOrdinal) {
+				case WorldConstants.CAMPS_BEFORE_GROUND: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+			}
+			return 1;
+		},
+
+		getWorkerWaterFactor: function (campOrdinal) {
+			switch (campOrdinal) {
+				// greenhouses
+				case 5: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case 7: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				// rainwater
+				case WorldConstants.CAMPS_TOTAL: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+			}
+			return 1;
+		},
+
+		getWorkerArtisanFactor: function (campOrdinal) {
+			switch (campOrdinal) {
+				case 1: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case 11: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+			}
+			return 1;
+		},
+
+		getWorkerAcademicFactor: function (campOrdinal) {
+			switch (campOrdinal) {
+				// mill road academy
+				case 7: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				// highgate
+				case 12: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+			}
+			return 1;
+		},
+
+		getWorkerHopeFactor: function (campOrdinal) {
+			if (campOrdinal == WorldConstants.CAMPS_BEFORE_GROUND) return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+			return 1;
+		},
 		
 		getZoneOrdinal: function (zone) {
 			switch (zone) {

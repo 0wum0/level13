@@ -66,8 +66,9 @@ define([
 					var accResearchCenter = GameGlobals.campHelper.getResearchCenterEvidenceGenerationPerSecond(improvementsComponent);
 					
 					numScientists = campNode.camp.assignedWorkers.scientist || 0;
-					var accScientists = GameGlobals.campHelper.getEvidenceProductionPerSecond(numScientists, improvementsComponent);
-					var accSpeedCamp = accLibrary + accResearchCenter + accScientists;
+					let workerFactors = GameGlobals.campHelper.getWorkerFactors(campNode.position.level);
+					let accScientists = GameGlobals.campHelper.getEvidenceProductionPerSecond(numScientists, improvementsComponent, workerFactors);
+					let accSpeedCamp = accLibrary + accResearchCenter + accScientists;
 					accSpeed += accSpeedCamp;
 					
 					evidenceComponent.addChange("Libraries", accLibrary, campNode.position.level);

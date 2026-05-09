@@ -59,10 +59,11 @@ define([
 			for (var campNode = this.campNodes.head; campNode; campNode = campNode.next) {
 				var improvementsComponent = campNode.entity.get(SectorImprovementsComponent);
 				
-				var accTemple = GameGlobals.campHelper.getTempleHopeGenerationPerSecond(improvementsComponent) * GameConstants.gameSpeedCamp;
-				var numClerics = campNode.camp.assignedWorkers.cleric || 0;
-				var accClerics = GameGlobals.campHelper.getHopeProductionPerSecond(numClerics, improvementsComponent);
-				var accCamp = accTemple + accClerics;
+				let accTemple = GameGlobals.campHelper.getTempleHopeGenerationPerSecond(improvementsComponent) * GameConstants.gameSpeedCamp;
+				let numClerics = campNode.camp.assignedWorkers.cleric || 0;
+				let workerFactors = GameGlobals.campHelper.getWorkerFactors(campNode.position.level);
+				let accClerics = GameGlobals.campHelper.getHopeProductionPerSecond(numClerics, improvementsComponent, workerFactors);
+				let accCamp = accTemple + accClerics;
 				let change = time * accCamp;
 				
 				hopeComponent.addChange("Temples", accTemple, campNode.position.level);

@@ -88,6 +88,8 @@ define(['ash', 'text/Text', 'game/vos/ResourcesVO'], function (Ash, Text, Resour
 		REPUTATION_SOURCE_LUXURY_RESOURCES: "luxury-resources",
 		REPUTATION_SOURCE_LEVEL_POP: "level-population",
 		MAX_REPUTATION: 30,
+
+		WORKER_LEVEL_FACTOR_POSITIVE: 1.2,
 		
 		// raids
 		CAMP_BASE_DEFENCE: 7,

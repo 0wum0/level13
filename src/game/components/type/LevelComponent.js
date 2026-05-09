@@ -19,6 +19,13 @@ define(['ash'], function (Ash) {
 		raidDangerFactor: 1,
 		traderFrequencyFactor: 1,
 		signatureDisaster: null, // CampConstants.DISASTER_TYPE_ or null
+
+		workerMetalFactor: 1,
+		workerFoodFactor: 1,
+		workerWaterFactor: 1,
+		workerArtisanFactor: 1,
+		workerAcademicFactor: 1,
+		workerHopeFactor: 1,
 		
 		constructor: function (pos, isCampable, isHard, notCampableReason, districts, features, minX, maxX, minY, maxY, attributes) {
 			this.position = pos;
@@ -38,6 +45,13 @@ define(['ash'], function (Ash) {
 			this.raidDangerFactor = attributes.raidDangerFactor || 1;
 			this.traderFrequencyFactor = attributes.traderFrequencyFactor || 1;
 			this.signatureDisaster = attributes.signatureDisaster || null;
+
+			this.workerMetalFactor = attributes.workerMetalFactor || 1;
+			this.workerFoodFactor = attributes.workerFoodFactor || 1;
+			this.workerWaterFactor = attributes.workerWaterFactor || 1;
+			this.workerArtisanFactor = attributes.workerArtisanFactor || 1;
+			this.workerAcademicFactor = attributes.workerAcademicFactor || 1;
+			this.workerHopeFactor = attributes.workerHopeFactor || 1;
 		}
 	});
 

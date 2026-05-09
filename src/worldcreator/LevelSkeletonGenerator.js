@@ -50,6 +50,9 @@ define([
 			levelVO.notCampableReason = isCampableLevel ? null : levelTemplateVO.notCampableReason || WorldCreatorHelper.getNotCampableReason(seed, l);
 			levelVO.habitability = isCampableLevel ? levelTemplateVO.habitability || WorldCreatorConstants.getHabitability(campOrdinal) : 0;
 			levelVO.raidDangerFactor = isCampableLevel ? WorldCreatorConstants.getRaidDangerFactor(campOrdinal) : 0;
+			levelVO.diseaseFrequecyFactor = WorldCreatorConstants.getDiseaseFrequencyFactor(campOrdinal);
+			levelVO.traderFrequencyFactor = isCampableLevel ? WorldCreatorConstants.getTraderFrequencyFactor(campOrdinal) : 0;
+			levelVO.signatureDisaster = WorldCreatorConstants.getSignatureDisaster(campOrdinal);
 
 			let numSectors = WorldCreatorHelper.getNumSectorsForLevel(seed, l);
 			levelVO.numSectors = numSectors;

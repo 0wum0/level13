@@ -388,14 +388,24 @@ define([
 			let position = sector.get(PositionComponent);
 			let features = sector.get(SectorFeaturesComponent);
 
+			let levelComponent = GameGlobals.levelHelper.getLevelComponentForPosition(position.level);
+
 			let surfaceLevel = GameGlobals.worldState.getSurfaceLevel();
 			let groundLevel = GameGlobals.worldState.getGroundLevel();
 
 			result.push(CampConstants.DISASTER_TYPE_COLLAPSE);
 			result.push(CampConstants.DISASTER_TYPE_EARTHQUAKE);
 			result.push(CampConstants.DISASTER_TYPE_EARTHQUAKE);
+			
 			if (features.sunlit) result.push(CampConstants.DISASTER_TYPE_STORM);
 			if (position.level != surfaceLevel && position.level != groundLevel) result.push(CampConstants.DISASTER_TYPE_FLOOD);
+
+			if (levelComponent.signatureDisaster) {
+				let count = result.length * 2;
+				for (let i = 0; i < count; i++) {
+					result.push(levelComponent.signatureDisaster);
+				}
+			}
 
 			return result;
 		},
@@ -413,6 +423,8 @@ define([
 				return result;
 			}
 
+			let levelComponent = GameGlobals.levelHelper.getLevelComponentForPosition(position.level);
+
 			result.push(CharacterConstants.characterTypes.bard);
 			result.push(CharacterConstants.characterTypes.crafter);
 			result.push(CharacterConstants.characterTypes.drifter);
@@ -420,13 +432,27 @@ define([
 
 			if (position.level < 14) {
 				result.push(CharacterConstants.characterTypes.drifter);
+				result.push(CharacterConstants.characterTypes.fortuneTeller);
 				result.push(CharacterConstants.characterTypes.shaman);
 			}
 			
 			if (position.level > 14) {
-				result.push(CharacterConstants.characterTypes.crafter);
 				result.push(CharacterConstants.characterTypes.bard);
+				result.push(CharacterConstants.characterTypes.crafter);
 				result.push(CharacterConstants.characterTypes.doomsayer);
+			}
+
+			if (levelComponent.habitability > 1) {
+				result.push(CharacterConstants.characterTypes.bard);
+			}
+
+			if (levelComponent.habitability < 1) {
+				result.push(CharacterConstants.characterTypes.doomsayer);
+			}
+
+			if (levelComponent.raidDangerFactor < 1) {
+				result.push(CharacterConstants.characterTypes.crafter);
+				result.push(CharacterConstants.characterTypes.drifter);
 			}
 
 			return result;
@@ -438,71 +464,77 @@ define([
 			return true;
 		},
 
-		getValidCampCharacters: function (campComponent) {
+		getValidCampCharacters: function (campComponent, unique) {
 			let result = [];
 
 			for (let origin in campComponent.populationByOrigin) {
 				let num = campComponent.populationByOrigin[origin];
 				if (num <= 0) continue;
-				switch (origin) {
-					case CultureConstants.origins.SURFACE: 
-						result.push(CharacterConstants.characterTypes.surfaceRefugee);
-						break;
-					case CultureConstants.origins.SLUMS: 
-						result.push(CharacterConstants.characterTypes.slumRefugee);
-						break;
-					case CultureConstants.origins.DARKLEVELS: 
-						result.push(CharacterConstants.characterTypes.darkDweller);
-						break;
+				let count = unique ? 1 : num;
+				for (let i = 0; i < count; i++) {
+					switch (origin) {
+						case CultureConstants.origins.SURFACE: 
+							result.push(CharacterConstants.characterTypes.surfaceRefugee);
+							break;
+						case CultureConstants.origins.SLUMS: 
+							result.push(CharacterConstants.characterTypes.slumRefugee);
+							break;
+						case CultureConstants.origins.DARKLEVELS: 
+							result.push(CharacterConstants.characterTypes.darkDweller);
+							break;
+					}
 				}
 			}
 			
 			for(let key in campComponent.assignedWorkers) {
 				let num = campComponent.assignedWorkers[key] || 0;
 				if (num <= 0) continue;
-				switch (key) {
-					case CampConstants.workerTypes.scavenger.id:
-						result.push(CharacterConstants.characterTypes.workerScavenger);
-						break;
-					case CampConstants.workerTypes.trapper.id:
-						result.push(CharacterConstants.characterTypes.workerTrapper);
-						break;
-					case CampConstants.workerTypes.water.id:
-						result.push(CharacterConstants.characterTypes.workerWater);
-						break;
-					case CampConstants.workerTypes.ropemaker.id:
-						result.push(CharacterConstants.characterTypes.workerRope);
-						break;
-					case CampConstants.workerTypes.chemist.id:
-						result.push(CharacterConstants.characterTypes.workerChemist);
-						break;
-					case CampConstants.workerTypes.rubbermaker.id:
-						result.push(CharacterConstants.characterTypes.workerRubber);
-						break;
-					case CampConstants.workerTypes.gardener.id:
-						result.push(CharacterConstants.characterTypes.workerGardener);
-						break;
-					case CampConstants.workerTypes.apothecary.id:
-						result.push(CharacterConstants.characterTypes.workerApothecary);
-						break;
-					case CampConstants.workerTypes.toolsmith.id:
-						result.push(CharacterConstants.characterTypes.workerToolsmith);
-						break;
-					case CampConstants.workerTypes.concrete.id:
-						result.push(CharacterConstants.characterTypes.workerConcrete);
-						break;
-					case CampConstants.workerTypes.robotmaker.id:
-						result.push(CharacterConstants.characterTypes.workerRobotmaker);
-						break;
-					case CampConstants.workerTypes.scientist.id:
-						result.push(CharacterConstants.characterTypes.workerScientist);
-						break;
-					case CampConstants.workerTypes.soldier.id:
-						result.push(CharacterConstants.characterTypes.workerSoldier);
-						break;
-					case CampConstants.workerTypes.cleric.id:
-						result.push(CharacterConstants.characterTypes.workerCleric);
-						break;
+				let count = unique ? 1 : num;
+				for (let i = 0; i < count; i++) {
+					switch (key) {
+						case CampConstants.workerTypes.scavenger.id:
+							result.push(CharacterConstants.characterTypes.workerScavenger);
+							break;
+						case CampConstants.workerTypes.trapper.id:
+							result.push(CharacterConstants.characterTypes.workerTrapper);
+							break;
+						case CampConstants.workerTypes.water.id:
+							result.push(CharacterConstants.characterTypes.workerWater);
+							break;
+						case CampConstants.workerTypes.ropemaker.id:
+							result.push(CharacterConstants.characterTypes.workerRope);
+							break;
+						case CampConstants.workerTypes.chemist.id:
+							result.push(CharacterConstants.characterTypes.workerChemist);
+							break;
+						case CampConstants.workerTypes.rubbermaker.id:
+							result.push(CharacterConstants.characterTypes.workerRubber);
+							break;
+						case CampConstants.workerTypes.gardener.id:
+							result.push(CharacterConstants.characterTypes.workerGardener);
+							break;
+						case CampConstants.workerTypes.apothecary.id:
+							result.push(CharacterConstants.characterTypes.workerApothecary);
+							break;
+						case CampConstants.workerTypes.toolsmith.id:
+							result.push(CharacterConstants.characterTypes.workerToolsmith);
+							break;
+						case CampConstants.workerTypes.concrete.id:
+							result.push(CharacterConstants.characterTypes.workerConcrete);
+							break;
+						case CampConstants.workerTypes.robotmaker.id:
+							result.push(CharacterConstants.characterTypes.workerRobotmaker);
+							break;
+						case CampConstants.workerTypes.scientist.id:
+							result.push(CharacterConstants.characterTypes.workerScientist);
+							break;
+						case CampConstants.workerTypes.soldier.id:
+							result.push(CharacterConstants.characterTypes.workerSoldier);
+							break;
+						case CampConstants.workerTypes.cleric.id:
+							result.push(CharacterConstants.characterTypes.workerCleric);
+							break;
+					}
 				}
 			}
 
@@ -540,7 +572,7 @@ define([
 				case CharacterConstants.characterTypes.workerWater:
 					return campComponent.assignedWorkers[CampConstants.workerTypes.water.id];
 				default:
-					let validTypes = this.getValidCampCharacters(campComponent);
+					let validTypes = this.getValidCampCharacters(campComponent, true);
 					return validTypes.indexOf(characterType) >= 0 ? campComponent.population : 0;
 			}
 		},
@@ -551,24 +583,7 @@ define([
 			let level = position.level;
 			let maxPopulation = campComponent.maxPopulation;
 
-			let possibleOrigins = [];
-
-			possibleOrigins.push(CultureConstants.origins.SURFACE);
-			if (level > 20) possibleOrigins.push(CultureConstants.origins.SURFACE);
-			if (level > 17) possibleOrigins.push(CultureConstants.origins.SURFACE);
-			if (level > 14) possibleOrigins.push(CultureConstants.origins.SURFACE);
-
-			possibleOrigins.push(CultureConstants.origins.SLUMS);
-			if (level < 20) possibleOrigins.push(CultureConstants.origins.SLUMS);
-			if (level > 14) possibleOrigins.push(CultureConstants.origins.SLUMS);
-			if (level > 6) possibleOrigins.push(CultureConstants.origins.SLUMS);
-
-			possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
-			if (level < 13) possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
-			if (level < 10) possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
-			if (maxPopulation < 24) possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
-
-			return MathUtils.randomElement(possibleOrigins);
+			return CultureConstants.getRandomOrigin(level, maxPopulation >= 24);
 		},
 		
 		getRandomIncomingCaravan: function (campOrdinal, levelOrdinal, traderLevel, unlockedResources, neededIngredient) {

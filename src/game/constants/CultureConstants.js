@@ -1,6 +1,6 @@
-define(function () {
+define(['utils/MathUtils'], function (MathUtils) {
 	
-	var CultureConstants = {
+	let CultureConstants = {
 		
 		cultures: {
 			ASSURIAN: "assurian",
@@ -267,15 +267,40 @@ define(function () {
 			return this.genders.OTHER;
 		},
 		
-		getRandomOrigin: function (level) {
-			let r = Math.random();
-			
-			let surfaceThreshold = level > 14 ? 0.25 : 0;
-			if (r < surfaceThreshold) return this.origins.SURFACE;
-			
-			let darkLevelThreshold = level < 10 ? 0.75 : 0.25;
-			if (r < surfaceThreshold + darkLevelThreshold) return this.origins.DARKLEVELS;
-			
+		getRandomOrigin: function (level, isBusyArea) {
+			let possibleOrigins = [];
+
+			possibleOrigins.push(CultureConstants.getDefaultOrigin(level));
+
+			possibleOrigins.push(CultureConstants.origins.SURFACE);
+			if (level > 22) possibleOrigins.push(CultureConstants.origins.SURFACE);
+			if (level > 20) possibleOrigins.push(CultureConstants.origins.SURFACE);
+			if (level > 17) possibleOrigins.push(CultureConstants.origins.SURFACE);
+			if (level > 14) possibleOrigins.push(CultureConstants.origins.SURFACE);
+
+			possibleOrigins.push(CultureConstants.origins.SLUMS);
+			if (level < 20) possibleOrigins.push(CultureConstants.origins.SLUMS);
+			if (level < 18) possibleOrigins.push(CultureConstants.origins.SLUMS);
+			if (level > 14) possibleOrigins.push(CultureConstants.origins.SLUMS);
+			if (level > 6) possibleOrigins.push(CultureConstants.origins.SLUMS);
+
+			if (level < 14) possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
+			if (level < 10) possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
+			if (!isBusyArea) possibleOrigins.push(CultureConstants.origins.DARKLEVELS);
+
+			return MathUtils.randomElement(possibleOrigins);
+		},
+
+		getDefaultOrigin: function (level) {
+			// level with mining activity before the Fall
+			if (level == 13) return this.origins.SLUMS;
+			// level with gang activity before the Fall, including the Red Hats compound
+			if (level == 8) return this.origins.SLUMS;
+			// levels near surface
+			if (level > 21) return this.origins.SURFACE;
+			// levels far down
+			if (level < 10) return this.origins.DARKLEVELS;
+			// default
 			return this.origins.SLUMS;
 		},
 		

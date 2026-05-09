@@ -150,7 +150,7 @@
 	"bandit__template": {
 		"attackRatio": 0.56,
 		"enemyType": "bandit",
-		"environment": [ "nohazard", "highlevels", "inhabited" ],
+		"environment": [ "nohazard", "highlevels", "inhabited", "raid" ],
 		"healthFactor": 0.9
 	},
 	"berserk": {
@@ -650,7 +650,7 @@
 		"attackRatio": 0.58,
 		"campOrdinal": 7,
 		"enemyType": "humanoid",
-		"environment": [ "uninhabited" ],
+		"environment": [ "uninhabited", "raid" ],
 		"name": "Fiend"
 	},
 	"fierce_snake": {
@@ -768,7 +768,7 @@
 		"attackRatio": 0.55,
 		"difficulty": 6,
 		"enemyType": "bandit",
-		"environment": [ "nohazard", "territory" ],
+		"environment": [ "nohazard", "territory", "raid" ],
 		"healthFactor": 0.9,
 		"rarity": 30,
 		"speed": 0.95
@@ -847,7 +847,7 @@
 	"ghoul": {
 		"campOrdinal": 9,
 		"enemyType": "humanoid",
-		"environment": [ "dark", "noflood", "industrial" ],
+		"environment": [ "dark", "noflood", "industrial", "raid" ],
 		"name": "Ghoul",
 		"rarity": 5
 	},
@@ -1295,7 +1295,7 @@
 			"water"
 		],
 		"enemyType": "bandit",
-		"environment": [ "water" ],
+		"environment": [ "water", "raid" ],
 		"name": "outlaw",
 		"rarity": 50,
 		"speed": 0.9
@@ -1473,7 +1473,7 @@
 			"water"
 		],
 		"enemyType": "bandit",
-		"environment": [ "water" ],
+		"environment": [ "water", "raid" ],
 		"name": "robber",
 		"rarity": 50,
 		"speed": 0.9
@@ -1949,6 +1949,7 @@
 	"thug__template": {
 		"difficulty": 6,
 		"enemyType": "bandit",
+		"environment": [ "raid" ],
 		"size": 1
 	},
 	"tiger_snake": {

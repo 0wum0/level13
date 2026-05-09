@@ -422,7 +422,7 @@
 			let population = campComponent.population;
 			let hasCampfire = improvements.getCount(improvementNames.campfire);
 
-			let validCharacterTypes = GameGlobals.campHelper.getValidCampCharacters(campComponent);
+			let validCharacterTypes = GameGlobals.campHelper.getValidCampCharacters(campComponent, false);
 
 			if (!hasCampfire || population < 1 || validCharacterTypes.length < 1) {
 				campComponent.displayedCharacters = [];

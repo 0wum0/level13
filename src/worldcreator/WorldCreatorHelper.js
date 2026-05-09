@@ -4,12 +4,13 @@ define([
 	'game/vos/ResourcesVO',
 	'worldcreator/WorldCreatorRandom',
 	'worldcreator/WorldCreatorConstants',
+	'game/constants/CampConstants',
 	'game/constants/LevelConstants',
 	'game/constants/PositionConstants',
 	'game/constants/SectorConstants',
 	'game/constants/WorldConstants',
 	'game/vos/PositionVO',
-], function (Ash, ResourcesVO, WorldCreatorRandom, WorldCreatorConstants, LevelConstants, PositionConstants, SectorConstants, WorldConstants, PositionVO) {
+], function (Ash, ResourcesVO, WorldCreatorRandom, WorldCreatorConstants, CampConstants, LevelConstants, PositionConstants, SectorConstants, WorldConstants, PositionVO) {
 
 	let WorldCreatorHelper = {
 		
@@ -589,7 +590,7 @@ define([
 		
 		getNotCampableReason: function (seed, level) {
 			if (this.isCampableLevel(seed, level)) return null;
-			var bottomLevel = this.getBottomLevel(seed);
+			let bottomLevel = this.getBottomLevel(seed);
 			
 			if (level === 14) return LevelConstants.UNCAMPABLE_LEVEL_TYPE_RADIATION;
 			if (level == bottomLevel) return LevelConstants.UNCAMPABLE_LEVEL_TYPE_SUPERSTITION;
@@ -609,17 +610,30 @@ define([
 				return LevelConstants.UNCAMPABLE_LEVEL_TYPE_RADIATION;
 			}
 			
-			if (campOrdinal >= WorldCreatorConstants.MIN_CAMP_ORDINAL_HAZARD_RADIATION && campOrdinal != 9)
+			if (campOrdinal >= WorldCreatorConstants.MIN_CAMP_ORDINAL_HAZARD_RADIATION && campOrdinal != 9) {
 				options.push(LevelConstants.UNCAMPABLE_LEVEL_TYPE_RADIATION);
-			if (campOrdinal >= WorldCreatorConstants.MIN_CAMP_ORDINAL_HAZARD_POISON)
-				options.push(LevelConstants.UNCAMPABLE_LEVEL_TYPE_POLLUTION);
-			if (campOrdinal != 8 && campOrdinal != 15 && campOrdinal != 14)
+			}
+			
+			if (campOrdinal >= WorldCreatorConstants.MIN_CAMP_ORDINAL_HAZARD_POISON) {
+				options.push(LevelConstants.UNCAMPABLE_LEVEL_TYPE_POLLUTION);				
+
+				if (WorldCreatorConstants.getDiseaseFrequencyFactor(campOrdinal) > 1) {
+					options.push(LevelConstants.UNCAMPABLE_LEVEL_TYPE_POLLUTION);
+				}
+			}
+			
+			if (campOrdinal != 8 && campOrdinal != 15 && campOrdinal != 14) {
 				options.push(LevelConstants.UNCAMPABLE_LEVEL_TYPE_FLOODED);
+
+				if (WorldCreatorConstants.getSignatureDisaster(campOrdinal) == CampConstants.DISASTER_TYPE_FLOOD) {
+					return LevelConstants.UNCAMPABLE_LEVEL_TYPE_FLOODED;
+				}
+			}
 				
 			if (options.length == 0)
 				return LevelConstants.UNCAMPABLE_LEVEL_TYPE_SUPERSTITION;
 				
-			return options[WorldCreatorRandom.randomInt(seed % 4 + level + level * 8 + 88, 0, options.length)];
+			return WorldCreatorRandom.randomItemFromArray(seed - level, options);
 		},
 		
 		getCamplessLevelOrdinals: function (seed) {

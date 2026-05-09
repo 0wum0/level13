@@ -1285,6 +1285,7 @@ define([
 			if (l == 14) levelDensity = 8;
 			if (l == worldVO.bottomLevel + 1) levelDensity = 6;
 			if (l == worldVO.bottomLevel) levelDensity = 3;
+			if (levelVO.diseaseFrequecyFactor > 1) levelDensity++;
 			
 			let minDensity = 0;
 			let maxDensity = 10;
@@ -2509,6 +2510,7 @@ define([
 				if (districtVO.type == SectorConstants.SECTOR_TYPE_INDUSTRIAL) result.push(SectorConstants.HAZARD_TYPE_POLLUTION);
 				if (districtVO.type == SectorConstants.SECTOR_TYPE_COMMERCIAL) result.push(SectorConstants.HAZARD_TYPE_POLLUTION);
 				if (districtVO.style == SectorConstants.STYLE_MODERN) result.push(SectorConstants.HAZARD_TYPE_POLLUTION);
+				if (levelVO.diseaseFrequecyFactor > 1) result.push(SectorConstants.HAZARD_TYPE_POLLUTION);
 			}
 
 			// radiation
@@ -2525,6 +2527,13 @@ define([
 				if (districtVO.type == SectorConstants.SECTOR_TYPE_PUBLIC) result.push(SectorConstants.HAZARD_TYPE_FLOODED);
 				if (districtVO.type == SectorConstants.SECTOR_TYPE_RESIDENTIAL) result.push(SectorConstants.HAZARD_TYPE_FLOODED);
 				if (districtVO.style == SectorConstants.STYLE_NEOWESTERN) result.push(SectorConstants.HAZARD_TYPE_FLOODED);
+				if (levelVO.diseaseFrequecyFactor > 1) result.push(SectorConstants.HAZARD_TYPE_FLOODED);
+
+				if (levelVO.signatureDisaster == CampConstants.DISASTER_TYPE_FLOOD) {
+					result.push(SectorConstants.HAZARD_TYPE_FLOODED);
+					result.push(SectorConstants.HAZARD_TYPE_FLOODED);
+					result.push(SectorConstants.HAZARD_TYPE_FLOODED);
+				}
 			}
 
 			// debris
@@ -2548,7 +2557,7 @@ define([
 			}
 
 			// territory
-			if (levelVO.isCampable && campOrdinal > WorldConstants.CAMPS_BEFORE_GROUND) {
+			if (levelVO.isCampable && campOrdinal > WorldConstants.CAMPS_BEFORE_GROUND && levelVO.raidDangerFactor > 0.5) {
 				let distanceToCamp = WorldCreatorHelper.getQuickMinDistanceToCamp(levelVO, sectorVO);
 
 				if (distanceToCamp > 3) {
@@ -2557,6 +2566,12 @@ define([
 					result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);
 
 					if (levelVO.habitability >= 1) {
+						result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);
+						result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);
+						result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);
+					}
+
+					if (levelVO.raidDangerFactor > 1) {
 						result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);
 						result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);
 						result.push(SectorConstants.HAZARD_TYPE_GANG_TERRITORY);

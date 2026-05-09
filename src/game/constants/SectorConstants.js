@@ -145,6 +145,7 @@ define(['ash', 'game/constants/LevelConstants'], function (Ash, LevelConstants) 
 
 			if (sectorData.hazards.flooded > 0) tags.push("flooded");
 			if (sectorData.hazards.territory > 0) tags.push("territory");
+			if (levelData.raidDangerFactor > 1) tags.push("raid");
 			if (sectorData.hazards.flooded === 0) tags.push("noflood");
 
 			if (sectorData.wear > 5 || districtData.wear > 5) tags.push("worn");

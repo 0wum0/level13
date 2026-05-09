@@ -1,7 +1,7 @@
-define(['ash', 'worldcreator/WorldCreatorLogger', 'game/constants/PlayerStatConstants', 'game/constants/WorldConstants', 'utils/MathUtils'],
-function (Ash, WorldCreatorLogger, PlayerStatConstants, WorldConstants, MathUtils) {
+define(['ash', 'game/constants/CampConstants', 'game/constants/PlayerStatConstants', 'game/constants/WorldConstants', 'utils/MathUtils'],
+function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 	
-	var WorldCreatorConstants = {
+	let WorldCreatorConstants = {
 		
 		CRITICAL_PATH_TYPE_PASSAGE_TO_CAMP: "passage_to_camp",
 		CRITICAL_PATH_TYPE_CAMP_TO_PASSAGE: "camp_to_passage",
@@ -119,7 +119,7 @@ function (Ash, WorldCreatorLogger, PlayerStatConstants, WorldConstants, MathUtil
 					maxLength = maxLength / 3 - movementCostLevel / movementCost;
 					break;
 				default:
-					WorldCreatorLogger.w("Unknown path type: " + pathType);
+					log.w("Unknown path type: " + pathType);
 					break;
 			}
 			
@@ -183,6 +183,61 @@ function (Ash, WorldCreatorLogger, PlayerStatConstants, WorldConstants, MathUtil
 			}
 		},
 		
+		getDiseaseFrequencyFactor: function (campOrdinal) {
+			if (campOrdinal <= 0) return 0;
+			switch (campOrdinal) {
+				case 5:
+				case WorldConstants.CAMPS_BEFORE_GROUND + 1:
+				case 12:
+					return 1.5;
+
+				case 2: 
+				case WorldConstants.CAMPS_BEFORE_GROUND: 
+				case 13: 
+					return 0.5;
+				
+				default:
+					return 1;
+			}
+		},
+		
+		getTraderFrequencyFactor: function (campOrdinal) {
+			if (campOrdinal <= 0) return 0;
+			switch (campOrdinal) {
+				case 4:
+				case 10:
+				case 11:
+					return 1.5;
+				
+				case 13:
+				case 7:
+				case 14:
+					return 0.5;
+				
+				default:
+					return 1;
+			}
+		},
+		
+		getSignatureDisaster: function (campOrdinal) {
+			if (campOrdinal <= 0) return 0;
+			switch (campOrdinal) {
+				case 2:
+					return CampConstants.DISASTER_TYPE_COLLAPSE;
+				case 10:
+				case 12:
+					return CampConstants.DISASTER_TYPE_EARTHQUAKE;
+				case 6:
+				case WorldConstants.CAMPS_BEFORE_GROUND: 
+					return CampConstants.DISASTER_TYPE_FLOOD;
+				case WorldConstants.CAMPS_TOTAL:
+					return CampConstants.DISASTER_TYPE_STORM;
+				
+				default:
+					return null;
+			}
+		},
+		
 		getZoneOrdinal: function (zone) {
 			switch (zone) {
 				// all levels
@@ -198,7 +253,7 @@ function (Ash, WorldCreatorLogger, PlayerStatConstants, WorldConstants, MathUtil
 				case WorldConstants.ZONE_PASSAGE_TO_PASSAGE: return 11;
 				case WorldConstants.ZONE_EXTRA_UNCAMPABLE: return 12;
 				default:
-					WorldCreatorLogger.w("no ordinal defined for zone: " + zone);
+					log.w("no ordinal defined for zone: " + zone);
 					return 5;
 			}
 		},

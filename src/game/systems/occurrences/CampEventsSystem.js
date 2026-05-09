@@ -146,7 +146,7 @@ define([
 					if (!isScheduled) {
 						this.scheduleEvent(campNode, event);
 					} else if (campTimers.isTimeToStart(event)) {
-						var skipProbability = this.getEventSkipProbability(campNode, event);
+						let skipProbability = this.getEventSkipProbability(campNode, event);
 						if (Math.random() < skipProbability) {
 							this.skipEvent(campNode, event);
 						} else {
@@ -473,9 +473,9 @@ define([
 		},
 
 		startEvent: function (campNode, event) {
-			var campTimers = campNode.entity.get(CampEventTimersComponent);
-			var duration = OccurrenceConstants.getDuration(event);
-			var campPos = campNode.entity.get(PositionComponent);
+			let campTimers = campNode.entity.get(CampEventTimersComponent);
+			let duration = OccurrenceConstants.getDuration(event);
+			let campPos = campNode.entity.get(PositionComponent);
 			let campOrdinal = GameGlobals.worldState.getCampOrdinal(campPos.level);
 
 			let logMsg = null;
@@ -843,16 +843,32 @@ define([
 		getTimeToNext: function (campNode, event) {
 			let isNew = this.isNew(event);
 			let numCamps = GameGlobals.gameState.numCamps;
+			let levelComponent = GameGlobals.levelHelper.getLevelComponentForPosition(campNode.position.level);
 			let upgradeLevel = GameGlobals.campHelper.getEventUpgradeLevel(event);
+			let campFactor = 1;
 
 			// event upgrades are supposed to "improve" them so for negative ones they should not make them more frequent
 			switch (event) {
 				case OccurrenceConstants.campOccurrenceTypes.disaster:
-				upgradeLevel = 1;
+					upgradeLevel = 1;
+					if (levelComponent.signatureDisaster) campFactor = 0.5;
+					break;
+				case OccurrenceConstants.campOccurrenceTypes.disease:
+					upgradeLevel = 1;
+					campFactor = 1 / levelComponent.diseaseFrequecyFactor;
+					break;
+				case OccurrenceConstants.campOccurrenceTypes.recruit:
+				case OccurrenceConstants.campOccurrenceTypes.refugees:
+				case OccurrenceConstants.campOccurrenceTypes.visitor:
+					campFactor = 1 / levelComponent.habitability;
+					break;
+				case OccurrenceConstants.campOccurrenceTypes.trader:
+					campFactor = 1 / levelComponent.traderFrequencyFactor;
+					break;
 			}
 
 			let reputationComponent = campNode.reputation;
-			return OccurrenceConstants.getTimeToNext(event, isNew, upgradeLevel, reputationComponent.value, numCamps);
+			return OccurrenceConstants.getTimeToNext(event, isNew, upgradeLevel, campFactor, reputationComponent.value, numCamps);
 		},
 		
 		getFastTrackTimeToNext: function (campNode, event) {

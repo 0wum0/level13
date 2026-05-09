@@ -206,7 +206,7 @@ define(['ash',
 				name = this.getRandomRobotName();
 				icon = this.getRandomRobotIcon();
 			} else {
-				let origin = template.origin || CultureConstants.getRandomOrigin(appearLevel);
+				let origin = template.origin || CultureConstants.getRandomOrigin(appearLevel, false);
 				let cultures = this.getExplorerCulturesFromTemplate(template, origin);
 				gender = template.gender || CultureConstants.getRandomGender();
 				name = CultureConstants.getRandomShortName(gender, origin, cultures);

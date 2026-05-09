@@ -11,6 +11,7 @@ function (Ash, VOCache, WorldCreatorConstants, WorldCreatorLogger, LevelConstant
 
 			this.additionalCampPositions = [];
 			this.campPosition = null; // PositionVO
+			this.diseaseFrequecyFactor = 1;
 			this.districts = []; // list of DistrictVO 
 			this.features = []; // list of WorldFeatureVO
 			this.gangs = []; // list of GangVO
@@ -38,7 +39,9 @@ function (Ash, VOCache, WorldCreatorConstants, WorldCreatorLogger, LevelConstant
 			this.predefinedExplorers = []; // list of id
 			this.raidDangerFactor = 1;
 			this.seed = 0;
+			this.signatureDisaster = null;
 			this.stageCenterPositions = {}; // e/l -> list of PositionVO
+			this.traderFrequencyFactor = 1;
 			this.workshopPositions = [];
 			this.workshopResource = null;
 

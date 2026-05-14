@@ -61,7 +61,7 @@ define([
 			GlobalSignals.add(this, GlobalSignals.sectorScoutedSignal, this.onSectorScouted);
 			GlobalSignals.add(this, GlobalSignals.improvementBuiltSignal, this.updateAll);
 			GlobalSignals.add(this, GlobalSignals.campBuiltSignal, this.updateAllLevels);
-			GlobalSignals.add(this, GlobalSignals.playerPositionChangedSignal, this.onPlayerPositionChanged);
+			GlobalSignals.add(this, GlobalSignals.playerLocationChangedSignal, this.onPlayerLocationChanged);
 			GlobalSignals.add(this, GlobalSignals.workshopClearedSignal, this.updateAllLevels);
 		},
 
@@ -226,7 +226,7 @@ define([
 			this.registerScoutedFeatures(sector);
 		},
 		
-		onPlayerPositionChanged: function () {
+		onPlayerLocationChanged: function () {
 			let level = this.playerLocationNodes.head.position.level;
 			if (GameGlobals.levelHelper.isLevelTypeRevealed(level)) return;
 			

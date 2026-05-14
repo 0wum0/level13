@@ -386,7 +386,7 @@ define([
 			let bugTitle = StringUtils.encodeURI("[JS Error] " + desc.title);
 			let bugBody = StringUtils.encodeURI(
 			   "Details:\n[Fill in any details here that you think will help tracking down this bug]" +
-			   "\n\nSeed: " + GameGlobals.gameState.worldSeed + "\nPosition: " + pos + "\nStacktrace:\n" + stackTrace);
+			   "\n\nSeed: " + GameGlobals.worldState.worldSeed + "\nPosition: " + pos + "\nStacktrace:\n" + stackTrace);
 			let url = "https://github.com/nroutasuo/level13/issues/new?title=" + bugTitle + "&body=" + bugBody + "&labels=exception";
 			
 			GameGlobals.uiFunctions.popupManager.closeAllPopups();

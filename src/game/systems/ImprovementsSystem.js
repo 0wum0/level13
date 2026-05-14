@@ -40,6 +40,7 @@ define([
 		update: function (time) {
 			if (GameGlobals.gameState.isPaused) return;
 			if (GameGlobals.gameState.isLaunched) return;
+			if (!this.playerLocationNodes.head) return;
 
 			let sectorImprovements = this.playerLocationNodes.head.entity.get(SectorImprovementsComponent);
 			this.updateSectorCollectors(time, sectorImprovements);

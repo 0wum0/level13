@@ -235,7 +235,7 @@ function (Ash, UIList, FileUtils, GameGlobals, GlobalSignals, GameConstants, UIC
 				saveName: saveData.saveName,
 				date: date,
 				version: saveData.version,
-				seed: hasData ? saveData.gameState.worldSeed : null,
+				seed: hasData ? GameGlobals.saveHelper.getWorldSeedFromSave(saveData) : null,
 				numCamps: hasData ? saveData.gameState.numCamps : 0,
 			};
 			return data;
@@ -256,7 +256,7 @@ function (Ash, UIList, FileUtils, GameGlobals, GlobalSignals, GameConstants, UIC
 
 			result += "Save version: <span" + (showVersionWarning ? " class='warning'" : "") + ">" + saveObject.version + "</span><br/>";
 			result += "Save timestamp: " + this.getDateDisplayStringFromDateString(saveObject.timeStamp) + "<br/>";
-			result += "Save world seed: " + saveObject.gameState.worldSeed;
+			result += "Save world seed: " + GameGlobals.saveHelper.getWorldSeedFromSave(saveObject);
 
 			if (showVersionWarning) {
 				result += "<br/><br/>This save is from an old, incompatible version. It may not work properly.";

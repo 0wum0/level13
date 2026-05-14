@@ -197,9 +197,9 @@ define([
 		},
 
 		getMoveDuration: function (oldSector, newSector) {
-			let isThemeTransition = oldSector.get(SectorFeaturesComponent).sunlit != newSector.get(SectorFeaturesComponent).sunlit;
+			let isThemeTransition = oldSector && oldSector.get(SectorFeaturesComponent).sunlit != newSector.get(SectorFeaturesComponent).sunlit;
 			if (isThemeTransition) return UIConstants.THEME_TRANSITION_DURATION;
-			let isLevelTransition = oldSector.get(PositionComponent).level != newSector.get(PositionComponent).level;
+			let isLevelTransition = oldSector && oldSector.get(PositionComponent).level != newSector.get(PositionComponent).level;
 			if (isLevelTransition) return 200;
 			return 50;
 		},

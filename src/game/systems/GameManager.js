@@ -507,7 +507,7 @@ define([
 		updateTrackingTags: function () {
 			try {
 				Sentry.setTag("numCamps", GameGlobals.gameState.numCamps);
-				Sentry.setTag("worldSeed", GameGlobals.gameState.worldSeed);
+				Sentry.setTag("worldSeed", GameGlobals.worldState.worldSeed);
 			} catch (e) {}
 		},
 		

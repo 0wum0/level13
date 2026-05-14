@@ -234,6 +234,11 @@ define([
 			return ((new Date(s) !== "Invalid Date" && !isNaN(new Date(s))));
 		},
 
+		getWorldSeedFromSave: function (saveObject) {
+			if (saveObject.worldState) return saveObject.worldState.worldSeed;
+			return saveObject.gameState.worldSeed;
+		}
+
 	});
 
 	return SaveHelper;

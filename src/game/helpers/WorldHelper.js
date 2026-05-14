@@ -34,13 +34,13 @@ define([
 				log.i("preparing world (" + GameConstants.getTimeSinceStart() + ")", "start");
 
 				let saveData = this.parseSave(save);
-				let worldSeed = saveData.hasSave ? saveData.worldSeed : WorldCreatorRandom.getNewSeed();
+				let worldSeed = GameGlobals.saveHelper.getWorldSeedFromSave(save) || WorldCreatorRandom.getNewSeed();
 				let levels = saveData.levels || [ 13 ];
 				
 				this.generateWorld(worldSeed, saveData.worldTemplateVO, saveData.hasSave)
 				.then(worldVO => {
 					this.worldVO = worldVO;
-					GameGlobals.gameState.worldSeed = worldVO.seed;
+					GameGlobals.worldState.worldSeed = worldVO.seed;
 				})
 				.then(() => this.generateLevels(levels, saveData.worldTemplateVO))
 				.then(() => this.saveWorld(saveData.worldTemplateVO))
@@ -64,7 +64,7 @@ define([
 
 			if (hasSave) {
 				let loadedGameState = save.gameState;
-				worldSeed = parseInt(loadedGameState.worldSeed);
+				worldSeed = parseInt(GameGlobals.saveHelper.getWorldSeedFromSave(save));
 
 				if (save.worldState && save.worldState.revealedLevels) 
 					log.i("save.worldState.revealedLevels: " + save.worldState.revealedLevels.join(","))

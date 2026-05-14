@@ -2,6 +2,7 @@
 define([
 	'ash',
 	'utils/MathUtils',
+	'game/constants/CampConstants',
 	'game/constants/ExplorerConstants',
 	'game/constants/ItemConstants',
 	'game/constants/LevelConstants',
@@ -27,7 +28,7 @@ define([
 	'worldcreator/CriticalPathVO',
 ], function (
 	Ash, MathUtils,
-	ExplorerConstants, ItemConstants, LevelConstants, MovementConstants, PositionConstants, SectorConstants, StoryConstants, TradeConstants, TribeConstants, UpgradeConstants, WorldConstants,
+	CampConstants, ExplorerConstants, ItemConstants, LevelConstants, MovementConstants, PositionConstants, SectorConstants, StoryConstants, TradeConstants, TribeConstants, UpgradeConstants, WorldConstants,
 	LocaleVO, PathConstraintVO, PositionVO, ResourcesVO, StashVO,
 	WorldCreatorConstants, WorldCreatorHelper, WorldCreatorRandom, WorldCreatorDebug, WorldCreatorLogger, SectorGeneratorHelper, CriticalPathVO
 ) {
@@ -1090,7 +1091,7 @@ define([
 			if (levelVO.level == 13) numMetal++;
 			if (!levelVO.isCampable) numMetal--;
 			if (!levelVO.isCampable) numRope--;
-			if (levelVO.isHard) count--;
+			if (levelVO.isHard) numMetal--;
 			if (levelVO.isHard) numRope--;
 
 			generateHeapSectors(resourceNames.rope, numRope);

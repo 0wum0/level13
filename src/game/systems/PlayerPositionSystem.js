@@ -408,7 +408,7 @@ define([
 		getFallbackPosition: function () {
 			let playerPos = this.playerPositionNodes.head.position;
 			let levelSectors = GameGlobals.levelHelper.getSectorsByLevel(playerPos.level);
-			if (levelSectors.length > 0) return sectors[0].get(PositionComponent);
+			if (levelSectors.length > 0) return levelSectors[0].get(PositionComponent);
 			let startSector = GameGlobals.levelHelper.getCampSectorOnLevel(13);
 			if (startSector) return startSector.get(PositionComponent);
 			log.e("can't find any sector for fallback position")

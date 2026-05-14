@@ -354,7 +354,7 @@ define([
 					let name = resources[i];
 					if (!GameGlobals.gameState.unlockedFeatures["resource_" + name]) continue;
 					if (!GameGlobals.playerHelper.hasCollectibleResource(name, false)) continue;
-					let total = Math.floor(GameGlobals.playerHelper.getResouceInInventory(name)) + Math.floor(this.getResourceCurrentlyAvailableToCollect(name));
+					let total = Math.floor(GameGlobals.playerHelper.getResourceInInventory(name)) + Math.floor(this.getResourceCurrentlyAvailableToCollect(name));
 					if (total < maxResourcesToShowWait) showWait = true;
 				}
 			}

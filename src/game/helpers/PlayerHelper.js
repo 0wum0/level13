@@ -178,7 +178,7 @@ define([
 		},
 		
 		hasAccessToResource: function (resourceName, includeScavenge, includeUnbuiltCollectible) {
-			if (this.getResouceInInventory(resourceName) >= 1) {
+			if (this.getResourceInInventory(resourceName) >= 1) {
 				return true;
 			}
 			
@@ -199,7 +199,7 @@ define([
 			return false;
 		},
 		
-		getResouceInInventory: function (resourceName) {
+		getResourceInInventory: function (resourceName) {
 			return GameGlobals.resourcesHelper.getCurrentStorage().resources.getResource(resourceName) || 0;
 		},
 		

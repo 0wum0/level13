@@ -61,6 +61,19 @@ define(['ash',
 		ASCII_MAP_SYMBOL_RES_METAL: "M",
 		ASCII_MAP_SYMBOL_RES_INGREDIENT: "I",
 
+		CAMP_UNIQUE_FEATURE_HABITABILITY: "habitability",
+		CAMP_UNIQUE_FEATURE_RAID_DANGER_FACTOR: "raid_danger",
+		CAMP_UNIQUE_FEATURE_TRADER_FACTOR: "trader_freq",
+		CAMP_UNIQUE_FEATURE_DISEASE_FACTOR: "disease_factor",
+		CAMP_UNIQUE_FEATURE_DISASTER: "disaster",
+		CAMP_UNIQUE_FEATURE_WORKER_METAL: "worker_metal",
+		CAMP_UNIQUE_FEATURE_WORKER_FOOD: "worker_food",
+		CAMP_UNIQUE_FEATURE_WORKER_WATER: "worker_water",
+		CAMP_UNIQUE_FEATURE_WORKER_ARTISAN: "worker_artisan",
+		CAMP_UNIQUE_FEATURE_WORKER_ACADEMIC: "worker_academic",
+		CAMP_UNIQUE_FEATURE_WORKER_HOPE: "worker_hope",
+		CAMP_UNIQUE_FEATURE_WORKSHOP: "workshop",
+
 		names: {
 			resources: {
 				stamina: "stamina",
@@ -98,6 +111,32 @@ define(['ash',
 			if ($body.hasClass("dark")) return UIConstants.THEME_DARK;
 			if ($body.hasClass("dusky")) return UIConstants.THEME_DUSKY;
 			return null;
+		},
+
+		getThemedIcon: function (src, alt, tooltip, classes) {
+			let result = "<img ";
+
+			let srcD = src.replace(/(\.[^/.]+)$/, "-dark$1");
+			let srcS = src;
+
+			result += "src='" + srcD + "' ";
+			result += "data-src-dark='" + srcD + "' ";
+			result += "data-src-sunlit='" + srcS + "' ";
+
+			classes = classes || [];
+			if (typeof classes == "string") classes = [ classes ];
+			classes.push("img-themed");
+			if (tooltip) classes.push("info-callout-target");
+			if (tooltip) classes.push("info-callout-target-small");
+
+			result += "class='" + classes.join(" ") + "' ";
+
+			if (alt) result += "alt='" + alt + "' ";
+			if (tooltip) result += "description='" + tooltip + "' ";
+			
+			result += "/>";
+
+			return result;
 		},
 		
 		getIconOrFallback: function (icon) {
@@ -758,8 +797,11 @@ define(['ash',
 			return true;
 		},
 		
-		getMultiplierBonusDisplayValue: function (value) {
-			return Math.round(Math.abs(1 - value) * 100) + "%";
+		getMultiplierBonusDisplayValue: function (value, includeSign) {
+			let result = Math.round(Math.abs(1 - value) * 100) + "%";
+			if (includeSign && value < 1) result = "-" + result;
+			if (includeSign && value > 1) result = "+" + result;
+			return result;
 		},
 
 		sortItemsByType: function (a, b) {
@@ -1041,6 +1083,126 @@ define(['ash',
 			}
 			
 			return html;
+		},
+
+		getCampUniqueFeatureIcon: function (type, value, isNegative, options, context) {
+			options = options || {};
+			let classes = [ "camp-unique-feature-icon-container" ];
+			if (isNegative) classes.push("camp-unique-feature-icon-negative");
+			if (!isNegative) classes.push("camp-unique-feature-icon-positive");
+
+			let getIconPath = (id) => "/img/eldorado/camp_feature_" + id + ".png";
+			let iconID = type;
+
+			let displayValue = typeof value == "number" ? UIConstants.getMultiplierBonusDisplayValue(value, true) : value;
+
+			let textKeyBase = "ui.camp.unique_feature_" + type;
+			let textKeySuffix = (isNegative ? "_negative" : "_positive");
+
+			let flavourDescription = Text.t(textKeyBase + textKeySuffix + "_description", displayValue, textKeyBase + "_description");
+			let functionalDescription = Text.t(textKeyBase + textKeySuffix + "_summary", displayValue, textKeyBase + "_summary");
+
+			switch (type) {
+				case UIConstants.CAMP_UNIQUE_FEATURE_HABITABILITY: 
+					iconID = value < 1 ? "habitability_negative" : "habitability_positive";
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_RAID_DANGER_FACTOR: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_TRADER_FACTOR: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_DISEASE_FACTOR: 
+					iconID = "disease_freq";
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_DISASTER:
+					iconID = "disaster_" + value;
+					flavourDescription = Text.t(textKeyBase + "_" + value + "_description");
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKER_METAL: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKER_FOOD: 
+					if (context.campOrdinal == 8) flavourDescription = Text.t(textKeyBase + "_ground_description");
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKER_WATER: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKER_ARTISAN: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKER_ACADEMIC: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKER_HOPE: 
+					break;
+				case UIConstants.CAMP_UNIQUE_FEATURE_WORKSHOP:
+					iconID = "worker_generic";
+					break;
+			}
+			
+			let tooltip = functionalDescription.toLowerCase();
+			
+			let span = "<div class='" + classes.join(" ") + "'>";
+			if (!options.hideIcons) span += this.getThemedIcon(getIconPath(iconID), tooltip, tooltip, "camp-unique-feature-icon");
+			if (options.showText && !options.shortText) span += "<div class='camp-unique-feature-label'>" + flavourDescription + "</div>";
+			if (options.showText && options.shortText) span += "<div class='camp-unique-feature-label'>" + functionalDescription + "</div>";
+
+			span += "</div>"
+			
+			return span;
+		},
+
+		// options: hideWorkshop, showText, hideIcons, shortText
+		getCampUniqueFeaturesDiv: function (features, options) {
+			let divClasses = [ "camp-unique-feature-icon-list" ];
+			if (options.showText) divClasses.push("camp-unique-feature-icon-list-detailed");
+			let div = "<div class='" + divClasses.join(" ") + "'>";
+
+			let items = [];
+
+			if (features.habitability && features.habitability != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_HABITABILITY, value: features.habitability, isNegative: features.habitability < 1 });
+
+			if (features.raidDangerFactor && features.raidDangerFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_RAID_DANGER_FACTOR, value: features.raidDangerFactor, isNegative: features.raidDangerFactor > 1 });
+
+			if (features.traderFactor && features.traderFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_TRADER_FACTOR, value: features.traderFactor, isNegative: features.traderFactor < 1 });
+
+			if (features.diseaseFactor && features.diseaseFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_DISEASE_FACTOR, value: features.diseaseFactor, isNegative: features.diseaseFactor > 1 });
+
+			if (features.signatureDisaster)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_DISASTER, value: features.signatureDisaster, isNegative: true });
+
+			if (features.workerMetalFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKER_METAL, value: features.workerMetalFactor, isNegative: features.workerMetalFactor < 1 });
+
+			if (features.workerFoodFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKER_FOOD, value: features.workerFoodFactor, isNegative: features.workerFoodFactor < 1 });
+
+			if (features.workerWaterFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKER_WATER, value: features.workerWaterFactor, isNegative: features.workerWaterFactor < 1 });
+
+			if (features.workerArtisanFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKER_ARTISAN, value: features.workerArtisanFactor, isNegative: features.workerArtisanFactor < 1 });
+
+			if (features.workerAcademicFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKER_ACADEMIC, value: features.workerAcademicFactor, isNegative: features.workerAcademicFactor < 1 });
+
+			if (features.workerHopeFactor != 1)
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKER_HOPE, value: features.workerHopeFactor, isNegative: features.workerHopeFactor < 1 });
+
+			if (features.workshopResource && !options.hideWorkshop) 
+				items.push({ type: UIConstants.CAMP_UNIQUE_FEATURE_WORKSHOP, value: features.workshopResource, isNegative: false });
+
+			if (items.length == 0) return "";
+
+			// negative first
+			items = items.sort((a, b) => { return b.isNegative - a.isNegative });
+
+			for (let i = 0; i < items.length; i++) {
+				div += this.getCampUniqueFeatureIcon(items[i].type, items[i].value, items[i].isNegative, options, features);
+			}
+
+			div += "</div>";
+
+			return div;
 		},
 
 		getTimeToNum: function (seconds, hideSeconds) {

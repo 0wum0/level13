@@ -113,9 +113,10 @@ define([
 				GameGlobals.uiMapHelper = new UIMapHelper(engine);
 				GameGlobals.uiTechTreeHelper = new UITechTreeHelper(engine);
 				GameGlobals.buttonHelper = new ButtonHelper();
-				GameGlobals.uiFunctions = new UIFunctions();
 				GameGlobals.campVisHelper = new CampVisHelper();
 			}
+			
+			GameGlobals.uiFunctions = new UIFunctions();
 		}
 		
 	};

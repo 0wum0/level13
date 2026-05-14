@@ -114,6 +114,7 @@ define([
 			GameGlobals.uiFunctions.toggle($("#camp-overview tr.camp-overview-camp"), false);
 			
 			this.updateNodes(true);
+			this.refreshNodes();
 			this.updateMessages();
 			
 			GameGlobals.uiFunctions.toggle(".camp-overview-lvl14", GameGlobals.gameState.numCamps > 8);
@@ -131,6 +132,12 @@ define([
 
 			if (isActive) {
 				GameGlobals.uiFunctions.updateInfoCallouts("#camp-overview");
+			}
+		},
+
+		refreshNodes: function () {			
+			for (let i = 0; i < this.sortedCampNodes.length; i++) {
+				this.refreshNode(this.sortedCampNodes[i]);
 			}
 		},
 
@@ -194,6 +201,14 @@ define([
 			this.updateCampRowMisc(node, rowID, isAlert, this.alerts[level]);
 			this.updateCampRowResources(node, rowID);
 			this.updateCampRowStats(node, rowID);
+		},
+
+		refreshNode: function (node) {
+			let level = node.entity.get(PositionComponent).level;
+			let campOrdinal = GameGlobals.worldState.getCampOrdinal(level);
+			let rowID = this.getCampRowID(campOrdinal);
+
+			this.refreshCampRow(node, rowID);
 		},
 
 		updateCampNotifications: function (node) {
@@ -310,6 +325,7 @@ define([
 			var btnAction = "move_camp_global_" + campOrdinal;
 			rowHTML += "<td class='camp-overview-level'><div class='camp-overview-level-container lvl13-box-1'></div></td>";
 			rowHTML += "<td class='camp-overview-name hide-in-small-layout'><span class='label info-callout-target info-callout-target-side'></span></td>";
+			rowHTML += "<td class='camp-overview-features hide-in-small-layout'></td>";
 			rowHTML += "<td class='camp-overview-population list-amount hide-in-small-layout nowrap'><span class='value'></span><span class='change-indicator'></span></td>";
 			rowHTML += "<td class='camp-overview-robots list-amount hide-in-small-layout nowrap'><span class='value'></span><span class='change-indicator'></span></td>";
 			rowHTML += "<td class='camp-overview-reputation list-amount hide-in-small-layout nowrap'><span class='value'></span><span class='change-indicator'></span></td>";
@@ -342,6 +358,21 @@ define([
 			rowHTML += "</tr>";
 			$("#camp-overview").append(rowHTML);
 		},
+
+		refreshCampRow: function (node, rowID) {
+			let camp = node.camp;
+			let level = node.entity.get(PositionComponent).level;
+
+			let campOrdinal = GameGlobals.worldState.getCampOrdinal(level);
+			let seed = GameGlobals.worldState.worldSeed;
+			let campFeatures = GameGlobals.campBalancingHelper.getCampUniqueFeaturesSummary(seed, campOrdinal);
+
+			$("#camp-overview tr#" + rowID + " .camp-overview-name .label").text(camp.campName);
+			$("#camp-overview tr#" + rowID + " .camp-overview-name .label").attr("description", camp.campName);
+			$("#camp-overview tr#" + rowID + " .camp-overview-features").html(UIConstants.getCampUniqueFeaturesDiv(campFeatures, {}));
+
+			GameGlobals.uiFunctions.generateInfoCallouts("#camp-overview tr#" + rowID);
+		},
 		
 		createLevel14Row: function () {
 			var rowHTML = "<tr class='camp-overview-special-row'>";
@@ -363,8 +394,6 @@ define([
 
 			$("#camp-overview tr#" + rowID).toggleClass("current", isPlayerInCampLevel);
 			GameGlobals.uiFunctions.toggle("#camp-overview tr#" + rowID + " .camp-overview-btn button", !isPlayerInCampLevel);
-			$("#camp-overview tr#" + rowID + " .camp-overview-name .label").text(camp.campName);
-			$("#camp-overview tr#" + rowID + " .camp-overview-name .label").attr("description", camp.campName);
 			GameGlobals.uiFunctions.toggle("#camp-overview tr#" + rowID + " .camp-overview-camp-bubble .bubble", isAlert);
 			
 			$("#camp-overview tr#" + rowID + " .camp-overview-level-container").text(level);

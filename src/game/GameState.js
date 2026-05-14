@@ -41,6 +41,7 @@ define(['ash'], function (Ash) {
 				sequenceTitleKey: null,
 				seenTabs: [],
 				hiddenProjects: [],
+				seenCamps: [],
 				leaveCampRes: {},
 				leaveCampItems: {},
 				lastSelection: {},
@@ -171,6 +172,7 @@ define(['ash'], function (Ash) {
 			this.uiStatus.isTransitioning = false;
 			if (!this.uiStatus.lastSelection) this.uiStatus.lastSelection = {};
 			if (!this.uiStatus.seenTabs) this.uiStatus.seenTabs = [];
+			if (!this.uiStatus.seenCamps) this.uiStatus.seenCamps = [];
 
 			// init stats in case new ones added
 			this.initStats();

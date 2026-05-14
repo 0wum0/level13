@@ -40,7 +40,7 @@ define(function () {
 
 		// key: string or TextVO
 		// options: (optional) Object with textParams, or single wildcard textParam value
-		t: function (key, options) {
+		t: function (key, options, fallbackKey) {
 			if (!key) {
 				if (this.isDebugMode) log.w("no key provided for Text.t");
 				return "";
@@ -51,7 +51,7 @@ define(function () {
 				key = key.textKey;
 			}
 
-			let fallbackKey = key.replace(/_\d*_/, "_")
+			fallbackKey || key.replace(/_\d*_/, "_");
 
 			if (!this.hasKey(key) && this.hasKey(fallbackKey)) {
 				key = fallbackKey;

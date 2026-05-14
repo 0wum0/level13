@@ -1,7 +1,6 @@
 // Specific elements (unthemed)
 
 
-
 // TAB BAR
 
 ul.tabs {
@@ -58,7 +57,7 @@ ul.tabs li span {
 // PLAYER NOTIFICATION (BUSY INDICATOR)
 
 .notification-player {
-	padding: 0px;
+	padding: 0px !important;
 	border-width: 2px;
 	border-style: solid;
     font-size: @font-size-small;
@@ -678,6 +677,39 @@ img.portrait {
 }
 
 
+// CAMP UNIQUE FEATURES ICONS
+
+.camp-unique-feature-icon-list {
+	display: flex;
+	gap: 4px;
+	justify-content: center;
+	flex-direction: row;
+}
+
+table .camp-unique-feature-icon-list {
+	justify-content: left;
+}
+
+.camp-unique-feature-icon-list-detailed {
+	flex-direction: column;
+	justify-content: left;
+}
+
+.camp-unique-feature-icon-container {
+	display: flex;
+  	justify-content: inherit;
+}
+
+.camp-unique-feature-icon {
+	width: 20px;
+	height: 20px;
+	padding: 2px;
+	overflow: hidden;
+	border-radius: 3px;
+	align-content: center;
+}
+
+
 // TRIBE LEVEL / MILESTONES
 
 #milestone-next-unlocks {
@@ -749,6 +781,17 @@ img.portrait {
 		text-transform: uppercase;
 		font-size: inherit;
 	}
+}
+
+
+// TOOLS
+
+.balancing-requires-world {
+	color: #33c;
+}
+
+.balancing-has-world .balancing-requires-world {
+	color: #ccf;
 }
 
 

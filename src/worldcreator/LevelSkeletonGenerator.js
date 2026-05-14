@@ -486,16 +486,9 @@ define([
 			if (levelTemplateVO && levelTemplateVO.workshopResource) return levelTemplateVO.workshopResource;
 
 			let campOrdinal = levelVO.campOrdinal;
-			let levelIndex = WorldCreatorHelper.getLevelIndexForCamp(seed, campOrdinal, levelVO.level);
-			let maxLevelIndex = WorldCreatorHelper.getMaxLevelIndexForCamp(seed, campOrdinal, levelVO.level);
-			
-			if (levelVO.isCampable && (campOrdinal === WorldConstants.CAMP_ORDINAL_FUEL || campOrdinal == WorldConstants.CAMP_ORDINAL_FUEL_2))
-				return "fuel";
-			if (levelIndex == maxLevelIndex && (campOrdinal === WorldConstants.CAMP_ORDINAL_GREENHOUSE_1 || campOrdinal == WorldConstants.CAMP_ORDINAL_GREENHOUSE_2))
-				return "herbs";
-			if (levelVO.level == worldVO.bottomLevel || (levelVO.isCampable && campOrdinal == WorldConstants.CAMP_ORDINAL_RUBBER_2))
-				return "rubber";
-			return null;
+			let level = levelVO.level;
+
+			return WorldCreatorHelper.getWorkshopResource(seed, campOrdinal, level);
 		},
 		
 		getLuxuryResources: function (seed, level, campOrdinal, previousLevels) {

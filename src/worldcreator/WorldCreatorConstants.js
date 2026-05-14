@@ -58,6 +58,39 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 		SHAPE_CIRCLE: "circle", // same as SHAPE_RECTANGLE_CENTER but rounded
 		SHAPE_TRIANGLE: "triangele", // triangles using two connection points
 		
+		camplessLevelOrdinals: {},
+		hardLevelOrdinals: {},
+
+		getBottomLevel: function (seed) {
+			switch (seed % 5) {
+				case 0: return 0;
+				case 1: return 1;
+				case 2: return -1;
+				case 3: return 1;
+				case 4: return 0;
+			}
+		},
+		
+		getHighestLevel: function (seed) {
+			switch (seed % 5) {
+				case 0: return 25;
+				case 1: return 26;
+				case 2: return 25;
+				case 3: return 26;
+				case 4: return 24;
+			}
+		},
+
+		getLevelOrdinal: function (seed, level) {
+			if (level > 13) {
+				let bottomLevel = this.getBottomLevel(seed);
+				let bottomLevelOrdinal = this.getLevelOrdinal(seed, bottomLevel);
+				return bottomLevelOrdinal + (level - 13);
+			} else {
+				return -level + 14;
+			}
+		},
+		
 		getNumSectors: function (campOrdinal) {
 			// sizes of levels if there is a campable and a non-campable level
 			let defaultBigLevel = 140;
@@ -163,11 +196,128 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 					return 1;
 			}
 		},
+
+		isHardLevel: function (seed, level) {
+			let hardLevelOrdinals = this.getHardLevelOrdinals(seed);
+			let levelOrdinal = this.getLevelOrdinal(seed, level);
+			return hardLevelOrdinals.includes(levelOrdinal);
+		},
+
+		getHardLevelOrdinals: function (seed) {
+			if (!this.hardLevelOrdinals[seed]) {
+				var hardLevelOrdinals = [];
+				var surfaceLevel = this.getHighestLevel(seed);
+				hardLevelOrdinals.push(this.getLevelOrdinal(seed, 14));
+				hardLevelOrdinals.push(this.getLevelOrdinal(seed, surfaceLevel));
+				switch (seed % 5) {
+					case 0:
+						hardLevelOrdinals.push(10);
+						hardLevelOrdinals.push(23);
+						break;
+					case 1:
+						hardLevelOrdinals.push(9);
+						hardLevelOrdinals.push(23);
+						break;
+					case 2:
+						hardLevelOrdinals.push(11);
+						hardLevelOrdinals.push(24);
+						break;
+					case 3:
+						hardLevelOrdinals.push(11);
+						hardLevelOrdinals.push(23);
+						break;
+					case 4:
+						hardLevelOrdinals.push(10);
+						hardLevelOrdinals.push(23);
+						break;
+				}
+				this.hardLevelOrdinals[seed] = hardLevelOrdinals.sort();
+			}
+			return this.hardLevelOrdinals[seed];
+		},
+
+		getCamplessLevelOrdinals: function (seed) {
+			if (!this.camplessLevelOrdinals[seed]) {
+				var camplessLevelOrdinals = [];
+
+				switch (seed % 5) {
+					case 0:
+						camplessLevelOrdinals.push(25);
+						camplessLevelOrdinals.push(23);
+						camplessLevelOrdinals.push(20);
+						camplessLevelOrdinals.push(17);
+						camplessLevelOrdinals.push(14);
+						camplessLevelOrdinals.push(15);
+						camplessLevelOrdinals.push(12);
+						camplessLevelOrdinals.push(10);
+						camplessLevelOrdinals.push(8);
+						camplessLevelOrdinals.push(5);
+						camplessLevelOrdinals.push(3);
+						break;
+					case 1:
+						camplessLevelOrdinals.push(25);
+						camplessLevelOrdinals.push(23);
+						camplessLevelOrdinals.push(21);
+						camplessLevelOrdinals.push(19);
+						camplessLevelOrdinals.push(17);
+						camplessLevelOrdinals.push(14);
+						camplessLevelOrdinals.push(13);
+						camplessLevelOrdinals.push(11);
+						camplessLevelOrdinals.push(9);
+						camplessLevelOrdinals.push(6);
+						camplessLevelOrdinals.push(3);
+						break;
+					case 2:
+						camplessLevelOrdinals.push(26);
+						camplessLevelOrdinals.push(24);
+						camplessLevelOrdinals.push(22);
+						camplessLevelOrdinals.push(19);
+						camplessLevelOrdinals.push(16);
+						camplessLevelOrdinals.push(15);
+						camplessLevelOrdinals.push(13);
+						camplessLevelOrdinals.push(11);
+						camplessLevelOrdinals.push(9);
+						camplessLevelOrdinals.push(7);
+						camplessLevelOrdinals.push(5);
+						camplessLevelOrdinals.push(3);
+						break;
+					case 3:
+						camplessLevelOrdinals.push(25);
+						camplessLevelOrdinals.push(23);
+						camplessLevelOrdinals.push(21);
+						camplessLevelOrdinals.push(18);
+						camplessLevelOrdinals.push(16);
+						camplessLevelOrdinals.push(14);
+						camplessLevelOrdinals.push(13);
+						camplessLevelOrdinals.push(11);
+						camplessLevelOrdinals.push(8);
+						camplessLevelOrdinals.push(6);
+						camplessLevelOrdinals.push(3);
+						break;
+					case 4:
+						camplessLevelOrdinals.push(23);
+						camplessLevelOrdinals.push(20);
+						camplessLevelOrdinals.push(17);
+						camplessLevelOrdinals.push(15);
+						camplessLevelOrdinals.push(14);
+						camplessLevelOrdinals.push(12);
+						camplessLevelOrdinals.push(10);
+						camplessLevelOrdinals.push(7);
+						camplessLevelOrdinals.push(5);
+						camplessLevelOrdinals.push(3);
+						break;
+				}
+				
+				this.camplessLevelOrdinals[seed] = camplessLevelOrdinals.sort((a, b) => a - b);
+			}
+			return this.camplessLevelOrdinals[seed];
+		},
 		
 		getRaidDangerFactor: function (campOrdinal) {
 			if (campOrdinal <= 0) return 0;
 			switch (campOrdinal) {
 				case 1:
+				case 6:
 				case WorldConstants.CAMPS_BEFORE_GROUND:
 				case WorldConstants.CAMPS_TOTAL:
 					return 0.5;
@@ -210,7 +360,7 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 					return 1.5;
 				
 				case 13:
-				case 7:
+				case 6:
 				case 14:
 					return 0.5;
 				
@@ -221,14 +371,14 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 		
 		getSignatureDisaster: function (campOrdinal) {
 			if (campOrdinal <= 0) return 0;
+
 			switch (campOrdinal) {
 				case 2:
 					return CampConstants.DISASTER_TYPE_COLLAPSE;
-				case 10:
-				case 12:
+				case 9:
+				case 4:
 					return CampConstants.DISASTER_TYPE_EARTHQUAKE;
 				case 6:
-				case WorldConstants.CAMPS_BEFORE_GROUND: 
 					return CampConstants.DISASTER_TYPE_FLOOD;
 				case WorldConstants.CAMPS_TOTAL:
 					return CampConstants.DISASTER_TYPE_STORM;
@@ -240,15 +390,15 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 
 		getWorkerMetalFactor: function (campOrdinal) {
 			switch (campOrdinal) {
-				// greenhouses
-				case 1: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 				case 3: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case 9: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 			}
 			return 1;
 		},
 
 		getWorkerFoodFactor: function (campOrdinal) {
 			switch (campOrdinal) {
+				case 2: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 				case WorldConstants.CAMPS_BEFORE_GROUND: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 			}
 			return 1;
@@ -257,8 +407,8 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 		getWorkerWaterFactor: function (campOrdinal) {
 			switch (campOrdinal) {
 				// greenhouses
-				case 5: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
-				case 7: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case WorldConstants.CAMP_ORDINAL_GREENHOUSE_1: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case WorldConstants.CAMP_ORDINAL_GREENHOUSE_2: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 				// rainwater
 				case WorldConstants.CAMPS_TOTAL: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 			}
@@ -267,7 +417,7 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 
 		getWorkerArtisanFactor: function (campOrdinal) {
 			switch (campOrdinal) {
-				case 1: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
+				case 4: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 				case 11: return CampConstants.WORKER_LEVEL_FACTOR_POSITIVE;
 			}
 			return 1;

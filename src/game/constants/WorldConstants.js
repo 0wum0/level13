@@ -23,6 +23,7 @@ define(['ash'], function (Ash) {
 		CAMP_ORDINAL_GREENHOUSE_2: 7,
 		CAMP_ORDINAL_GROUND: 8,
 		CAMP_ORDINAL_FUEL_2: 12,
+		CAMP_ORDINAL_RUBBER_1: 8,
 		CAMP_ORDINAL_RUBBER_2: 14,
 		
 		CAMP_STAGE_EARLY: "e",
@@ -140,6 +141,17 @@ define(['ash'], function (Ash) {
 					return true;
 			}
 			return false;
+		},
+
+		getWorkshopResourceForCampOrdinal: function (seed, campOrdinal) {			
+			if (campOrdinal === WorldConstants.CAMP_ORDINAL_FUEL || campOrdinal == WorldConstants.CAMP_ORDINAL_FUEL_2)
+				return "fuel";
+			if (campOrdinal === WorldConstants.CAMP_ORDINAL_GREENHOUSE_1 || campOrdinal == WorldConstants.CAMP_ORDINAL_GREENHOUSE_2)
+				return "herbs";
+			if (campOrdinal == WorldConstants.CAMP_ORDINAL_RUBBER_1 || campOrdinal == WorldConstants.CAMP_ORDINAL_RUBBER_2)
+				return "rubber";
+
+			return null;
 		},
 		
 		getNumInvestigateSectors: function (level, topLevel) {

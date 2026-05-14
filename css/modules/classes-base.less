@@ -48,11 +48,16 @@
 	height: 1em;
 }
 
-.info-icon img {
+.info-icon img, img.inline-icon {
 	height: 1em;
 	width: 1em;
 	line-height: 1em;
 	vertical-align: middle;
+}
+
+img.inline-icon {
+	margin-left: 1px;
+	margin-right: 1px;
 }
 
 img.icon-ui-generic {
@@ -179,6 +184,11 @@ td.list-amount, td.list-storage {
 
 td.list-ordinal {
 	min-width: 10pt;
+	text-align: center;
+}
+
+td.list-icons {
+	min-width:5pt;
 	text-align: center;
 }
 

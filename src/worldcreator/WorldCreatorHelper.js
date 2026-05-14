@@ -13,9 +13,6 @@ define([
 ], function (Ash, ResourcesVO, WorldCreatorRandom, WorldCreatorConstants, CampConstants, LevelConstants, PositionConstants, SectorConstants, WorldConstants, PositionVO) {
 
 	let WorldCreatorHelper = {
-		
-		camplessLevelOrdinals: {},
-		hardLevelOrdinals: {},
 
 		copyValueForAllSectors: function (levelTemplateVO, levelVO, key) {
 			if (!levelTemplateVO || !levelTemplateVO.sectors) return;
@@ -395,33 +392,15 @@ define([
 		},
 		
 		getBottomLevel: function (seed) {
-			switch (seed % 5) {
-				case 0: return 0;
-				case 1: return 1;
-				case 2: return -1;
-				case 3: return 1;
-				case 4: return 0;
-			}
+			return WorldCreatorConstants.getBottomLevel(seed);
 		},
 		
 		getHighestLevel: function (seed) {
-			switch (seed % 5) {
-				case 0: return 25;
-				case 1: return 26;
-				case 2: return 25;
-				case 3: return 26;
-				case 4: return 24;
-			}
+			return WorldCreatorConstants.getHighestLevel(seed);
 		},
 		
 		getLevelOrdinal: function(seed, level) {
-			if (level > 13) {
-				var bottomLevel = this.getBottomLevel(seed);
-				var bottomLevelOrdinal = this.getLevelOrdinal(seed, bottomLevel);
-				return bottomLevelOrdinal + (level - 13);
-			} else {
-				return -level + 14;
-			}
+			return WorldCreatorConstants.getLevelOrdinal(seed, level);
 		},
 		
 		getLevelForOrdinal: function (seed, levelOrdinal) {
@@ -434,7 +413,7 @@ define([
 		},
 		
 		getCampOrdinal: function (seed, level) {
-			var camplessLevelOrdinals = this.getCamplessLevelOrdinals(seed);
+			var camplessLevelOrdinals = WorldCreatorConstants.getCamplessLevelOrdinals(seed);
 			var levelOrdinal = this.getLevelOrdinal(seed, level);
 			var ordinal = 0;
 			for (let i = 1; i <= levelOrdinal; i++) {
@@ -449,7 +428,7 @@ define([
 			var mainLevel = this.getLevelForOrdinal(seed, mainLevelOrdinal);
 			result.push(mainLevel);
 			
-			var camplessLevelOrdinals = this.getCamplessLevelOrdinals(seed);
+			var camplessLevelOrdinals = WorldCreatorConstants.getCamplessLevelOrdinals(seed);
 			for (let i = 0; i < camplessLevelOrdinals.length; i++) {
 				var l = this.getLevelForOrdinal(seed, camplessLevelOrdinals[i]);
 				var co = this.getCampOrdinal(seed, l);
@@ -548,7 +527,7 @@ define([
 		getLevelOrdinalForCampOrdinal: function (seed, campOrdinal) {
 			// this assumes camplessLevelOrdinals are sorted from smallest to biggest
 			var levelOrdinal = campOrdinal;
-			var camplessLevelOrdinals = this.getCamplessLevelOrdinals(seed);
+			var camplessLevelOrdinals = WorldCreatorConstants.getCamplessLevelOrdinals(seed);
 			for (let i = 0; i < camplessLevelOrdinals.length; i++) {
 				if (camplessLevelOrdinals[i] <= levelOrdinal) {
 					levelOrdinal++;
@@ -558,16 +537,14 @@ define([
 		},
 		
 		isCampableLevel: function (seed, level) {
-			var camplessLevelOrdinals = this.getCamplessLevelOrdinals(seed);
+			var camplessLevelOrdinals = WorldCreatorConstants.getCamplessLevelOrdinals(seed);
 			var levelOrdinal = this.getLevelOrdinal(seed, level);
 			var campOrdinal = this.getCampOrdinal(seed, level);
 			return camplessLevelOrdinals.indexOf(levelOrdinal) < 0;
 		},
 		
 		isHardLevel: function (seed, level) {
-			var hardLevelOrdinals = this.getHardLevelOrdinals(seed);
-			var levelOrdinal = this.getLevelOrdinal(seed, level);
-			return hardLevelOrdinals.includes(levelOrdinal);
+			return WorldCreatorConstants.isHardLevel(seed, level);
 		},
 		
 		isSmallLevel: function (seed, level) {
@@ -579,7 +556,7 @@ define([
 		
 		getNextUncampableLevelOrdinalForCampOrdinal: function (seed, campOrdinal) {
 			var campLevelOrdinal = this.getLevelOrdinalForCampOrdinal(seed, campOrdinal);
-			var camplessLevelOrdinals = this.getCamplessLevelOrdinals(seed);
+			var camplessLevelOrdinals = WorldCreatorConstants.getCamplessLevelOrdinals(seed);
 			for (let i = 0; i < camplessLevelOrdinals.length; i++) {
 				if (camplessLevelOrdinals[i] > campLevelOrdinal) {
 					return camplessLevelOrdinals[i];
@@ -637,113 +614,32 @@ define([
 		},
 		
 		getCamplessLevelOrdinals: function (seed) {
-			if (!this.camplessLevelOrdinals[seed]) {
-				var camplessLevelOrdinals = [];
-
-				switch (seed % 5) {
-					case 0:
-						camplessLevelOrdinals.push(25);
-						camplessLevelOrdinals.push(23);
-						camplessLevelOrdinals.push(20);
-						camplessLevelOrdinals.push(17);
-						camplessLevelOrdinals.push(14);
-						camplessLevelOrdinals.push(15);
-						camplessLevelOrdinals.push(12);
-						camplessLevelOrdinals.push(10);
-						camplessLevelOrdinals.push(8);
-						camplessLevelOrdinals.push(5);
-						camplessLevelOrdinals.push(3);
-						break;
-					case 1:
-						camplessLevelOrdinals.push(25);
-						camplessLevelOrdinals.push(23);
-						camplessLevelOrdinals.push(21);
-						camplessLevelOrdinals.push(19);
-						camplessLevelOrdinals.push(17);
-						camplessLevelOrdinals.push(14);
-						camplessLevelOrdinals.push(13);
-						camplessLevelOrdinals.push(11);
-						camplessLevelOrdinals.push(9);
-						camplessLevelOrdinals.push(6);
-						camplessLevelOrdinals.push(3);
-						break;
-					case 2:
-						camplessLevelOrdinals.push(26);
-						camplessLevelOrdinals.push(24);
-						camplessLevelOrdinals.push(22);
-						camplessLevelOrdinals.push(19);
-						camplessLevelOrdinals.push(16);
-						camplessLevelOrdinals.push(15);
-						camplessLevelOrdinals.push(13);
-						camplessLevelOrdinals.push(11);
-						camplessLevelOrdinals.push(9);
-						camplessLevelOrdinals.push(7);
-						camplessLevelOrdinals.push(5);
-						camplessLevelOrdinals.push(3);
-						break;
-					case 3:
-						camplessLevelOrdinals.push(25);
-						camplessLevelOrdinals.push(23);
-						camplessLevelOrdinals.push(21);
-						camplessLevelOrdinals.push(18);
-						camplessLevelOrdinals.push(16);
-						camplessLevelOrdinals.push(14);
-						camplessLevelOrdinals.push(13);
-						camplessLevelOrdinals.push(11);
-						camplessLevelOrdinals.push(8);
-						camplessLevelOrdinals.push(6);
-						camplessLevelOrdinals.push(3);
-						break;
-					case 4:
-						camplessLevelOrdinals.push(23);
-						camplessLevelOrdinals.push(20);
-						camplessLevelOrdinals.push(17);
-						camplessLevelOrdinals.push(15);
-						camplessLevelOrdinals.push(14);
-						camplessLevelOrdinals.push(12);
-						camplessLevelOrdinals.push(10);
-						camplessLevelOrdinals.push(7);
-						camplessLevelOrdinals.push(5);
-						camplessLevelOrdinals.push(3);
-						break;
-				}
-				
-				this.camplessLevelOrdinals[seed] = camplessLevelOrdinals.sort((a, b) => a - b);
-			}
-			return this.camplessLevelOrdinals[seed];
+			return WorldCreatorConstants.getCamplessLevelOrdinals(seed);
 		},
 		
 		getHardLevelOrdinals: function (seed) {
-			if (!this.hardLevelOrdinals[seed]) {
-				var hardLevelOrdinals = [];
-				var surfaceLevel = this.getHighestLevel(seed);
-				hardLevelOrdinals.push(this.getLevelOrdinal(seed, 14));
-				hardLevelOrdinals.push(this.getLevelOrdinal(seed, surfaceLevel));
-				switch (seed % 5) {
-					case 0:
-						hardLevelOrdinals.push(10);
-						hardLevelOrdinals.push(23);
-						break;
-					case 1:
-						hardLevelOrdinals.push(9);
-						hardLevelOrdinals.push(23);
-						break;
-					case 2:
-						hardLevelOrdinals.push(11);
-						hardLevelOrdinals.push(24);
-						break;
-					case 3:
-						hardLevelOrdinals.push(11);
-						hardLevelOrdinals.push(23);
-						break;
-					case 4:
-						hardLevelOrdinals.push(10);
-						hardLevelOrdinals.push(23);
-						break;
-				}
-				this.hardLevelOrdinals[seed] = hardLevelOrdinals.sort();
-			}
-			return this.hardLevelOrdinals[seed];
+			return WorldCreatorConstants.getHardLevelOrdinals(seed);
+		},
+
+		getWorkshopResource: function (seed, campOrdinal, level) {
+			let campOrdinalResource = WorldConstants.getWorkshopResourceForCampOrdinal(seed, campOrdinal);
+
+			if (!campOrdinalResource) return null;
+
+			let levelIndex = WorldCreatorHelper.getLevelIndexForCamp(seed, campOrdinal, level);
+			let maxLevelIndex = WorldCreatorHelper.getMaxLevelIndexForCamp(seed, campOrdinal, level);
+			let isMaxLevelIndex = levelIndex == maxLevelIndex;
+			let isMinLevelIndex = levelIndex == 0;
+			let bottomLevel = this.getBottomLevel(seed);
+
+			// by default workshop is on max level index, but for some it is the campable level
+
+			let isCorrectLevelCampable = campOrdinalResource == "fuel" || campOrdinal == WorldConstants.CAMP_ORDINAL_RUBBER_2;
+			let isCorrectLevel = false;
+			if (!isCorrectLevelCampable && isMaxLevelIndex) isCorrectLevel = true;
+			if (isCorrectLevelCampable && isMinLevelIndex) isCorrectLevel = true;
+
+			return isCorrectLevel ? campOrdinalResource : null;
 		},
 		
 		getRequiredPaths: function (worldVO, levelVO) {

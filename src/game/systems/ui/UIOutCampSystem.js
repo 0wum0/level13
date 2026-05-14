@@ -113,6 +113,7 @@
 			GlobalSignals.add(this, GlobalSignals.playerLocationChangedSignal, this.onPlayerPositionChanged);
 			GlobalSignals.add(this, GlobalSignals.campRenamedSignal, this.onCampRenamed);
 			GlobalSignals.add(this, GlobalSignals.populationChangedSignal, this.onPopulationChanged);
+			GlobalSignals.add(this, GlobalSignals.playerEnteredCampSignal, this.onCampEntered);
 			GlobalSignals.add(this, GlobalSignals.campEventStartedSignal, this.onCampEventStarted);
 			GlobalSignals.add(this, GlobalSignals.campEventEndedSignal, this.onCampEventEnded);
 			GlobalSignals.add(this, GlobalSignals.workersAssignedSignal, this.onWorkersAssigned);
@@ -151,7 +152,7 @@
 
 			this.updateImprovements();
 			this.updateBubble();
-			this.updateStats();
+			this.updateCampStatus();
 			this.updatePopulationDisplaySlow();
 		},
 
@@ -177,7 +178,8 @@
 			this.updateAssignedWorkers();
 			this.updateWorkerMaxDescriptions();
 			this.updateImprovements();
-			this.updateStats();
+			this.updateCampStatus();
+			this.updateCampDemographics();
 			this.updateNews();
 			this.updateBubble();
 			this.updateCharactersDisplay();
@@ -215,9 +217,9 @@
 		updateWorkerStepper: function (campComponent, id, workerType, maxWorkers, showMax, isAutoAssigned) {
 			GameGlobals.uiFunctions.toggle($(id).closest("tr"), maxWorkers > 0);
 
-			var freePopulation = Math.max(0, campComponent.getFreePopulation()) || 0;
-			var assignedWorkers = Math.max(0, campComponent.assignedWorkers[workerType]) || 0;
-			var maxAssigned = Math.min(assignedWorkers + freePopulation, maxWorkers);
+			let freePopulation = Math.max(0, campComponent.getFreePopulation()) || 0;
+			let assignedWorkers = Math.max(0, campComponent.assignedWorkers[workerType]) || 0;
+			let maxAssigned = Math.min(assignedWorkers + freePopulation, maxWorkers);
 			GameGlobals.uiFunctions.updateStepper(id, assignedWorkers, 0, maxAssigned);
 			
 			let $checkbox = $("#in-assing-worker-auto-" + workerType);
@@ -373,14 +375,16 @@
 			indicator.toggleClass("indicator-decrease", accumulation < 0);
 		},
 
-		updateAssignedWorkers: function (campComponent) {
-			var campComponent = this.playerLocationNodes.head.entity.get(CampComponent);
+		updateAssignedWorkers: function () {
+			let campComponent = this.playerLocationNodes.head.entity.get(CampComponent);
 			if (!campComponent) return;
 				
 			for (let key in CampConstants.workerTypes) {
 				var def = CampConstants.workerTypes[key];
 				UIConstants.updateCalloutContent("#in-assign-" + key + " .in-assign-worker-desc .info-callout-target", this.getWorkerDescription(def), true);
 			}
+
+			let workerFactors = GameGlobals.campHelper.getWorkerFactors(this.playerLocationNodes.head.position.level);
 			
 			for (let key in CampConstants.workerTypes) {
 				let def = CampConstants.workerTypes[key];
@@ -388,6 +392,11 @@
 				let showMax = maxWorkers >= 0;
 				let isAutoAssigned = campComponent.autoAssignedWorkers[key] || false;
 				if (maxWorkers < 0) maxWorkers = GameGlobals.campHelper.getCampMaxPopulation(this.playerLocationNodes.head.entity);
+				let workerFactor = workerFactors[def.id] || 1;
+
+				let hasBonus = workerFactor > 1;
+				GameGlobals.uiFunctions.toggle($("#in-assign-" + key + " .in-assign-worker-bonus-icon"), hasBonus);
+
 				this.updateWorkerStepper(campComponent, "#stepper-" + def.id, def.id, maxWorkers, showMax, isAutoAssigned);
 			}
 		},
@@ -681,7 +690,8 @@
 				let def = CampConstants.workerTypes[key];
 				let tds = "";
 				let displayName = CampConstants.getWorkerDisplayName(key);
-				tds += "<td class='in-assign-worker-desc'><div class='info-callout-target info-callout-target-small'>" + displayName + "</div></td>";
+				let campBonusIcon = UIConstants.getThemedIcon("img/eldorado/icon-star.png", "bonus", null, [ "in-assign-worker-bonus-icon", "inline-icon" ]);
+				tds += "<td class='in-assign-worker-desc'><div class='info-callout-target info-callout-target-small'>" + displayName + "</div>" + campBonusIcon +  "</td>";
 				tds += "<td><div class='stepper' id='stepper-" + def.id + "'></div></td>";
 				tds += "<td class='in-assign-worker-limit'><div class='info-callout-target info-callout-target-small'></div></td>"
 				tds += "<td class='in-assign-worker-auto'><input type='checkbox' id='in-assing-worker-auto-" + def.id + "' class='in-assign-workers-auto-toggle' title='Auto-assign worker' /></td>"
@@ -928,30 +938,37 @@
 			return result;
 		},
 
-		updateStats: function () {
-			var campComponent = this.playerLocationNodes.head.entity.get(CampComponent);
+		updateCampStatus: function () {
+			let campComponent = this.playerLocationNodes.head.entity.get(CampComponent);
 			if (!campComponent) return;
 			
-			var levelComponent = this.playerLevelNodes.head.level;
+			let levelComponent = this.playerLevelNodes.head.level;
 			let sector = this.playerLocationNodes.head.entity;
 
-			var improvements = sector.get(SectorImprovementsComponent);
-			var soldiers = sector.get(CampComponent).assignedWorkers.soldier || 0;
-			var soldierLevel = GameGlobals.upgradeEffectsHelper.getWorkerLevel("soldier", this.tribeUpgradesNodes.head.upgrades);
-			var raidDanger = GameGlobals.campHelper.getCampRaidDanger(sector);
-			var raidDefence = OccurrenceConstants.getRaidDefencePoints(improvements, soldiers, soldierLevel);
+			let improvements = sector.get(SectorImprovementsComponent);
+			let soldiers = sector.get(CampComponent).assignedWorkers.soldier || 0;
+			let soldierLevel = GameGlobals.upgradeEffectsHelper.getWorkerLevel("soldier", this.tribeUpgradesNodes.head.upgrades);
+			let raidDanger = GameGlobals.campHelper.getCampRaidDanger(sector);
+			let raidDefence = OccurrenceConstants.getRaidDefencePoints(improvements, soldiers, soldierLevel);
 
-			let inGameFoundingDate = UIConstants.getInGameDate(campComponent.foundedTimeStampGameTime);
-			let showCalendar = this.tribeUpgradesNodes.head.upgrades.hasUpgrade(GameGlobals.upgradeEffectsHelper.getUpgradeIdForUIEffect(UpgradeConstants.upgradeUIEffects.calendar));
-			$("#in-demographics-general-age .value").text(inGameFoundingDate);
-			GameGlobals.uiFunctions.toggle("#in-demographics-general-age", showCalendar);
+			// trade network
+			let hasUnlockedTrade = this.hasUpgrade(GameGlobals.upgradeEffectsHelper.getUpgradeToUnlockBuilding(improvementNames.tradepost));
+			$("#in-demographics-trade-network").toggle(hasUnlockedTrade);
+			if (hasUnlockedTrade) {
+				var hasAccessToTradeNetwork = GameGlobals.resourcesHelper.hasAccessToTradeNetwork(this.playerLocationNodes.head.entity);
+				$("#in-demographics-trade-network .value").text(hasAccessToTradeNetwork ? "yes" : "no");
+				$("#in-demographics-trade-network .value").toggleClass("warning", !hasAccessToTradeNetwork);
+			}
 			
+			// luxury resources
 			let availableLuxuryResources = GameGlobals.campHelper.getAvailableLuxuryResources(sector);
+			let showLuxuryResources = availableLuxuryResources.length > 0
 			let availableLuxuryResourcesInfoText = availableLuxuryResources.map(res => TribeConstants.getLuxuryDisplayName(res)).join(", ");
 			$("#in-demographics-general-luxuries .value").text(availableLuxuryResources.length);
 			UIConstants.updateCalloutContent($("#in-demographics-general-luxuries .info-icon"), availableLuxuryResourcesInfoText, true);
-			GameGlobals.uiFunctions.toggle("#in-demographics-general-luxuries", availableLuxuryResources.length > 0);
+			GameGlobals.uiFunctions.toggle("#in-demographics-general-luxuries", showLuxuryResources);
 
+			// raids
 			let showRaid = raidDanger > 0 || raidDefence > CampConstants.CAMP_BASE_DEFENCE || campComponent.population > 1;
 			if (showRaid) {
 				let showRaidWarning = raidDanger > CampConstants.REPUTATION_PENALTY_DEFENCES_THRESHOLD;
@@ -959,11 +976,12 @@
 				$("#in-demographics-raid-danger .value").text(Math.round(raidDanger * 100) + "%");
 				$("#in-demographics-raid-danger .value").toggleClass("warning", showRaidWarning);
 				UIAnimations.animateOrSetNumber($("#in-demographics-raid-defence .value"), true, raidDefence, "", false, Math.round);
-				UIConstants.updateCalloutContent("#in-demographics-raid-danger", this.getRaidDangerCalloutContent());
-				UIConstants.updateCalloutContent("#in-demographics-raid-defence", defenceS);
+				UIConstants.updateCalloutContent($("#in-demographics-raid-danger .info-icon"), this.getRaidDangerCalloutContent(), true);
+				UIConstants.updateCalloutContent($("#in-demographics-raid-defence .info-icon"), defenceS, true);
 			}
 			GameGlobals.uiFunctions.toggle("#in-demographics-raid", showRaid);
 
+			// disease
 			let showDisease = campComponent.population > 1;
 			if (showDisease) {
 				let hasHerbs = GameGlobals.campHelper.hasHerbs(sector);
@@ -971,29 +989,13 @@
 				let apothecaryLevel = GameGlobals.upgradeEffectsHelper.getWorkerLevel("apothecary", this.tribeUpgradesNodes.head.upgrades);
 				let diseaseChance = OccurrenceConstants.getDiseaseOutbreakChance(campComponent.population, hasHerbs, hasMedicine, apothecaryLevel);
 				let showDiseaseWarning = diseaseChance > CampConstants.REPUTATION_PENALTY_DEFENCES_THRESHOLD; // not related to defences but matching raid warning value
-				UIConstants.updateCalloutContent("#in-demographics-disease-chance", this.getDiseaseChanceCalloutContent());
+				UIConstants.updateCalloutContent("#in-demographics-disease-chance .info-icon", this.getDiseaseChanceCalloutContent(), true);
 				UIAnimations.animateOrSetNumber($("#in-demographics-disease-chance .value"), true, Math.round(diseaseChance * 100), "%", false, Math.round);
 				$("#in-demographics-disease-chance .value").toggleClass("warning", showDiseaseWarning);
 			}
 			GameGlobals.uiFunctions.toggle("#in-demographics-disease", showDisease);
 
-			var showLevelStats = GameGlobals.gameState.numCamps > 1;
-			if (showLevelStats) {
-				var levelComponent = this.playerLevelNodes.head.level;
-				var hasUnlockedTrade = this.hasUpgrade(GameGlobals.upgradeEffectsHelper.getUpgradeToUnlockBuilding(improvementNames.tradepost));
-				$("#in-demographics-level-population .value").text(UIConstants.getFactorLabel(levelComponent.habitability));
-				$("#in-demographics-level-danger .value").text(UIConstants.getFactorLabel(levelComponent.raidDangerFactor));
-				$("#in-demographics-trade-network").toggle(hasUnlockedTrade);
-				if (hasUnlockedTrade) {
-					var hasAccessToTradeNetwork = GameGlobals.resourcesHelper.hasAccessToTradeNetwork(this.playerLocationNodes.head.entity);
-					$("#in-demographics-trade-network .value").text(hasAccessToTradeNetwork ? "yes" : "no");
-					$("#in-demographics-trade-network .value").toggleClass("warning", !hasAccessToTradeNetwork);
-				}
-			}
-
-			GameGlobals.uiFunctions.toggle("#in-demographics-level", showLevelStats);
-			GameGlobals.uiFunctions.toggle("#in-demographics", showCalendar || showRaid || showLevelStats);
-
+			// debug info
 			if (GameConstants.isDebugVersion) {
 				let debugInfoText = "";
 				let campTimers = sector.get(CampEventTimersComponent);
@@ -1008,6 +1010,34 @@
 				}
 				$("#in-demographics-debug-general").html(debugInfoText);
 			}
+
+		},
+
+		updateCampDemographics: function () {
+			let campComponent = this.playerLocationNodes.head.entity.get(CampComponent);
+			if (!campComponent) return;
+			let levelComponent = this.playerLevelNodes.head.level;
+
+			let showDemographics = GameGlobals.gameState.numCamps > 1;
+
+			if (showDemographics) {
+				let level = this.playerLocationNodes.head.position.level;
+				let campOrdinal = GameGlobals.worldState.getCampOrdinal(level);
+				let seed = GameGlobals.worldState.worldSeed;
+				let campFeatures = GameGlobals.campBalancingHelper.getCampUniqueFeaturesSummary(seed, campOrdinal);
+				
+				// founding date
+				let showCalendar = this.tribeUpgradesNodes.head.upgrades.hasUpgrade(GameGlobals.upgradeEffectsHelper.getUpgradeIdForUIEffect(UpgradeConstants.upgradeUIEffects.calendar));
+				let inGameFoundingDate = UIConstants.getInGameDate(campComponent.foundedTimeStampGameTime);
+				$("#in-demographics-general-age .value").text(inGameFoundingDate);
+				GameGlobals.uiFunctions.toggle("#in-demographics-general-age", showCalendar);
+
+				// camp unique features
+				$("#in-demographics-camp-features").html(UIConstants.getCampUniqueFeaturesDiv(campFeatures, { showText: true, shortText: true }));
+				GameGlobals.uiFunctions.generateInfoCallouts("#in-demographics-camp-features");
+			}
+
+			GameGlobals.uiFunctions.toggle($("#in-demographics-static-container"), showDemographics);
 		},
 
 		updateNews: function () {
@@ -1027,12 +1057,15 @@
 				}
 			}
 
-			let hasLastEvent = lastEventDescription != null;
-			lastEventDescription = lastEventDescription || "(none)";
+			let showLastEvent = true; // lastEventDescription != null;
+			
+			if (showLastEvent) {
+				lastEventDescription = lastEventDescription || "(none)";
 
-			$("#in-demographics-raid-last .value").text(lastEventDescription);
+				$("#in-demographics-event-last .value").text(lastEventDescription);
+			}
 
-			GameGlobals.uiFunctions.toggle("#in-demographics-raid-last", hasLastEvent);
+			GameGlobals.uiFunctions.toggle("#in-demographics-event-last", showLastEvent);
 		},
 
 		updateLayout: function () {
@@ -1319,6 +1352,35 @@
 			li.$root.toggleClass("event-no-timer", !data.hasTimer);
 			li.$label.html(displayName);
 		},
+
+		showNewCampPopup: function () {
+			if (!this.playerLocationNodes.head || !this.playerLocationNodes.head.entity) return;
+			let level = this.playerLocationNodes.head.position.level;
+			if (GameGlobals.gameState.uiStatus.seenCamps.indexOf(level) >= 0) return;
+
+			let sector =  this.playerLocationNodes.head.entity;
+			let improvements = this.playerLocationNodes.head.entity.get(SectorImprovementsComponent);
+			if (improvements.getCount(improvementNames.house) > 0) return;
+			if (improvements.getCount(improvementNames.campfire) > 0) return;
+
+			let seed = GameGlobals.worldState.worldSeed;
+			let campOrdinal = GameGlobals.worldState.getCampOrdinal(level);
+			let features = GameGlobals.campBalancingHelper.getCampUniqueFeaturesSummary(seed, campOrdinal);
+
+			let title = Text.t("ui.camp.new_camp_popup_title");
+			let msg = "";
+			let introKey = campOrdinal == 1 ? "ui.camp.new_camp_popup_intro_first" : "ui.camp.new_camp_popup_intro";
+
+			msg += "<p>" + Text.t(introKey) + "</p>"
+			
+			if (campOrdinal > 1) {
+				msg += UIConstants.getCampUniqueFeaturesDiv(features, { hideWorkshop: true });
+				msg += UIConstants.getCampUniqueFeaturesDiv(features, { hideWorkshop: true, showText: true, hideIcons: true });
+			}
+
+			GameGlobals.uiFunctions.showInfoPopup(title, msg);
+			GameGlobals.uiFunctions.generateInfoCallouts(".popup");
+		},
 		
 		isCampActionListItemDataSame: function (d1, d2) {
 			return d1.action == d2.action;
@@ -1361,6 +1423,12 @@
 				this.refresh();
 				this.updateCharacters();
 			}
+		},
+
+		onCampEntered: function () {			
+			setTimeout(() => {
+				this.showNewCampPopup();
+			}, 100);
 		},
 
 		onCampEventStarted: function () {

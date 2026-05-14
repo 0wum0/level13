@@ -5,6 +5,7 @@ define([
 	'game/GameGlobals',
 	'game/constants/GameConstants',
 	'game/constants/CampConstants',
+	'game/constants/CultureConstants',
 	'game/constants/ImprovementConstants',
 	'game/constants/OccurrenceConstants',
 	'game/constants/PlayerActionConstants',
@@ -17,7 +18,7 @@ define([
 	'game/vos/ResourcesVO',
 	'worldcreator/WorldCreatorConstants',
 ], function (
-	Ash, MathUtils, GameGlobals, GameConstants, CampConstants, ImprovementConstants, OccurrenceConstants, PlayerActionConstants,
+	Ash, MathUtils, GameGlobals, GameConstants, CampConstants, CultureConstants, ImprovementConstants, OccurrenceConstants, PlayerActionConstants,
 	UpgradeConstants, TribeConstants, WorldConstants, CampComponent, SectorImprovementsComponent, UpgradesComponent,
 	ResourcesVO, WorldCreatorConstants
 ) {
@@ -1022,6 +1023,31 @@ define([
 		
 		getHabitability: function (campOrdinal) {
 			return WorldCreatorConstants.getHabitability(campOrdinal);
+		},
+
+		getCampUniqueFeaturesSummary: function (seed, campOrdinal) {
+			let level = GameGlobals.worldState.getLevelForCamp(campOrdinal);
+
+			let result = {};
+
+			result.habitability = WorldCreatorConstants.getHabitability(campOrdinal);
+			result.raidDangerFactor = WorldCreatorConstants.getRaidDangerFactor(campOrdinal);
+			result.traderFactor = WorldCreatorConstants.getTraderFrequencyFactor(campOrdinal);
+			result.signatureDisaster = WorldCreatorConstants.getSignatureDisaster(campOrdinal);
+			result.diseaseFactor = WorldCreatorConstants.getDiseaseFrequencyFactor(campOrdinal);
+			result.workshopResource = WorldConstants.getWorkshopResourceForCampOrdinal(seed, campOrdinal);
+			result.defaultPopulationOrigin = CultureConstants.getDefaultOrigin(level);
+
+			result.workerMetalFactor = WorldCreatorConstants.getWorkerMetalFactor(campOrdinal);
+			result.workerFoodFactor = WorldCreatorConstants.getWorkerFoodFactor(campOrdinal);
+			result.workerWaterFactor = WorldCreatorConstants.getWorkerWaterFactor(campOrdinal);
+			result.workerArtisanFactor = WorldCreatorConstants.getWorkerArtisanFactor(campOrdinal);
+			result.workerAcademicFactor = WorldCreatorConstants.getWorkerAcademicFactor(campOrdinal);
+			result.workerHopeFactor = WorldCreatorConstants.getWorkerHopeFactor(campOrdinal);
+
+			result.campOrdinal = campOrdinal;
+
+			return result;
 		},
 	
 	});

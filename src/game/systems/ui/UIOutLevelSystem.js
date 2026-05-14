@@ -297,7 +297,7 @@ define([
 				this.elements.btnScavengeHeap.find(".btn-label").text("scavenge " + heapName);
 			}
 
-			GameGlobals.uiFunctions.slideToggleIf("#out-locales", null, this.getVisibleLocales(isScouted).length > 0, 200, 0);
+			GameGlobals.uiFunctions.slideToggleIf("#out-locales", null, this.getVisibleLocales().length > 0, 200, 0);
 			GameGlobals.uiFunctions.slideToggleIf("#container-out-actions-movement-related", null, isScouted, 200, 0);
 
 			GameGlobals.uiFunctions.toggle("#table-out-actions-movement", GameGlobals.gameState.isFeatureUnlocked("move"));
@@ -306,8 +306,7 @@ define([
 			GameGlobals.uiFunctions.toggle("#out-improvements table", GameGlobals.gameState.unlockedFeatures.vision);
 		},
 
-		getVisibleLocales: function (isScouted) {
-			if (!isScouted) return [];
+		getVisibleLocales: function () {
 			let sectorLocalesComponent = this.playerLocationNodes.head.entity.get(SectorLocalesComponent);
 			let result = [];
 			for (let i = 0; i < sectorLocalesComponent.locales.length; i++) {
@@ -316,6 +315,7 @@ define([
 				localeVO.index = i;
 				result.push(localeVO);
 			}
+
 			return result;
 		},
 
@@ -881,14 +881,14 @@ define([
 			let positionComponent = currentSector.get(PositionComponent);
 			let position = positionComponent.getPosition();
 			let campOrdinal = GameGlobals.worldState.getCampOrdinal(position.level);
-			var sectorStatus = this.playerLocationNodes.head.entity.get(SectorStatusComponent);
+			let sectorStatus = this.playerLocationNodes.head.entity.get(SectorStatusComponent);
 
-			var isScouted = sectorStatus.scouted;
+			let isScouted = sectorStatus.scouted;
 			
 			let sectorFeaturesComponent = currentSector.get(SectorFeaturesComponent);
 			let sectorStatusComponent = currentSector.get(SectorStatusComponent);
 
-			let locales = this.getVisibleLocales(isScouted);
+			let locales = this.getVisibleLocales();
 			
 			let data = locales.map((locale) => {
 				let index = locale.index;

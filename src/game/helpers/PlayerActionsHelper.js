@@ -390,7 +390,7 @@ define([
 				let featuresComponent = sector.get(SectorFeaturesComponent);
 				let itemsComponent = this.playerStatsNodes.head.items;
 				let isAffectedByHazard = GameGlobals.sectorHelper.isAffectedByHazard(featuresComponent, statusComponent, itemsComponent)
-				if (isAffectedByHazard && !this.isActionIndependentOfHazards(action)) {
+				if (isAffectedByHazard && !this.isActionIndependentOfHazards(sector, action)) {
 					let reason = GameGlobals.sectorHelper.getHazardDisabledReason(featuresComponent, statusComponent, itemsComponent);
 					return { value: 0, reason: this.getDisabledReasonVO(reason) };
 				}
@@ -2222,8 +2222,14 @@ define([
 					requirements = localeVO == null ? {} : localeVO.requirements;
 					requirements.sector = {};
 					requirements.sector.scouted = true;
+
 					if (localeVO) {
 						let localeType = localeVO.type;
+
+						if (LocaleConstants.isLocaleScoutActionMovement(localeType)) {
+							delete requirements.sector.scouted;
+						}
+
 						if (!LocaleConstants.canBeScoutedAgain(localeType)) {
 							requirements.sector.scoutedLocales = {};
 							requirements.sector.scoutedLocales[localei] = false;
@@ -3089,8 +3095,8 @@ define([
 			return result;
 		},
 		
-		isActionIndependentOfHazards: function (action) {
-			var improvement = this.getImprovementNameForAction(action, true);
+		isActionIndependentOfHazards: function (sector, action) {
+			let improvement = this.getImprovementNameForAction(action, true);
 			if (improvement) {
 				if (getImprovementType(improvement) == improvementTypes.level) {
 					return true;
@@ -3117,6 +3123,13 @@ define([
 				case "clear_debris": return true;
 				case "clear_explosives": return true;
 				case "bridge_gap": return true;
+
+				case "select_dialogue_option": return true;
+
+				case "scout_locale_i":
+				case "scout_locale_u":
+					let localeVO = this.getLocaleForScoutAction(sector, action);
+					return localeVO && LocaleConstants.isLocaleScoutActionMovement(localeVO.type);
 
 				default: return false;
 			}

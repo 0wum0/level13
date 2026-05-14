@@ -37,6 +37,15 @@ define(['ash'], function (Ash) {
 		hasHazards: function () {
 			return this.radiation > 0 || this.poison > 0 || this.cold > 0 || this.debris > 0 || this.flooded > 0 || this.territory > 0;
 		},
+
+		equals: function (hazardsVO) {
+			return this.radiation == hazardsVO.radiation && 
+				this.poison == hazardsVO.poison && 
+				this.cold == hazardsVO.cold && 
+				this.debris == hazardsVO.debris && 
+				this.flooded == hazardsVO.flooded && 
+				this.territory == hazardsVO.territory;
+		},
 		
 		clone: function () {
 			let result = new EnvironmentalHazardsVO();

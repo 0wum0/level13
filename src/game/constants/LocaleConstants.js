@@ -20,7 +20,14 @@ define(['ash'], function (Ash) {
 				case localeTypes.repairshop: return true;
 			}
 			return false;
-		}
+		},
+
+		isLocaleScoutActionMovement: function (localeType) {
+			switch (localeType) {
+				case localeTypes.shortcut: return true;
+			}
+			return false;
+		},
 	
 	};
 	

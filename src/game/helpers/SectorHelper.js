@@ -264,6 +264,10 @@ define([
 		},
 
 		isLocaleVisible: function (sector, localeVO) {
+			let statusComponent = sector.get(SectorStatusComponent);
+			let localesComponent = sector.get(SectorLocalesComponent);
+			let isSectorScouted = statusComponent.scouted;
+
 			if (localeVO.type == localeTypes.grove) {
 				let forcedExplorerID = GameGlobals.explorerHelper.getForcedExplorerID();
 				if (forcedExplorerID == "gambler") {
@@ -271,7 +275,14 @@ define([
 					return !explorerVO || explorerVO.inParty;
 				}
 			}
-			return true;
+
+			if (localeVO.type == localeTypes.shortcut) {
+				// show locale if already scouted (via pair) even if this sector not scouted yet
+				let localei = localesComponent.locales.indexOf(localeVO);
+				if (statusComponent.isLocaleScouted(localei)) return true;
+			}
+
+			return isSectorScouted;
 		},
 				
 		hasSectorKnownResource: function (sector, resourceName, min) {

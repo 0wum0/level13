@@ -984,6 +984,7 @@ define([
 			if (levelVO.sectors.length < 80) num = 0;
 			if (levelVO.level >= worldVO.topLevel - 1) num = 0;
 			if (levelVO.level == worldVO.bottomLevel) num = 0;
+			if (levelVO.level == 13) num = 0;
 			if (levelVO.level == 14) num = 0;
 
 			if (num <= 0) return;
@@ -1011,6 +1012,8 @@ define([
 					score += pathToPair.length / distanceToPair * 5; 
 					if (sectorVO.position.sectorX == pair.position.sectorX) score++;
 					if (sectorVO.position.sectorY == pair.position.sectorY) score++;
+					if (sectorVO.stage == pair.stage) score++;
+					if (sectorVO.hazards.equals(pair.hazards)) score++;
 				}
 				return score;
 			};

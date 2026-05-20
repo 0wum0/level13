@@ -235,6 +235,7 @@ define([
 		},
 
 		getWorldSeedFromSave: function (saveObject) {
+			if (!saveObject) return null;
 			if (saveObject.worldState) return saveObject.worldState.worldSeed;
 			return saveObject.gameState.worldSeed;
 		}

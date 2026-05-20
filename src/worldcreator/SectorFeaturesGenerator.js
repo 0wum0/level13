@@ -553,12 +553,12 @@ define([
 			
 			// campable levels: block all paths to one POI
 			// TODO check that that POI is in a different direction than first passage of the level, otherwise the movement blockers will just get blocked because blockers on zone ZONE_PASSAGE_TO_CAMP are not allowed
-			if (levelVO.isCampable && WorldCreatorRandom.randomBool(seed % 888 + l * 777, 0.75)) {
-				var localeSectors = levelVO.localeSectors;
-				var rand = seed % 333 + 1000 + l * 652;
+			if (campOrdinal > 1 && levelVO.isCampable && WorldCreatorRandom.randomBool(seed % 888 + l * 777, 0.75)) {
+				let localeSectors = levelVO.localeSectors;
+				let rand = seed % 333 + 1000 + l * 652;
 				let i = WorldCreatorRandom.randomInt(rand, 0, localeSectors.length);
-				var poiSector = localeSectors[i];
-				var campPos = levelVO.campPosition;
+				let poiSector = localeSectors[i];
+				let campPos = levelVO.campPosition;
 				if (poiSector) {
 					var allowedCriticalPathTypes = [ WorldCreatorConstants.CRITICAL_PATH_TYPE_CAMP_TO_POI_1, WorldCreatorConstants.CRITICAL_PATH_TYPE_CAMP_TO_POI_2, WorldCreatorConstants.CRITICAL_PATH_TYPE_CAMP_TO_PASSAGE ];
 					addBlockersBetween(rand, levelVO, campPos, poiSector.position, null, 3, allowedCriticalPathTypes);

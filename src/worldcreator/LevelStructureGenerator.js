@@ -2034,70 +2034,7 @@ define([
 			let baseScore = point.connectionPointScoreBase;
 
 			if (!isPartialUpdate || !baseScore) {
-				let sectorVO = levelVO.getSectorByPos(point.position);
-				let possibleShapes = Object.keys(levelVO.structureSettings.shapeWeights).filter(shape => levelVO.structureSettings.shapeWeights[shape] > 0);
-				let densityScoreModifier = 1 - levelVO.structureSettings.density;
-				let isLevelOnlyLines = possibleShapes.indexOf(WorldCreatorConstants.SHAPE_CIRCLE) < 0 && possibleShapes.indexOf(WorldCreatorConstants.SHAPE_RECTANGLE_CENTER) < 0 && possibleShapes.indexOf(WorldCreatorConstants.SHAPE_RECTANGLE_CORNER) < 0;
-
-				let sectorStage = sectorVO.stage;
-				if (sectorStage == stage) score += 3;
-
-				let defaultStage = LevelStructureGenerator.getDefaultStage(levelVO, point.position);
-				if (defaultStage == stage) score += 3;
-
-				if (sectorVO.features.length > 0) score += 1;
-
-				let neighbourCount = levelVO.getNeighbourCount(point.position.sectorX, point.position.sectorY);
-				if (neighbourCount == 1 && !isLevelOnlyLines) score += 10;
-				if (neighbourCount == 2) score++;
-				if (neighbourCount < 4) score += densityScoreModifier;
-				if (neighbourCount > 4) score -= 99;
-
-				let areaDensity = levelVO.getAreaDensity(point.position.sectorX, point.position.sectorY, 4);
-				if (areaDensity < 0.2) score += densityScoreModifier;
-				if (areaDensity < 0.3) score += densityScoreModifier;
-				if (areaDensity < 0.4) score += densityScoreModifier;
-				if (areaDensity < 0.5) score += densityScoreModifier;
-
-				let localDensity = levelVO.getAreaDensity(point.position.sectorX, point.position.sectorY, 3);
-				if (localDensity < 0.3) score += densityScoreModifier;
-
-				let immediateDensity = levelVO.getAreaDensity(point.position.sectorX, point.position.sectorY, 2);
-				if (immediateDensity < 0.4) score += densityScoreModifier;
-				if (immediateDensity < 0.4) score += densityScoreModifier;
-
-				let mapCenter = levelVO.levelMapCenterPosition;
-				let distanceToOrigo = PositionConstants.getDistanceTo(point.position, mapCenter);
-				if (distanceToOrigo < 10) score++;
-				if (distanceToOrigo < 20) score++;
-				if (distanceToOrigo < 25) score++;
-				if (distanceToOrigo >= 30) score -= 99;
-				if (PositionConstants.getDistanceTo(point.position, levelVO.getExcursionStartPosition()) < 20) score++;
-				if (PositionConstants.getDistanceTo(point.position, levelVO.getExcursionStartPosition()) < 30) score++;
-
-				if (neighbourCount < 3) {
-					let distanceToCrossing = WorldCreatorHelper.getShortestDistanceToMatchingSector(worldVO, levelVO, point.position, s => levelVO.isCrossing(s.position.sectorX, s.position.sectorY), 0, WorldConstants.MAX_PATH_NO_CROSSINGS_LENGTH);
-					if (distanceToCrossing <= 2) score -= 20;
-					if (distanceToCrossing > 8) score++;
-					if (distanceToCrossing > 10) score++;
-					if (distanceToCrossing >= WorldConstants.MAX_PATH_NO_CROSSINGS_LENGTH) score += 3;
-				}
-
-				let pathToExcursionStart = WorldCreatorRandom.findPath(worldVO, point.position, levelVO.getExcursionStartPosition(), false, true);
-				let distanceToExcursionStart = pathToExcursionStart ? pathToExcursionStart.length : 999;
-				let maxExcursionLength = this.getMaxExcursionDistance(levelVO);
-				if (distanceToExcursionStart >= maxExcursionLength) score -= 30;
-				if (distanceToExcursionStart >= maxExcursionLength - 3) score -= 3;
-				if (distanceToExcursionStart >= maxExcursionLength - 5) score -= 3;
-				if (distanceToExcursionStart >= maxExcursionLength - 8) score -= 1;
-
-				if (!LevelStructureGenerator.isPreferredSectorPosition(levelVO, point.position)) score -= 2;
-
-				if (PositionConstants.areEqual(point.position, levelVO.getEntrancePassagePosition())) score -= 5;
-
-				if (this.hasConnectionPointPotentialConnectionLine(levelVO, point)) score += 1;
-				
-				score += LevelStructureGenerator.getPositionStageSuitabilityScore(levelVO, point.position, stage);
+				score = this.getConnectionPointScoreRaw(worldVO, levelVO, point, stage);
 			} else {
 				score = baseScore;
 			}
@@ -2105,6 +2042,92 @@ define([
 			point.connectionPointScoreBase = score;
 			
 			if (point.numFailures) score -= point.numFailures * 0.5;
+
+			return score;
+		},
+
+		getConnectionPointScoreRaw: function (worldVO, levelVO, point, stage) {
+			let score = 0;
+
+			let sectorVO = levelVO.getSectorByPos(point.position);
+			let possibleShapes = Object.keys(levelVO.structureSettings.shapeWeights).filter(shape => levelVO.structureSettings.shapeWeights[shape] > 0);
+			let densityScoreModifier = 1 - levelVO.structureSettings.density;
+			let isLevelOnlyLines = possibleShapes.indexOf(WorldCreatorConstants.SHAPE_CIRCLE) < 0 && possibleShapes.indexOf(WorldCreatorConstants.SHAPE_RECTANGLE_CENTER) < 0 && possibleShapes.indexOf(WorldCreatorConstants.SHAPE_RECTANGLE_CORNER) < 0;
+
+			// stage
+			let sectorStage = sectorVO.stage;
+			if (sectorStage == stage) score += 3;
+
+			let defaultStage = LevelStructureGenerator.getDefaultStage(levelVO, point.position);
+			if (defaultStage == stage) score += 3;
+			
+			score += LevelStructureGenerator.getPositionStageSuitabilityScore(levelVO, point.position, stage);
+
+			// features
+			if (sectorVO.features.length > 0) score += 1;
+
+			// neighbour count
+			let neighbourCount = levelVO.getNeighbourCount(point.position.sectorX, point.position.sectorY);
+			if (neighbourCount == 1 && !isLevelOnlyLines) score += 10;
+			if (neighbourCount == 2) score++;
+			if (neighbourCount < 4) score += densityScoreModifier;
+			if (neighbourCount > 4) return -99;
+
+			// density
+			let areaDensity = levelVO.getAreaDensity(point.position.sectorX, point.position.sectorY, 4);
+			if (areaDensity < 0.2) score += densityScoreModifier;
+			if (areaDensity < 0.3) score += densityScoreModifier;
+			if (areaDensity < 0.4) score += densityScoreModifier;
+			if (areaDensity < 0.5) score += densityScoreModifier;
+
+			let localDensity = levelVO.getAreaDensity(point.position.sectorX, point.position.sectorY, 3);
+			if (localDensity < 0.3) score += densityScoreModifier;
+
+			let immediateDensity = levelVO.getAreaDensity(point.position.sectorX, point.position.sectorY, 2);
+			if (immediateDensity < 0.4) score += densityScoreModifier;
+			if (immediateDensity < 0.4) score += densityScoreModifier;
+
+			// distance
+			let mapCenter = levelVO.levelMapCenterPosition;
+			let distanceToOrigo = PositionConstants.getDistanceTo(point.position, mapCenter);
+			if (distanceToOrigo < 10) score++;
+			if (distanceToOrigo < 20) score++;
+			if (distanceToOrigo < 25) score++;
+			if (distanceToOrigo >= 30) score -= 99;
+
+			let distanceToExcursionStart = PositionConstants.getDistanceTo(point.position, levelVO.getExcursionStartPosition());
+			if (distanceToExcursionStart < 20) score++;
+			if (distanceToExcursionStart < 30) score++;
+
+			if (neighbourCount < 3) {
+				let distanceToCrossing = WorldCreatorHelper.getShortestDistanceToMatchingSector(worldVO, levelVO, point.position, s => levelVO.isCrossing(s.position.sectorX, s.position.sectorY), 0, WorldConstants.MAX_PATH_NO_CROSSINGS_LENGTH);
+				if (distanceToCrossing <= 2) score -= 20;
+				if (distanceToCrossing > 8) score++;
+				if (distanceToCrossing > 10) score++;
+				if (distanceToCrossing >= WorldConstants.MAX_PATH_NO_CROSSINGS_LENGTH) score += 3;
+			}
+
+			let maxExcursionLength = this.getMaxExcursionDistance(levelVO);
+			if (distanceToExcursionStart < 5) {
+				// path unlikely to be long, avoid calculating
+			} else if (distanceToExcursionStart > maxExcursionLength) {
+				// too long anyway no need to calculate path
+				score -= 30;
+			} else {
+				let pathToExcursionStart = WorldCreatorRandom.findPath(worldVO, point.position, levelVO.getExcursionStartPosition(), false, true);
+				let distanceToExcursionStart = pathToExcursionStart ? pathToExcursionStart.length : 999;
+				if (distanceToExcursionStart >= maxExcursionLength) score -= 30;
+				if (distanceToExcursionStart >= maxExcursionLength - 3) score -= 3;
+				if (distanceToExcursionStart >= maxExcursionLength - 5) score -= 3;
+				if (distanceToExcursionStart >= maxExcursionLength - 8) score -= 1;
+			}
+
+			// position relative to poi
+			if (!LevelStructureGenerator.isPreferredSectorPosition(levelVO, point.position)) score -= 2;
+			if (PositionConstants.areEqual(point.position, levelVO.getEntrancePassagePosition())) score -= 5;
+
+			// suitability for shapes
+			if (this.hasConnectionPointPotentialConnectionLine(levelVO, point)) score += 1;
 
 			return score;
 		},

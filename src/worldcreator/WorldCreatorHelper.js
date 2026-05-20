@@ -226,11 +226,11 @@ define([
 			let result = levelVO.getNeighbours(pos.sectorX, pos.sectorY);
 			if (pendingSectors) {
 				for (let i = 0; i < pendingSectors.length; i++) {
-					var pendingPos = pendingSectors[i];
+					let pendingPos = pendingSectors[i];
 					if (levelVO.hasSector(pendingPos.sectorX, pendingPos.sectorY)) continue;
-					var distance = PositionConstants.getDistanceTo(pos, pendingPos);
+					let distance = PositionConstants.getDistanceTo(pos, pendingPos);
 					if (distance >= 1 && distance < 2) {
-						var direction = PositionConstants.getDirectionFrom(pos, pendingPos);
+						let direction = PositionConstants.getDirectionFrom(pos, pendingPos);
 						result[direction] = { position: pendingPos };
 					}
 				}

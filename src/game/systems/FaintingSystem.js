@@ -95,8 +95,7 @@ define([
 			
 			let hasDeity = GameGlobals.tribeHelper.hasDeity();
 			let hasExplorers = this.playerStatsNodes.head.explorers.getParty().length > 0;
-			var hasLastVisitedCamp = this.lastVisitedCampNodes.head !== null;
-			var hasCampOnLevel = this.nearestCampNodes.head !== null;
+			let hasCampOnLevel = this.nearestCampNodes.head !== null;
 			
 			// TODO rework texts
 			// TODO check distance to camp / safety - if fainted 1-2 tiles away from camp, be saved by workers
@@ -145,67 +144,33 @@ define([
 			}
 			
 			// pass out and teleport to last visited camp: lose items, back to last visited camp, injury
-			if (hasLastVisitedCamp) {
-				this.fadeOutToLastVisitedCamp(true, msgAdjective);
+			if (this.lastVisitedCampNodes.head !== null) {
+				this.fadeOutToLastVisitedCamp(this.lastVisitedCampNodes.head.entity, true, msgAdjective);
+				return;
+			}
+			
+			// pass out and teleport to first camp: lose items, injury
+			let firstSector = GameGlobals.levelHelper.getSectorByPosition(13, 0, 0);
+			if (firstSector !== null && firstSector.has(CampComponent)) {
+				this.fadeOutToLastVisitedCamp(firstSector, true, msgAdjective);
 				return;
 			}
 			
 			// pass out and teleport to nearest safe sector (with scavengable food & water)
-			var sectorSafe = this.isSectorSafe(this.playerLocationNodes.head.entity);
-			if (!sectorSafe) {
-				this.fadeOutToOutside(msgAdjective);
-				return;
-			}
-			
-			log.w("can't faint: no known safe sector or camp");
+			this.fadeOutToOutside(msgAdjective);
 		},
 		
 		fadeOutToOutside: function (msgAdjective) {
-			var playerPosition = this.playerResourcesNodes.head.entity.get(PositionComponent);
-			var nearestKnownSafeSector;
-			var nearestKnownSafeSectorDist = 100;
-			var nearestVisitedSafeSector;
-			var nearestVisitedSafeSectorDist = 100;
-			
-			var dist;
-			var isVisited;
-			var isSafe;
-			var isKnownSafe;
-			for (var node = this.sectorNodes.head; node; node = node.next) {
-				if (node.position.level === playerPosition.level) {
-					isVisited = GameGlobals.sectorHelper.isVisited(node.entity);
-					if (!isVisited) continue;
-					isSafe = this.isSectorSafe(node.entity);
-					if (!isSafe) continue;
-					dist = PositionConstants.getDistanceTo(playerPosition.getPosition(), node.position.getPosition());
-					if (dist < nearestVisitedSafeSectorDist) {
-						nearestVisitedSafeSector = node.entity;
-						nearestVisitedSafeSectorDist = dist;
-					}
-					isKnownSafe = this.isSectorKnownSafe(node.entity);
-					if (dist < nearestKnownSafeSectorDist) {
-						nearestKnownSafeSector = node.entity;
-						nearestKnownSafeSectorDist = dist;
-					}
-				}
-			}
-			
-			var msgMain = "Weak and " + msgAdjective + ", you sit to rest. Your consciousness fades.<br/>When you wake up, you find yourself back in a familiar area.";
-			var msgLog = "The world fades. You wake up with no memory of how you got here.";
-			if (nearestKnownSafeSector) {
-				this.fadeOut(msgMain, msgLog, true, nearestKnownSafeSector, 1, 0, 0, 0);
-			} else if (nearestVisitedSafeSector) {
-				this.fadeOut(msgMain, msgLog, true, nearestVisitedSafeSector, 1, 0, 0, 0);
-			} else {
-				if (GameGlobals.logWarnings) log.w("Nowhere to fade out to.");
-			}
+			let sector = this.getFadeOutOutsideSector();
+			let msgMain = "Weak and " + msgAdjective + ", you sit to rest. Your consciousness fades.<br/>When you wake up, you find yourself back in a familiar area.";
+			let msgLog = "The world fades. You wake up with no memory of how you got here.";
+			this.fadeOut(msgMain, msgLog, true, sector, 1, 0, 0, 0);
 		},
 		
-		fadeOutToLastVisitedCamp: function (handleResults, msgAdjective) {
-			if (!this.lastVisitedCampNodes.head) return;
+		fadeOutToLastVisitedCamp: function (sector, handleResults, msgAdjective) {
 			var msgMain = "Weak and " + msgAdjective + ", you sit to rest. Your consciousness fades.<br/>When you wake up, you find yourself back in camp.";
 			var msgLog = "The world fades. You wake up with no memory of how you found your way back.";
-			this.fadeOut(msgMain, msgLog, handleResults, this.lastVisitedCampNodes.head.entity, 1, 1, 0.5, 0.25);
+			this.fadeOut(msgMain, msgLog, handleResults, sector, 1, 1, 0.5, 0.25);
 		},
 		
 		fadeOut: function (msg, msgLog, handleResults, sector, loseInventoryProbability, injuryProbability, loseAugmentationProbability, loseExplorerProbability) {
@@ -276,13 +241,51 @@ define([
 		save: function () {
 			GlobalSignals.saveGameSignal.dispatch(GameConstants.SAVE_SLOT_DEFAULT, false);
 		},
+
+		getFadeOutOutsideSector: function () {
+			let playerPosition = this.playerResourcesNodes.head.entity.get(PositionComponent);
+			let nearestKnownSafeSector;
+			let nearestKnownSafeSectorDist = 100;
+			let nearestVisitedSafeSector;
+			let nearestVisitedSafeSectorDist = 100;
+			
+			for (let node = this.sectorNodes.head; node; node = node.next) {
+				let isCorrectLevel = node.position.level === playerPosition.level;
+
+				let isVisited = GameGlobals.sectorHelper.isVisited(node.entity);
+				if (!isVisited) continue;
+				let isSafe = this.isSectorSafe(node.entity);
+				if (!isSafe) continue;
+
+				let dist = PositionConstants.getDistanceTo(playerPosition.getPosition(), node.position.getPosition()) * (isCorrectLevel ? 1000 : 1);
+
+				if (dist < nearestVisitedSafeSectorDist) {
+					nearestVisitedSafeSector = node.entity;
+					nearestVisitedSafeSectorDist = dist;
+				}
+				
+				let isKnownSafe = this.isSectorKnownSafe(node.entity);
+				if (dist < nearestKnownSafeSectorDist) {
+					nearestKnownSafeSector = node.entity;
+					nearestKnownSafeSectorDist = dist;
+				}
+			}
+
+			return nearestKnownSafeSector || nearestVisitedSafeSector;
+		},
 		
 		isSectorSafe: function (sector) {
-			var featuresComponent = sector.get(SectorFeaturesComponent);
-			var sectorResourcesSca = featuresComponent.resourcesScavengable;
-			var sectorResourcesCo = featuresComponent.resourcesCollectable;
-			return (sectorResourcesSca.getResource(resourceNames.food) > 0 || sectorResourcesCo.getResource(resourceNames.food) > 0) &&
-				(sectorResourcesSca.getResource(resourceNames.water) > 0 || sectorResourcesCo.getResource(resourceNames.water) > 0);
+			let featuresComponent = sector.get(SectorFeaturesComponent);
+			let sectorResourcesSca = featuresComponent.resourcesScavengable;
+			let sectorResourcesCo = featuresComponent.resourcesCollectable;
+			let hasFood = sectorResourcesSca.getResource(resourceNames.food) > 0 || sectorResourcesCo.getResource(resourceNames.food) > 0;
+			if (!hasFood) return false;
+			let hasWater = sectorResourcesSca.getResource(resourceNames.water) > 0 || sectorResourcesCo.getResource(resourceNames.water) > 0;
+			if (!hasWater) return false;
+			
+			if (featuresComponent.hasHazards()) return false;
+
+			return true;
 		},
 		
 		isSectorKnownSafe: function (sector) {

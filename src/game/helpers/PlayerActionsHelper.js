@@ -2016,6 +2016,7 @@ define([
 
 			var levelComponent = sector ? GameGlobals.levelHelper.getLevelEntityForSector(sector).get(LevelComponent) : null;
 			var isOutpost = levelComponent ? levelComponent.habitability < 1 : false;
+			let level = levelComponent.position;
 
 			if (action.indexOf("build_in") >= 0) {
 				var improvementName = this.getImprovementNameForAction(action);
@@ -2049,8 +2050,7 @@ define([
 				case "build_out_passage_up_stairs":
 				case "build_out_passage_up_elevator":
 				case "build_out_passage_up_hole":
-					let levelOrdinal = action.substring(action.lastIndexOf("_") + 1);
-					let campOrdinal = GameGlobals.worldState.getCampOrdinalForLevelOrdinal(levelOrdinal);
+					let campOrdinal = GameGlobals.worldState.getCampOrdinal(level);
 					// exception_ passage up from level 13
 					if (baseActionID.indexOf("_up_") >= 0) {
 						 if (campOrdinal <= WorldConstants.CAMP_ORDINAL_GROUND) {
@@ -3110,6 +3110,7 @@ define([
 
 			var baseActionID = this.getBaseActionID(action);
 			switch (baseActionID) {
+				case "get_up": return true;
 				case "craft": return true;
 				case "equip": return true;
 				case "unequip": return true;

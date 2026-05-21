@@ -444,7 +444,9 @@ define(['ash',
 		},
 		
 		getActionSectorOrCurrent: function (sectorPos) {
-			let current = this.playerLocationNodes.head.entity;
+			// if param is actual sector use it
+			if (sectorPos && sectorPos.get) return sectorPos;
+			let current = this.playerLocationNodes.head ? this.playerLocationNodes.head.entity : null;
 			return this.getActionSector("", sectorPos) || current;
 		},
 
@@ -2521,9 +2523,10 @@ define(['ash',
 		},
 
 		useCampfire: function () {
-			var campSector = this.nearestCampNodes.head.entity;
-			var campComponent = campSector.get(CampComponent);
-			var improvementsComponent = campSector.get(SectorImprovementsComponent);
+			if (!this.nearestCampNodes.head) return;
+			let campSector = this.nearestCampNodes.head.entity;
+			let campComponent = campSector.get(CampComponent);
+			let improvementsComponent = campSector.get(SectorImprovementsComponent);
 			// TODO move this check to startAction
 			if (campSector) {
 				if (campComponent.rumourpool >= 1) {
@@ -2547,6 +2550,7 @@ define(['ash',
 		},
 		
 		startCampfire: function () {
+			if (!this.nearestCampNodes.head) return;
 			var campSector = this.nearestCampNodes.head.entity;
 			var campComponent = campSector.get(CampComponent);
 
@@ -2559,6 +2563,7 @@ define(['ash',
 		},
 		
 		useMarket: function () {
+			if (!this.nearestCampNodes.head) return;
 			var campSector = this.nearestCampNodes.head.entity;
 			var improvementsComponent = campSector.get(SectorImprovementsComponent);
 			// TODO move this check to startAction
@@ -2598,6 +2603,7 @@ define(['ash',
 		},
 		
 		useLibrary: function () {
+			if (!this.nearestCampNodes.head) return;
 			let campSector = this.nearestCampNodes.head.entity;
 			let campComponent = campSector.get(CampComponent);
 			let improvementsComponent = campSector.get(SectorImprovementsComponent);
@@ -2622,6 +2628,7 @@ define(['ash',
 		},
 
 		useShrine: function () {
+			if (!this.nearestCampNodes.head) return;
 			let hopeComponent = this.playerStatsNodes.head.entity.get(HopeComponent);
 			if (!hopeComponent) return;
 			let campSector = this.nearestCampNodes.head.entity;
@@ -3122,7 +3129,9 @@ define(['ash',
 
 		// actionName: can be null if improvement is built automatically (for example passage corresponding to a built one)
 		buildImprovement: function (actionName, improvementName, otherSector) {
-			let sector = otherSector ? otherSector : this.playerLocationNodes.head.entity;
+			let sector = this.getActionSectorOrCurrent(otherSector);
+			if (!sector) return;
+			
 			let improvementsComponent = sector.get(SectorImprovementsComponent);
 
 			if (!improvementsComponent) {

@@ -490,7 +490,7 @@ define(['ash',
 			let calloutContent = "Visitor";
 			
 			div += "<div class='npc-type-indicator'><img src='img/eldorado/icon_time-dark.png'/></div>";
-			div += "<div class='info-callout-target info-callout-target-small' description='" + this.cleanupText(calloutContent) + "'>";
+			div += "<div class='info-callout-target info-callout-target-small fullwidth' description='" + this.cleanupText(calloutContent) + "'>";
 			div += this.createNPCPortrait();
 			div += "</div>";
 
@@ -510,14 +510,16 @@ define(['ash',
 			options.isTemporary = options.isTemporary || false;
 
 			let showName = options.showName || false;
+			let displayName = Text.t(this.getNPCDisplayNameKey(characterType));
 
-			let name = showName ? Text.t(this.getNPCDisplayNameKey(characterType)) : "";
+			let name = showName ? displayName : "";
 
 			$div.toggleClass("npc-visitor", options.isTemporary);
 			$div.attr("data-characterType", characterType);
 			$div.find(".npc-portrait").find("img").attr("src", icon);
 			$div.find(".npc-name").text(name);
 			$div.find("button").attr("action", action);
+			$div.find(".info-callout-target").attr("description", displayName);
 			
 			$div.find(".npc-type-indicator").toggleClass("hidden", !options.isTemporary);
 		},

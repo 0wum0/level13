@@ -986,6 +986,7 @@ define([
 			}
 
 			GameGlobals.uiFunctions.createButtons("#out-characters");
+			GameGlobals.uiFunctions.generateInfoCallouts("#out-characters");
 		},
 
 		updateMovementRelatedActions: function () {

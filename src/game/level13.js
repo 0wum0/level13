@@ -388,15 +388,24 @@ define([
 			   "Details:\n[Fill in any details here that you think will help tracking down this bug]" +
 			   "\n\nSeed: " + GameGlobals.worldState.worldSeed + "\nPosition: " + pos + "\nStacktrace:\n" + stackTrace);
 			let url = "https://github.com/nroutasuo/level13/issues/new?title=" + bugTitle + "&body=" + bugBody + "&labels=exception";
+
+			let hasPlayedOnIncompatibleVersions = GameGlobals.changeLogHelper.hasPlayedOnOldVersion();
+			let hasCheated = GameGlobals.gameState.hasCheated;
+			let showReportBugNudge = !hasPlayedOnIncompatibleVersions && !hasCheated;
+
+			let text  = "You've found a bug! Please reload the page to continue playing. ";
+			text += "If reloading doesn't help, you can clear your data and restart the game, but you will lose all your progress.<br\><br\>";
+
+			if (showReportBugNudge) text += "You can also help the developer by <a href='" + url + "' target='_blank'>reporting</a> the problem on GitHub.";
+
+			if (hasPlayedOnIncompatibleVersions) text += "<span class='warning'>The game state contains data from two incompatible versions. ";
+			if (hasCheated) text += "<span class='warning'>It appears that you have used cheats. ";
+			if (hasPlayedOnIncompatibleVersions || hasCheated) text += "This may have caused the issue.</span>"
 			
 			GameGlobals.uiFunctions.popupManager.closeAllPopups();
 			GameGlobals.uiFunctions.showQuestionPopup(
 				"Error",
-				"You've found a bug! Please reload the page to continue playing. " +
-				"If reloading doesn't help, you can clear your data and restart the game, but you will lose all your progress.<br\><br\>" +
-				"You can also help the developer by <a href='" +
-				url +
-				"' target='_blank'>reporting</a> the problem on Github.",
+				text,
 				"reload",
 				"clear data",
 				() => { location.reload(); },

@@ -486,7 +486,7 @@ define([
 			message += "<br><br/>";
 			message += "Save version: " + saveVersion + "<br/>Current version: " + currentVersion;
 			message += "<br><br/>";
-			message += " It is recommended to restart the game. Continue at your own risk.";
+			message += "<span class='warning'>It is recommended to restart the game. Continue at your own risk.</span>";
 			GameGlobals.uiFunctions.showQuestionPopup(
 				"Update",
 				message,

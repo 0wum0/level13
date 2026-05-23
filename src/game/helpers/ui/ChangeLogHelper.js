@@ -107,6 +107,18 @@ function (Ash, GameGlobals, GlobalSignals, GameConstants) {
 			if (!compareVersionDigits) return false;
 			return compareVersionDigits.major < requiredVersionDigits.major || compareVersionDigits.minor < requiredVersionDigits.minor || compareVersionDigits.patch < requiredVersionDigits.patch;
 		},
+
+		hasPlayedOnOldVersion: function () {
+			let playedVersions = GameGlobals.gameState.playedVersions;
+			if (!playedVersions) return false;
+
+			for (let i = 0; i < playedVersions.length; i++) {
+				let version = playedVersions[i];
+				if (this.isOldVersion(version)) return true;
+			}
+
+			return false;
+		},
 	
 	});
 	

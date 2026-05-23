@@ -28,10 +28,11 @@ define(['ash', 'game/vos/PositionVO'], function (Ash, PositionVO) {
 			return this.getPositionOnPath(sectorPos, direction, 1);
 		},
 		
-		getPositionOnPath: function (pathStartPos, direction, pathStep, round) {
+		getPositionOnPath: function (pathStartPos, direction, pathStep, round, optimise) {
 			if (pathStep == 0) return pathStartPos;
 
-			let resultPos = { level: pathStartPos.level, sectorX: pathStartPos.sectorX, sectorY: pathStartPos.sectorY }
+			// skip creating a proper PositionVO as a performance optimisation in performance sensitive contexts
+			let resultPos = optimise || !pathStartPos.clone ? { level: pathStartPos.level, sectorX: pathStartPos.sectorX, sectorY: pathStartPos.sectorY } : pathStartPos.clone();
 
 			switch (direction) {
 				case this.DIRECTION_WEST: 

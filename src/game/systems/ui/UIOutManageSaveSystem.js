@@ -259,7 +259,7 @@ function (Ash, UIList, FileUtils, GameGlobals, GlobalSignals, GameConstants, UIC
 			result += "Save world seed: " + GameGlobals.saveHelper.getWorldSeedFromSave(saveObject);
 
 			if (showVersionWarning) {
-				result += "<br/><br/>This save is from an old, incompatible version. It may not work properly.";
+				result += "<br/><br/><span class='warning'>This save is from an old, incompatible version. It may not work properly.</span>";
 			}
 
 			return result;

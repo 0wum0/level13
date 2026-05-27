@@ -44,6 +44,7 @@ function (Ash, WorldConstants, WorldCreatorConstants, WorldCreatorLogger, Resour
 			this.stage = null;
 			this.stashes = [];
 			this.sunlit = 0;
+			this.sunlitReason = null;
 			this.waymarks = [];
 			this.wealth = 0; // 0-10
 			this.wear = 0; // 0-10

@@ -56,6 +56,7 @@ define(
 			this.sectorType = features.sectorType;
 			this.sectorStyle = features.sectorStyle;
 			this.sunlit = features.sunlit || 0;
+			this.sunlitReason = features.sunlitReason || null;
 			this.ground = features.ground || false;
 			this.surface = features.surface || false;
 			this.hazards = features.hazards || null;

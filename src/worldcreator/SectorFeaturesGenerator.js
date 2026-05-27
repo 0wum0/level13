@@ -66,7 +66,8 @@ define([
 
 				sectorVO.sectorType = this.getSectorType(seed, worldVO, levelVO, sectorTemplateVO, sectorVO);
 				sectorVO.sectorStyle = this.getSectorStyle(seed, worldVO, levelVO, sectorTemplateVO, sectorVO);
-				sectorVO.sunlit = this.isSunlit(seed, worldVO, levelVO, sectorTemplateVO, sectorVO) || 0;
+				
+				this.generateSectorSunlit(seed, worldVO, levelVO, sectorTemplateVO, sectorVO);
 			}
 			
 			// level path features
@@ -110,7 +111,7 @@ define([
 			// sector features 4
 			for (let s = 0; s < levelVO.sectors.length; s++) {
 				let sectorVO = levelVO.sectors[s];
-				sectorVO.sunlit = sectorVO.sunlit || this.isSunlitByNeighbours(worldVO, levelVO, sectorVO) || 0;
+				this.generateSectorSunlitByNeighbours(worldVO, levelVO, sectorVO);
 			}
 		},
 		
@@ -367,7 +368,7 @@ define([
 					
 					var maxHazardCold = Math.min(100, this.itemsHelper.getMaxHazardColdForLevel(campOrdinal, step, levelVO.isHard));
 					var minHazardCold = this.itemsHelper.getMinHazardColdForLevel(campOrdinal, step, levelVO.isHard);
-					if (levelVO.level != worldVO.topLevel && this.isSunlit(seed, worldVO, levelVO, sectorTemplateVO, sectorVO) && distanceToEdge > 1) {
+					if (levelVO.level != worldVO.topLevel && sectorVO.sunlit > 0 && distanceToEdge > 1) {
 						maxHazardCold /= 2;
 						minHazardCold /= 2;
 					}
@@ -2363,10 +2364,14 @@ define([
 			}
 		},
 		
-		isSunlit: function (seed, worldVO, levelVO, sectorTemplateVO, sectorVO) {
-			let max = this.getMaxSunlitAlloweded(worldVO, levelVO, sectorVO, true);
+		generateSectorSunlit: function (seed, worldVO, levelVO, sectorTemplateVO, sectorVO) {
+			let max = this.getMaxSunlitAllowed(worldVO, levelVO, sectorVO, true);
 
-			if (max <= 0) return 0;
+			if (max <= 0) {
+				sectorVO.sunlit = 0;
+				sectorVO.sunlitReason = null;
+				return;	
+			}
 			
 			let l = sectorVO.position.level;
 			let savedValue = sectorTemplateVO.sunlit || 0;
@@ -2395,35 +2400,48 @@ define([
 			
 			if (l === worldVO.topLevel) {
 				// surface: all lit
-				return 1;
+				sectorVO.sunlit = 1;
+				sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_SURFACE;
 			} else if (l === 13) {
 				// start level: no sunlight
-				return 0;
+				sectorVO.sunlit = 0;
+				sectorVO.sunlitReason = null;
 			} else if (sectorVO.workshopResource == "herbs") {
 				// greenhouse (herbs workshop) sectors: all lit
-				return 1;
+				sectorVO.sunlit = 1;
+				sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_MIRROR;
 			} else {
 				// others: sunlight only with certain conditions
 				// - sector itself is a hole or adjacent to a hole
-				if (isHole(sectorVO.position)) return max;
-				if (this.hasSunlitFeature(sectorVO, sectorVO.position)) return max;
+				if (isHole(sectorVO.position)) {
+					sectorVO.sunlit = max;
+					sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_HOLE;
+				}
+				if (this.hasSunlitFeature(sectorVO, sectorVO.position)) {
+					sectorVO.sunlit = max;
+					sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_HOLE;
+				}
 				// - sector(s) above are holes or damaged enough
-				if (hasHoleAbove(sectorVO.position)) return max;
+				if (hasHoleAbove(sectorVO.position)) {
+					sectorVO.sunlit = max;
+					sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_HOLE;
+				}
 				// - sector itself has mirror
-				if (sectorVO.requiredFeatures.mirror) return max;
+				if (sectorVO.requiredFeatures.mirror) {
+					sectorVO.sunlit = max;
+					sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_MIRROR;
+				}
 			}
-
-			return 0;
 		},
 
 		hasSunlitFeature: function (sectorVO) {
 			return sectorVO.hasFeature(WorldConstants.FEATURE_HOLE_WELL_EDGE) || sectorVO.hasFeature(WorldConstants.FEATURE_HOLE_COLLAPSE_EDGE) || sectorVO.hasFeature(WorldConstants.FEATURE_HOLE_MOUNTAIN_EDGE);
 		},
 		
-		isSunlitByNeighbours: function (worldVO, levelVO, sectorVO) {
-			let max = this.getMaxSunlitAlloweded(worldVO, levelVO, sectorVO, true);
+		generateSectorSunlitByNeighbours: function (worldVO, levelVO, sectorVO) {
+			let max = this.getMaxSunlitAllowed(worldVO, levelVO, sectorVO, true);
 			
-			if (max <= 0) return 0;
+			if (max <= 0) return;
 			
 			let numTotal = 0;
 			let numSunlit = 0;
@@ -2439,20 +2457,23 @@ define([
 				numSunlitWeighted = value;
 			}
 
-			if (numSunlit <= 0) return 0;
+			if (numSunlit <= 0) return;
 			
 			let neighbourSunlitRatio = numSunlitWeighted / numTotal;
 
 			let sunlightThreshold = MathUtils.map(sectorVO.buildingDensity, 0, 10, 3/4, 5/6);
 			let halfThreshold = MathUtils.map(sectorVO.buildingDensity, 0, 10, 1/4, 4/5);
 
-			if (neighbourSunlitRatio >= sunlightThreshold) return max;
-			if (neighbourSunlitRatio >= halfThreshold) return 0.5;
-			
-			return 0;
+			if (neighbourSunlitRatio >= sunlightThreshold) {
+				sectorVO.sunlit = max;
+				sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_NEIGHBOUR;
+			} else if (neighbourSunlitRatio >= halfThreshold) {
+				sectorVO.sunlit = Math.min(0.5, max);
+				sectorVO.sunlitReason = SectorConstants.SUNLIT_REASON_NEIGHBOUR;
+			}
 		},
 
-		getMaxSunlitAlloweded: function (worldVO, levelVO, sectorVO, isStrict) {
+		getMaxSunlitAllowed: function (worldVO, levelVO, sectorVO, isStrict) {
 			let isSurfaceLevel = levelVO.level === worldVO.topLevel;
 			let isLevelBelowSurfaceLevel = levelVO.level === worldVO.topLevel -1;
 			

@@ -39,6 +39,11 @@ define(['ash', 'game/constants/LevelConstants'], function (Ash, LevelConstants) 
 		STYLE_SLUM_GENERAL: "slum-general",
 		STYLE_SLUM_HUN: "slum-hun",	
 		STYLE_WESTERN: "western",
+
+		SUNLIT_REASON_SURFACE: "surface",
+		SUNLIT_REASON_MIRROR: "mirror",
+		SUNLIT_REASON_HOLE: "hole",
+		SUNLIT_REASON_NEIGHBOUR: "neighbour",
 		
 		WAYMARK_TYPE_CAMP: "camp",
 		WAYMARK_TYPE_CLINIC: "clinic",

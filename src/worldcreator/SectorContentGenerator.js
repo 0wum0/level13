@@ -129,6 +129,7 @@ define([
 				let options = { excludingFeature: excludedFeatures, filter: SectorGeneratorHelper.isValidSectorForLocale };
 				let sector = WorldCreatorRandom.randomSectorScored(seed, worldVO, levelVO, options, (s) => getSectorScore(s, def));
 				if (def.type == localeTypes.grove) sector.sunlit = 1;
+				if (def.type == localeTypes.grove) sector.sunlitReason = SectorConstants.SUNLIT_REASON_MIRROR;
 				if (def.type == localeTypes.grove) sector.resourcesScavengable.food = Math.max(sector.resourcesScavengable.food, 3);
 				if (def.type == localeTypes.grove) sector.resourcesScavengable.water = Math.max(sector.resourcesScavengable.water, 3);
 				sector.hazards.radiation = 0;

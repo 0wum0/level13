@@ -309,6 +309,7 @@ define([
 			sectorFeatures.damage = sectorVO.damage;
 			sectorFeatures.districtIndex = sectorVO.districtIndex;
 			sectorFeatures.sunlit = sectorVO.sunlit;
+			sectorFeatures.sunlitReason = sectorVO.sunlitReason;
 			sectorFeatures.ground = level == worldVO.bottomLevel;
 			sectorFeatures.surface = level == worldVO.topLevel;
 			sectorFeatures.hazards = sectorVO.hazards;

@@ -41,6 +41,7 @@ function (Ash, WorldConstants, ResourcesVO, EnvironmentalHazardsVO, LocaleVO, Po
 			this.stage = sectorVO.stage;
 			this.stashes = sectorVO.stashes;
 			this.sunlit = sectorVO.sunlit;
+			this.sunlitReason = sectorVO.sunlitReason;
 			this.wealth = sectorVO.wealth;
 			this.wear = sectorVO.wear;
 			this.workshopResource = sectorVO.workshopResource;
@@ -86,6 +87,7 @@ function (Ash, WorldConstants, ResourcesVO, EnvironmentalHazardsVO, LocaleVO, Po
 			if (this.stage != this.DEFAULT_STAGE) copy.stage = this.stage;
 			if (this.stashes.length > 0) copy.stashes = this.stashes;
 			if (this.sunlit) copy.sunlit = this.sunlit;
+			if (this.sunlitReason) copy.sunlitReason = this.sunlitReason;
 			if (this.wealth > 0) copy.wealth = this.wealth;
 			if (this.wear) copy.wear = this.wear;
 			if (this.workshopResource) copy.workshopResource = this.workshopResource;
@@ -138,6 +140,7 @@ function (Ash, WorldConstants, ResourcesVO, EnvironmentalHazardsVO, LocaleVO, Po
 			this.stage = saveObject.stage || this.DEFAULT_STAGE;
 			this.stashes = saveObject.stashes || [];
 			this.sunlit = saveObject.sunlit ? saveObject.sunlit : 0;
+			this.sunlitReason = saveObject.sunlitReason ? saveObject.sunlitReason : null;
 			this.wealth = saveObject.wealth || 0;
 			this.wear = saveObject.wear || 0;
 			this.workshopResource = saveObject.workshopResource || null;

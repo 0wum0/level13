@@ -2666,6 +2666,9 @@ body.dark ::-moz-selection {
 body.dark ::selection {
   background: #ccc;
 }
+body.dark a {
+  color: #fff;
+}
 body.dark .collapsible-container {
   border: 1px solid #3a3a3a;
 }
@@ -3444,6 +3447,9 @@ body.dusky ::-moz-selection {
 body.dusky ::selection {
   background: #ccc;
 }
+body.dusky a {
+  color: #000;
+}
 body.dusky .collapsible-container {
   border: 1px solid #666;
 }
@@ -4221,6 +4227,9 @@ body.sunlit ::-moz-selection {
 }
 body.sunlit ::selection {
   background: #ccc;
+}
+body.sunlit a {
+  color: #000;
 }
 body.sunlit .collapsible-container {
   border: 1px solid #aaa;

@@ -18,6 +18,7 @@ define([
 	'game/components/common/PositionComponent',
 	'game/components/common/RevealedComponent',
 	'game/components/common/VisitedComponent',
+	'game/components/sector/EnemiesComponent',
 	'game/components/sector/PassagesComponent',
 	'game/components/sector/SectorControlComponent',
 	'game/components/sector/SectorStatusComponent',
@@ -45,6 +46,7 @@ define([
 	PositionComponent,
 	RevealedComponent,
 	VisitedComponent,
+	EnemiesComponent,
 	PassagesComponent,
 	SectorControlComponent,
 	SectorStatusComponent,
@@ -91,17 +93,19 @@ define([
 		},
 		
 		getTextFeatures: function (sector) {
-			var position = sector.get(PositionComponent).getPosition();
-			var featuresComponent = sector.get(SectorFeaturesComponent);
-			var levelOrdinal = GameGlobals.worldState.getLevelOrdinal(position.level);
-			var campOrdinal = GameGlobals.worldState.getCampOrdinal(position.level);
-			var levelEntity = GameGlobals.levelHelper.getLevelEntityForSector(sector);
-			var levelComponent = levelEntity.get(LevelComponent);
-			var hasCamp = sector.has(CampComponent);
-			var hasGrove = false;
+			let position = sector.get(PositionComponent).getPosition();
+			let featuresComponent = sector.get(SectorFeaturesComponent);
+			let enemiesComponent = sector.get(EnemiesComponent);
+			let passagesComponent = sector.get(PassagesComponent);
+			let levelOrdinal = GameGlobals.worldState.getLevelOrdinal(position.level);
+			let campOrdinal = GameGlobals.worldState.getCampOrdinal(position.level);
+			let levelEntity = GameGlobals.levelHelper.getLevelEntityForSector(sector);
+			let levelComponent = levelEntity.get(LevelComponent);
+			let hasCamp = sector.has(CampComponent);
+			let hasGrove = false;
 			
-			var sectorLocalesComponent = sector.get(SectorLocalesComponent);
-			var locales = sectorLocalesComponent.locales;
+			let sectorLocalesComponent = sector.get(SectorLocalesComponent);
+			let locales = sectorLocalesComponent.locales;
 			for (let i = 0; i < locales.length; i++) {
 				if (locales[i].type == localeTypes.grove) {
 					hasGrove = true;
@@ -110,6 +114,7 @@ define([
 
 			let sectorFeatures = sector.get(SectorFeaturesComponent);
 			let districtVO = levelComponent.districts[sectorFeatures.districtIndex];
+			let neighbours = GameGlobals.levelHelper.getSectorNeighboursList(sector);
 			
 			let features = Object.assign({}, featuresComponent);
 			features.level = position.level;
@@ -124,11 +129,53 @@ define([
 			features.isGroundLevel = position.level == GameGlobals.worldState.getGroundLevel();
 			features.hasCamp = hasCamp;
 			features.hasGrove = hasGrove;
+			features.cold = featuresComponent.hazards.cold;
 			features.radiation = featuresComponent.hazards.radiation;
 			features.poison = featuresComponent.hazards.poison;
 			features.debris = featuresComponent.hazards.debris;
 			features.flooded = featuresComponent.hazards.flooded;
+			features.territory = featuresComponent.hazards.territory;
+			features.hasHazards = featuresComponent.hazards.hasHazards();
 			features.districtType = districtVO.type;
+			features.numNeighbours = neighbours.length;
+			features.hasEnemies = enemiesComponent.hasEnemies;
+			features.affiliation = districtVO.affiliation;
+			features.hasPassage = passagesComponent.hasLevelPassage();
+			features.passageUp = passagesComponent.getPassageUpType();
+			features.passageDown = passagesComponent.getPassageDownType();
+			features.hasCollectableWater = featuresComponent.resourcesCollectable.water > 0;
+			features.hasLevelFeature = features.levelFeatures.length > 0;
+
+			features.enemyTags = [];
+			for (let i in enemiesComponent.possibleEnemies) {
+				let enemyVO = enemiesComponent.possibleEnemies[i];
+				let enemyType = enemyVO.enemyClass;
+				if (features.enemyTags.indexOf(enemyType) < 0) features.enemyTags.push(enemyType);
+				for (let i = 0; i < enemyVO.tags.length; i++) {
+					let tag = enemyVO.tags[i];
+					if (features.enemyTags.indexOf(tag) < 0) features.enemyTags.push(tag);
+				}
+			}
+
+			features.numPOI = locales.length + sectorFeatures.levelFeatures.length + sectorFeatures.examineSpots.length;
+			if (features.heapResource) features.numPOI++;
+			if (passagesComponent.hasLevelPassage()) features.numPOI++;
+
+			features.neighboursFeatures = [];
+			features.neighboursDistricts = [];
+			for (let i in neighbours) {
+				let neighbour = neighbours[i];
+				let neighbourFeatures = neighbour.get(SectorFeaturesComponent);
+				if (neighbourFeatures.levelFeatures.length > 0) {
+					features.neighboursFeatures = features.neighboursFeatures.concat(neighbourFeatures.levelFeatures);
+				}
+
+				let neighbourDistrictVO = levelComponent.districts[neighbourFeatures.districtIndex];
+				if (neighbourDistrictVO.type != districtVO.type) {
+					features.neighboursDistricts.push(neighbourDistrictVO.type);
+				}
+			}
+			features.hasNeighbourFeature = features.neighboursFeatures.length > 0 || features.neighboursDistricts.length > 0;
 
 			return features;
 		},

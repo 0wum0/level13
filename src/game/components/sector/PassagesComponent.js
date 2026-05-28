@@ -33,6 +33,14 @@ function (Ash, MovementConstants, PositionConstants, PassageVO, MovementBlockerV
 				this.getBlockerType(PositionConstants.DIRECTION_SW) === type ||
 				this.getBlockerType(PositionConstants.DIRECTION_NW) === type;
 		},
+
+		getPassageUpType: function () {
+			return this.passageUp ? this.passageUp.type : null;
+		},
+
+		getPassageDownType: function () {
+			return this.passageDown ? this.passageDown.type : null;
+		},
 		
 		getBlocker: function (direction) {
 			return typeof this.blockers[direction] === 'undefined' ? null : this.blockers[direction];

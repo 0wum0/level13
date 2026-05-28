@@ -207,7 +207,8 @@
 		"name": "camel spider",
 		"rarity": 35,
 		"size": 0.5,
-		"speed": 1
+		"speed": 1,
+		"tags": [ "spider", "insect" ]
 	},
 	"carpet_viper": {
 		"attackRatio": 0.6,
@@ -270,7 +271,8 @@
 		"name": "cave bat",
 		"rarity": 20,
 		"size": 0.3,
-		"speed": 1.1
+		"speed": 1.1,
+		"tags": [ "bat" ]
 	},
 	"centipede__giant": {
 		"attackRatio": 0.4,
@@ -305,7 +307,8 @@
 		"speed": 0.5
 	},
 	"centipede__template": {
-		"enemyType": "small_animal"
+		"enemyType": "small_animal",
+		"tags": [ "insect" ]
 	},
 	"cloud__noxious": {
 		"campOrdinal": 10,
@@ -358,7 +361,8 @@
 	"cockroach__template": {
 		"enemyType": "small_animal",
 		"environment": [ "poor" ],
-		"size": 0.3
+		"size": 0.3,
+		"tags": [ "insect" ]
 	},
 	"condor": {
 		"attackRatio": 0.4,
@@ -400,7 +404,8 @@
 		"campOrdinal": 3,
 		"enemyType": "small_animal",
 		"environment": [ ],
-		"name": "Deathfly"
+		"name": "Deathfly",
+		"tags": [ "insect" ]
 	},
 	"delivery_bot__gleaming": {
 		"campOrdinal": 15,
@@ -729,7 +734,8 @@
 		"name": "flying fox",
 		"rarity": 70,
 		"size": 0.4,
-		"speed": 1
+		"speed": 1,
+		"tags": [ "bat" ]
 	},
 	"flying_fox__horned": {
 		"attackRatio": 0.7,
@@ -740,7 +746,8 @@
 		"name": "horned flying fox",
 		"rarity": 70,
 		"size": 0.6,
-		"speed": 1
+		"speed": 1,
+		"tags": [ "bat" ]
 	},
 	"gangster__armed": {
 		"campOrdinal": 14,
@@ -842,7 +849,8 @@
 		"name": "ghost bat",
 		"rarity": 50,
 		"size": 0.6,
-		"speed": 1
+		"speed": 1,
+		"tags": [ "bat" ]
 	},
 	"ghoul": {
 		"campOrdinal": 9,
@@ -1781,7 +1789,8 @@
 		"speed": 1
 	},
 	"spider__template": {
-		"enemyType": "small_animal"
+		"enemyType": "small_animal",
+		"tags": [ "spider", "insect" ]
 	},
 	"spider__toxic": {
 		"attackRatio": 0.7,
@@ -1844,7 +1853,8 @@
 		"name": "tarantula",
 		"rarity": 20,
 		"size": 0.8,
-		"speed": 0.95
+		"speed": 0.95,
+		"tags": [ "spider", "insect" ]
 	},
 	"tarantula__white": {
 		"attackRatio": 0.7,
@@ -1867,7 +1877,8 @@
 		"environment": [ "dark", "noflood" ],
 		"rarity": 70,
 		"size": 0.6,
-		"speed": 1
+		"speed": 1,
+		"tags": [ "spider" ]
 	},
 	"tenrec__rat": {
 		"campOrdinal": 2,
@@ -2046,7 +2057,8 @@
 			"food"
 		],
 		"enemyType": "small_animal",
-		"environment": [ "dark" ]
+		"environment": [ "dark" ],
+		"tags": [ "bat" ]
 	},
 	"wasp_nest": {
 		"attackRatio": 1.2,

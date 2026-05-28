@@ -5,7 +5,7 @@ define(['ash'], function (Ash) {
 		id: "",
 		name: "",
 		environment: [], // determines what kind of sectors it can appear on
-		tags: [], // mostly empty but can trigger story flags etc
+		tags: [], // mostly empty but can trigger story flags or select for texts
 		att: 0,
 		def: 0,
 		speed: 0,
@@ -59,6 +59,8 @@ define(['ash'], function (Ash) {
 			this.attIV = Math.round(Math.random() * 100);
 			this.defIV = Math.round(Math.random() * 100);
 			this.speedIV = Math.round(Math.random() * 100);
+
+			this.tags = [];
 			
 			this.enemyID = this.name.replace(/ /g, "-") + "-" + this.att + "-" + this.def;
 		},
@@ -108,7 +110,7 @@ define(['ash'], function (Ash) {
 			let clone = new EnemyVO(this.id, this.name, this.environment, this.nouns, this.groupN, this.activeV, this.defeatedV, this.size, this.att, this.def, this.maxHP, this.maxShield, this.speed, this.rarity, this.droppedResources, this.droppedIngredients, this.causedInjuryTypes);
 			clone.enemyClass = this.enemyClass;
 			clone.curseProbability = this.curseProbability;
-			clone.tags = this.tags;
+			clone.tags = this.tags || [];
 			return clone;
 		},
 		

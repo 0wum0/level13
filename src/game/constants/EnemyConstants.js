@@ -1,7 +1,7 @@
 define(['ash', 'game/vos/EnemyVO', 'game/constants/PerkConstants'],
 function (Ash, EnemyVO, PerkConstants) {
 
-	var EnemyConstants = {
+	let EnemyConstants = {
 		
 		enemyDefinitions: [],
 
@@ -34,13 +34,13 @@ function (Ash, EnemyVO, PerkConstants) {
 			},
 			flora: {
 				nouns: ["urban pest", "vicious plant", "hostile wildlife" ],
-				groupNouns: ["cluster", "group"],
+				groupNouns: [ "cluster", "group", "growth" ],
 				verbsActive: ["infested with", "covered in", "overrun with"],
 				verbsDefeated: ["cleared"],
 			},
 			fungi: {
 				nouns: ["urban pest", "dangerous fungi", "hostile wildlife"],
-				groupNouns: ["cluster", "group"],
+				groupNouns: [ "cluster", "group", "growth" ],
 				verbsActive: ["infested with", "covered in", "overrun with"],
 				verbsDefeated: ["cleared", "killed"],
 			},

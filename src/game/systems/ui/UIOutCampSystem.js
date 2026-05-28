@@ -512,6 +512,8 @@
 			GameGlobals.uiFunctions.toggle("#in-characters", characterData.length > 0);
 			UIList.update(this.characterList, characterData);
 			GameGlobals.uiFunctions.createButtons("#in-characters");
+			GameGlobals.uiFunctions.generateInfoCallouts("#in-characters");
+			GameGlobals.uiFunctions.updateInfoCallouts("#in-characters");
 		},
 
 		createCharacterListItem: function () {

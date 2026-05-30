@@ -147,7 +147,7 @@ define([
 			features.hasCollectableWater = featuresComponent.resourcesCollectable.water > 0;
 			features.hasLevelFeature = features.levelFeatures.length > 0;
 			features.hasIngredients = features.itemsScavengeable.length > 0;
-			features.localeTypes = features.locales.map(localeVO => localeVO.type);
+			features.localeTypes = features.locales ? features.locales.map(localeVO => localeVO.type) : [];
 			features.hasWorkshop = workshopComponent != null;
 			features.workshopResource = workshopComponent ? workshopComponent.resource : null;
 

@@ -542,7 +542,7 @@ function (Ash, ArrayUtils, DescriptionMapper, Text, TextBuilder, GameConstants, 
 			}
 
 			// - locales
-			let hasLocale = (localeType) => features.locales.find(localeVO => localeVO.type == localeType);
+			let hasLocale = (localeType) => features.localeTypes.indexOf(localeType) >= 0;
 			addOptions("a-street", hasVision && hasLocale(localeTypes.bunker), [ "hidden" ]);
 			addOptions("a-street", hasVision && hasLocale(localeTypes.factory), [ "industrial" ]);
 			addOptions("a-street", hasVision && hasLocale(localeTypes.farm), [ "agricultural" ]);

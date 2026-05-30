@@ -3026,6 +3026,9 @@ define([
 		isValidPath: function (levelVO, path, stage, options) {
 			options = options || {};
 
+			let canConnectToDifferentStage = options.canConnectToDifferentStage;
+			if (!stage) canConnectToDifferentStage = true;
+
 			let startPos = path.startPos;
 			let direction = path.dir;
 			let pathPositions = this.getPathVOPositions(path);
@@ -3034,7 +3037,7 @@ define([
 				sectorPos.level = levelVO.level;
 				if (levelVO.hasSector(sectorPos.sectorX, sectorPos.sectorY)) {
 					let sector = levelVO.getSector(sectorPos.sectorX, sectorPos.sectorY);
-					if (options.stage && sector.stage != options.stage && !options.canConnectToDifferentStage) {
+					if (options.stage && sector.stage != options.stage && !canConnectToDifferentStage) {
 						return { isValid: false, reason: "contains sector of wrong stage: " + sector.stage + " " + sector.position };
 					}
 				}

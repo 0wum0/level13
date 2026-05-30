@@ -150,6 +150,10 @@ define(function () {
 			}
 
 			if (!color) {
+				color = this.getGlobalColor(name);;
+			}
+
+			if (!color) {
 				debugger
 				log.w("No such color: " + name);
 				return "#000";

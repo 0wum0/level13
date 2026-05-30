@@ -10,6 +10,16 @@ define([], function () {
 			if (filtered.length >= min) return filtered;
 			
 			return arr;
+		},
+
+		containsAny: function (arr, options) {
+			if (!arr || arr.length <= 0 || !options || !options.length <= 0) return false;
+
+			for (let i = 0; i < options.length; i++) {
+				if (arr.indexOf(options[i]) >= 0) return true;
+			}
+
+			return false;
 		}
 
 	};

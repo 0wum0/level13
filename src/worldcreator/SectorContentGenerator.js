@@ -60,7 +60,7 @@ define([
 				let result = 0;
 
 				result += sectorVO.activity;
-				result += SectorGeneratorHelper.getLocaleSectorScore(levelVO, sectorVO);
+				result += SectorGeneratorHelper.getLocaleSectorScore(levelVO, sectorVO, explorerTemplate.localeType);
 
 				if (SectorGeneratorHelper.getPossibleLocaleTypesForSector(levelVO, sectorVO).indexOf(explorerTemplate.localeType)) result += 5;
 				

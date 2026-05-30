@@ -1876,7 +1876,7 @@ define([
 					let sectorVO = existingSectors.length > 0 ? existingSectors[0].sectorVO : null;
 					if (!sectorVO) {
 						let options = { excludingFeature: excludedFeatures, filter: SectorGeneratorHelper.isValidSectorForLocale };
-						sectorVO = WorldCreatorRandom.randomSectorsScored(seed - 9393 + i * i, worldVO, levelVO, 1, 2, options, s => SectorGeneratorHelper.getLocaleSectorScore(levelVO, s))[0];
+						sectorVO = WorldCreatorRandom.randomSectorsScored(seed - 9393 + i * i, worldVO, levelVO, 1, 2, options, s => SectorGeneratorHelper.getLocaleSectorScore(levelVO, s, localeTypes.tradingpartner))[0];
 					}
 					let locale = new LocaleVO(localeTypes.tradingpartner, true, false);
 					SectorGeneratorHelper.addLocale(levelVO, sectorVO, locale);

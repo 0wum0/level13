@@ -105,6 +105,7 @@ define([
 			let hasGrove = false;
 			
 			let sectorLocalesComponent = sector.get(SectorLocalesComponent);
+			let workshopComponent = sector.get(WorkshopComponent);
 			let locales = sectorLocalesComponent.locales;
 			for (let i = 0; i < locales.length; i++) {
 				if (locales[i].type == localeTypes.grove) {
@@ -145,6 +146,10 @@ define([
 			features.passageDown = passagesComponent.getPassageDownType();
 			features.hasCollectableWater = featuresComponent.resourcesCollectable.water > 0;
 			features.hasLevelFeature = features.levelFeatures.length > 0;
+			features.hasIngredients = features.itemsScavengeable.length > 0;
+			features.localeTypes = features.locales.map(localeVO => localeVO.type);
+			features.hasWorkshop = workshopComponent != null;
+			features.workshopResource = workshopComponent ? workshopComponent.resource : null;
 
 			features.enemyTags = [];
 			for (let i in enemiesComponent.possibleEnemies) {
@@ -159,6 +164,7 @@ define([
 
 			features.numPOI = locales.length + sectorFeatures.levelFeatures.length + sectorFeatures.examineSpots.length;
 			if (features.heapResource) features.numPOI++;
+			if (features.hasWorkshop) features.numPOI++;
 			if (passagesComponent.hasLevelPassage()) features.numPOI++;
 
 			features.neighboursFeatures = [];

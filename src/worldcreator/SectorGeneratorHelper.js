@@ -274,7 +274,7 @@ define([
 			return true;
 		},
 
-		getLocaleSectorScore: function (levelVO, sectorVO) {
+		getLocaleSectorScore: function (levelVO, sectorVO, localeType) {
 			let score = 0;
 			let zone = sectorVO.zone;
 			if (sectorVO.sectorType == SectorConstants.SECTOR_TYPE_EMPTY) score--;
@@ -289,6 +289,14 @@ define([
 			let numNeighours = levelVO.getNeighbourCount(sectorVO.position.sectorX, sectorVO.position.sectorY);
 			if (numNeighours == 1) score++;
 			if (sectorVO.hasFeature(WorldConstants.FEATURE_TRAIN_TRACKS_NEW)) score++;
+
+			switch (localeType) {
+				case localeTypes.tradingpartner:
+				case localeTypes.clinic:
+					score += sectorVO.activity / 5;
+					break;
+			}
+
 			return score;
 		},
 

@@ -17,9 +17,9 @@ define(function () {
 		descriptions: {},
 		scores: {},
 		
-		add: function (type, props, text) {
+		add: function (type, props, text, score) {
 			if (!this.descriptions[type]) this.descriptions[type] = [];
-			this.descriptions[type].push({ props: props, text: text})
+			this.descriptions[type].push({ props: props, text: text, score: score });
 		},
 		
 		get: function (type, props) {
@@ -82,27 +82,29 @@ define(function () {
 				// test for simple value
 				if (propsValue === value) continue;
 
+				// test for wildcard
+				if (value == this.WILDCARD) continue;
+
 				let isPropsValueArray = propsValue && typeof propsValue == "object" && propsValue.length && propsValue.length > 0;
 				let isDescValueArray = value && typeof value == "object" && value.length && value.length > 0;
 
-				// test for array of possible values in props (props has array, desc has one value)
-				if (isPropsValueArray && !isDescValueArray) 
-					if (propsValue.indexOf(value) >= 0) continue;
-				// tes for array of possible values in desc (props has one value, desc has array)
-				if (!isPropsValueArray && isDescValueArray) 
-					if (value.indexOf(propsValue) >= 0) continue;
-				// test for range
-				if (value && value.length && value.length == 2) {
+				// test for range (props has value, desc has range)
+				if (isDescValueArray && value.length == 2 && typeof value[0] == "number" &&  typeof value[1] == "number")
 					if (propsValue >= value[0] && propsValue <= value[1]) continue;
-				}
-				// test for wildcard
-				if (value == this.WILDCARD) continue;
+				// test for array of possible values in props (props has array, desc has one value)
+				if (isPropsValueArray && !isDescValueArray)
+					if (propsValue.indexOf(value) >= 0) continue;
+				// test for array of possible values in desc (props has one value, desc has array)
+				if (!isPropsValueArray && isDescValueArray)
+					if (value.indexOf(propsValue) >= 0) continue;
+
 				return false;
 			}
 			return true;
 		},
 		
 		getMatchScore: function (type, desc) {
+			if (desc.score) return desc.score;
 			let result = 1;
 			for (let [key, value] of Object.entries(desc.props)) {
 				result += this.scores[type] && this.scores[type][key] ? this.scores[type][key] : 1 || 1;

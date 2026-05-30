@@ -1382,6 +1382,8 @@
 
 			GameGlobals.uiFunctions.showInfoPopup(title, msg);
 			GameGlobals.uiFunctions.generateInfoCallouts(".popup");
+
+			GameGlobals.gameState.uiStatus.seenCamps.push(level);
 		},
 		
 		isCampActionListItemDataSame: function (d1, d2) {

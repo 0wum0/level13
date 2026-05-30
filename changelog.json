@@ -9,6 +9,18 @@
 				{
 					"type": "DEV",
 					"summary": "Refactor world generation to be faster and more backwards compatible"
+				},
+				{
+					"type": "GD",
+					"summary": "Add more story flavour to story generation (sector features, level features, districts)"
+				},
+				{
+					"type": "GD",
+					"summary": "Improve level structure generation"
+				},
+				{
+					"type": "GD",
+					"summary": "Add small differences to camps to make each camp unique"
 				}
 			]
 		},

@@ -341,7 +341,6 @@ function (Ash, CampConstants, PlayerStatConstants, WorldConstants, MathUtils) {
 				case 12:
 					return 1.5;
 
-				case 2: 
 				case WorldConstants.CAMPS_BEFORE_GROUND: 
 				case 13: 
 					return 0.5;

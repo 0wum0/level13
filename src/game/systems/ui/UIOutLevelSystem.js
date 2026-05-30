@@ -553,12 +553,13 @@ define([
 			}
 
 			if (hasCampHere) {
+				let campComponent = this.playerLocationNodes.head.entity.get(CampComponent);
 				let campOrdinal = GameGlobals.worldState.getCampOrdinal(position.level);
 				let isOutpost = GameGlobals.campBalancingHelper.isOutpost(campOrdinal);
-				let campTerm = "camp";
-				if (isOutpost) campTerm = "small camp";
+				let campTerm = TextConstants.getCampTerm(isOutpost);
+				let campModifier = TextConstants.getCampModifier(campComponent, improvements);
 
-				description += "There is a <span class='hl-functionality'>" + campTerm + "</span> here. ";
+				description += Text.t("ui.exploration.sector_features_camp_description", { noun: campTerm, modifier: campModifier });
 			}
 
 			if (isScouted && featuresComponent.examineSpots.length > 0) {

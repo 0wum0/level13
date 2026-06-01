@@ -1,25 +1,25 @@
-// maps a number of properties to text descriptions / templates, for example sector features to a sector description
-// add descriptions with properties required to match them
+// maps a number of filters to text descriptions / templates, for example sector features to a sector description
+// add descriptions with filters required to match them
 // get description with a query object
-// - returns description whose properties ALL match that of the object
+// - returns description whose filters ALL match properties of the object
 // - if several match, returns a "random" one from matching (preferring one with many matching properties, and guaranteed to be the same every time for the exact same query object)
-// define properties in descriptions as
-// - simple (equals) or ranges (array of two values (inclusive))
-// - WILDCARD to match any value but still count as 1 matching property for choosing one out of many matching
-// set default value for properties to ensure they are checked even if input template does not explicitly define them
+// define filters in descriptions as
+// - simple (equals) or ranges (array of two values (inclusive)) or an array of allowed values
+// - * to match any value but still count as 1 matching property for choosing one out of many matching
+// set default value for filters to ensure they are checked even if input template does not explicitly define them
 
 define(function () {
 	
 	let DescriptionMapper = {
 		
-		WILDCARD: "WILDCARD",
+		WILDCARD: "*",
 
 		descriptions: {},
 		scores: {},
 		
-		add: function (type, props, text, score) {
+		add: function (type, filters, text, score) {
 			if (!this.descriptions[type]) this.descriptions[type] = [];
-			this.descriptions[type].push({ props: props, text: text, score: score });
+			this.descriptions[type].push({ filters: filters, text: text, score: score });
 		},
 		
 		get: function (type, props) {
@@ -56,7 +56,7 @@ define(function () {
 			return this.pickRandom(weightedMatches, props).text;
 		},
 
-		setDefaultValue: function (type, prop, value) {
+		setDefaultValue: function (type, filter, value) {
 			if (!this.descriptions[type]) {
 				log.w("no such description type: " + type);
 				return;
@@ -64,19 +64,21 @@ define(function () {
 
 			for (let i = 0; i < this.descriptions[type].length; i++) {
 				let desc = this.descriptions[type][i];
-				if (desc.props[prop] === undefined) {
-					desc.props[prop] = value;
+				if (desc.filters[filter] === undefined) {
+					desc.filters[filter] = value;
 				}
 			}
 		},
 
-		setParamScore: function (type, prop, score) {
+		setParamScore: function (type, filter, score) {
 			if (!this.scores[type]) this.scores[type] = [];
-			this.scores[type][prop] = score;
+			this.scores[type][filter] = score;
 		},
 		
 		matches: function (props, desc) {
-			for (let [key, value] of Object.entries(desc.props)) {
+			if (!desc.filters) return true;
+
+			for (let [key, value] of Object.entries(desc.filters)) {
 				let propsValue = props[key];
 				
 				// test for simple value
@@ -89,24 +91,33 @@ define(function () {
 				let isDescValueArray = value && typeof value == "object" && value.length && value.length > 0;
 
 				// test for range (props has value, desc has range)
-				if (isDescValueArray && value.length == 2 && typeof value[0] == "number" &&  typeof value[1] == "number")
-					if (propsValue >= value[0] && propsValue <= value[1]) continue;
+				if (isDescValueArray && value.length == 2 && typeof value[0] == "number" &&  typeof value[1] == "number") {
+					let min = value[0];
+					let max = value[1];
+					if (max == -1) max = 99999;
+					if (propsValue >= min && propsValue <= max) continue;
+				}
+
 				// test for array of possible values in props (props has array, desc has one value)
-				if (isPropsValueArray && !isDescValueArray)
+				if (isPropsValueArray && !isDescValueArray) {
 					if (propsValue.indexOf(value) >= 0) continue;
+				}
+
 				// test for array of possible values in desc (props has one value, desc has array)
-				if (!isPropsValueArray && isDescValueArray)
+				if (!isPropsValueArray && isDescValueArray) {
 					if (value.indexOf(propsValue) >= 0) continue;
+				}
 
 				return false;
 			}
+			
 			return true;
 		},
 		
 		getMatchScore: function (type, desc) {
 			if (desc.score) return desc.score;
 			let result = 1;
-			for (let [key, value] of Object.entries(desc.props)) {
+			for (let [key, value] of Object.entries(desc.filters)) {
 				result += this.scores[type] && this.scores[type][key] ? this.scores[type][key] : 1 || 1;
 			}
 			return result;

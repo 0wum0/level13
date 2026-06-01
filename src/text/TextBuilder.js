@@ -6,7 +6,8 @@
 // result: "A former industrial sector wheere factories and warehouses lie in ruins"
 
 define(function () {
-	var TextBuilder = {
+
+	let TextBuilder = {
 		
 		// predefined variables
 		VAR_INDEFINITE_ARTICLE: "a",
@@ -107,5 +108,6 @@ define(function () {
 		}
 		
 	};
+	
 	return TextBuilder;
 });

@@ -17,7 +17,7 @@ define(function () {
 		
 		build: function (template, params) {
 			let result = template;
-			let vars = template.match(/\[\S*\]/g);
+			let vars = template.match(/\{\S*\}/g);
 			if (vars) {
 				// 1dt pass: replace custom variables
 				let replacedVars = {};

@@ -4,7 +4,7 @@
 // - returns description whose filters ALL match properties of the object
 // - if several match, returns a "random" one from matching (preferring one with many matching properties, and guaranteed to be the same every time for the exact same query object)
 // define filters in descriptions as
-// - simple (equals) or ranges (array of two values (inclusive)) or an array of allowed values
+// - simple (equals) or ranges (array of two values (exclusive max)) or an array of allowed values
 // - * to match any value but still count as 1 matching property for choosing one out of many matching
 // set default value for filters to ensure they are checked even if input template does not explicitly define them
 
@@ -95,7 +95,7 @@ define(function () {
 					let min = value[0];
 					let max = value[1];
 					if (max == -1) max = 99999;
-					if (propsValue >= min && propsValue <= max) continue;
+					if (propsValue >= min && propsValue < max) continue;
 				}
 
 				// test for array of possible values in props (props has array, desc has one value)

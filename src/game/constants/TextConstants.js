@@ -58,11 +58,14 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 				for (let i in params[paramID]) {
 					let entry = params[paramID][i];
 
-					TextConstants.loadFilters(Object.assign({}, entry.filters), macros);
+					let filters = {};
+					ObjectUtils.assignValues(filters, defaultFilters);
+					ObjectUtils.assignValues(filters, entry.filters);
+					TextConstants.loadFilters(Object.assign({}, filters), macros);
 
 					for (let j in entry.text) {
 						let text = entry.text[j];
-						let param = { text: text, filters: entry.filters };
+						let param = { text: text, filters: filters };
 						this.params[type][paramID].push(param);
 					}
 				}
@@ -149,25 +152,25 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		},
 		
 		getSectorName: function (isScouted, features) {
-			var template = "[a-sectortype] [n-street]";
+			var template = "{a-sectortype} {n-street}";
 			var params = this.getSectorTextParams(features);
 			var phrase = TextBuilder.build(template, params);
 			return Text.capitalize(phrase);
 		},
 		
 		getSectorHeader: function (hasVision, features) {
-			var template = "[a-street] [a-sectortype] [n-street]";
+			var template = "{a-street} {a-sectortype} {n-street}";
 			if (features.hasCamp) {
-				template = "[n-street] with camp";
+				template = "{n-street} with camp";
 			}
 			if (features.hasGrove) {
-				template = "[a-street] park";
+				template = "{a-street} park";
 			}
 			if (!hasVision) {
 				if (features.sunlit) {
-					template = "sunlit [n-street]";
+					template = "sunlit {n-street}";
 				} else {
-					template = "dark [n-street]";
+					template = "dark {n-street}";
 				}
 			}
 			var params = this.getSectorTextParams(features);
@@ -177,10 +180,9 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		
 		getSectorDescription: function (hasVision, features) {
 			features.hasVision = hasVision;
-			let type = "sector-description";
-			let template = DescriptionMapper.get(type, features);
+			let template = DescriptionMapper.get("sector-description", features);
 			if (features.hasGrove) {
-				template = "[a] [a-street] park overrun by plant-life. In the middle there is a grove of tall trees. Though strange and wild, it also seems somehow peaceful";
+				template = "{a} {a-street} park overrun by plant-life. In the middle there is a grove of tall trees. Though strange and wild, it also seems somehow peaceful";
 			}
 			let params = this.getSectorTextParams(features, hasVision);
 			let phrase = TextBuilder.build(template, params);
@@ -237,6 +239,8 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 			result["an-decos"] = selectFromOptions("an-decos", 2, !hasVision);
 			// noun used to describe prominent feature in neighbouring sector (optional)
 			result["n-neighbour"] = selectFromOptions("n-neighbour", 1, true);
+			// noun used to describe enemies in the sector (optional)
+			result["n-enemies"] = selectFromOptions("n-enemies", 1, true);
 			
 			return result;
 		},
@@ -1390,72 +1394,10 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 	};
 		
 	function initSectorTexts() {
-		let wildcard = DescriptionMapper.WILDCARD;
-		
-		let t_R = SectorConstants.SECTOR_TYPE_RESIDENTIAL;
-		let t_I = SectorConstants.SECTOR_TYPE_INDUSTRIAL;
-		let t_M = SectorConstants.SECTOR_TYPE_MAINTENANCE;
-		let t_C = SectorConstants.SECTOR_TYPE_COMMERCIAL;
-		let t_P = SectorConstants.SECTOR_TYPE_PUBLIC;
-		let t_E = SectorConstants.SECTOR_TYPE_EMPTY;
-
-		let t_H = [ SectorConstants.SECTOR_TYPE_RESIDENTIAL, SectorConstants.SECTOR_TYPE_COMMERCIAL ];
-		let t_W = [ SectorConstants.SECTOR_TYPE_COMMERCIAL, SectorConstants.SECTOR_TYPE_INDUSTRIAL, SectorConstants.SECTOR_TYPE_PUBLIC ];
-		let t_U = [ SectorConstants.SECTOR_TYPE_INDUSTRIAL, SectorConstants.SECTOR_TYPE_MAINTENANCE ];
-
-		let s_CT = SectorConstants.STYLE_CITTADINIAN;
-		let s_HU = SectorConstants.STYLE_HUMANIST;
-		let s_IN = SectorConstants.STYLE_INDUSTRIAL;
-		let s_KB = SectorConstants.STYLE_KARBOQUE;
-		let s_KI = SectorConstants.STYLE_KIEVAN;
-		let s_MO = SectorConstants.STYLE_MODERN;
-		let s_NW = SectorConstants.STYLE_NEOWESTERN;
-		let s_SG = SectorConstants.STYLE_SLUM_GENERAL;
-		let s_SH = SectorConstants.STYLE_SLUM_HUN;
-		let s_OW = SectorConstants.STYLE_WESTERN;
-
-		// modern
-		let s_M = [ SectorConstants.STYLE_HUMANIST, SectorConstants.STYLE_INDUSTRIAL, SectorConstants.STYLE_MODERN ];
-		// ethnic
-		let s_E = [ SectorConstants.STYLE_CITTADINIAN, SectorConstants.STYLE_KIEVAN, SectorConstants.STYLE_SLUM_HUN ];
-		// symmetric
-		let s_S = [ SectorConstants.STYLE_HUMANIST, SectorConstants.STYLE_INDUSTRIAL, SectorConstants.STYLE_KARBOQUE ];
-		// cozy
-		let s_C = [ SectorConstants.STYLE_CITTADINIAN, SectorConstants.STYLE_KIEVAN, SectorConstants.STYLE_NEOWESTERN, SectorConstants.STYLE_WESTERN ];
-		// slums
-		let s_P = [ SectorConstants.STYLE_SLUM_GENERAL, SectorConstants.STYLE_SLUM_HUN ];
-		// ornate
-		let s_O = [ SectorConstants.STYLE_KIEVAN, SectorConstants.STYLE_MODERN, SectorConstants.STYLE_NEOWESTERN ];
-		// historical
-		let s_H = [ SectorConstants.STYLE_KIEVAN, SectorConstants.STYLE_CITTADINIAN, SectorConstants.STYLE_WESTERN ];
-		
-		// brackets for values like building density, wear, damage
-		let bany = [0, 10];
-		let b0 = [0, 0];
-		let b1 = [1, 10];
-		let b12 = [0, 5];
-		let b22 = [5, 10];
-		let b13 = [0, 3];
-		let b23 = [4, 6];
-		let b33 = [7, 10];
-
-		let gt0 = [1, 1000];
-		let gt1 = [2, 1000];
-
-		let bmoderate = [3, 7];
-		
-		let lmodern = [15, 100];
-		let lold = [0, 18];
-		let l_surfacers = [20, 100];
-
-		// TODO get from descriptions.json
-		
-		// DescriptionMapper.add("sector-vision", { numPOI: 0, buildingDensity: b12 }, "[a] [n-street] in front of what looks like [a] [a-building] [n-building]", 1);
-
 		// settings
 		// - default value for filter props that shouldn't make the description more likely to be chosen
-		DescriptionMapper.setDefaultValue("sector-vision", "buildingDensity", wildcard);
-		DescriptionMapper.setDefaultValue("sector-vision", "sectorType", wildcard);
+		DescriptionMapper.setDefaultValue("sector-vision", "buildingDensity", DescriptionMapper.WILDCARD);
+		DescriptionMapper.setDefaultValue("sector-vision", "sectorType", DescriptionMapper.WILDCARD);
 		// - default value for required props that if sector has non-default value should only use templates matching that
 		// DescriptionMapper.setDefaultValue("sector-vision", "isSurfaceLevel", false);
 		// DescriptionMapper.setDefaultValue("sector-vision", "isGroundLevel", false);
@@ -1483,29 +1425,29 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		let wt_WW = SectorConstants.WAYMARK_TYPE_SPRING;
 		
 		// brackets for values like building density, wear, damage
-		var b0 = [0, 0];
-		var b12 = [0, 5];
-		var b22 = [5, 10];
+		let b0 = [0, 1];
+		let b12 = [0, 6];
+		let b22 = [5, -1];
 		
-		DescriptionMapper.add("waymark", { sectorType: wildcard }, "A wall by a corridor leading [direction] has been painted with a big [n-target] symbol");
-		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There is a graffiti with the word [n-target] and an arrow pointing [direction]");
-		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There is a small sign for a [n-target] pointing [direction]");
-		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There are a few worn posters indicating there is [n-target] to the [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_CL }, "Someone has put up a sign pointing to [a] [n-target] to the [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_CM }, "You spot a few graffiti with arrows pointing [direction] and words like 'safe' and 'shelter'");
-		DescriptionMapper.add("waymark", { waymarkType: wt_CM }, "Graffiti pointing towards [direction] promises shelter");
-		DescriptionMapper.add("waymark", { waymarkType: wt_DS }, "An old sign points to [a] [n-district-type] district to the [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_DS }, "Official signage points to a [n-district-type] district to the [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_PO }, "There are multiple skull signs on walls when heading towards [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_PS }, "An orange emergency exit sign points [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_RD }, "There are multiple skull signs on walls when heading towards [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_SS }, "There is a metal plaque on a wall by a passage leading [direction] with the name '[n-settlement-name]'");
-		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "A blue arrow painted on the street is pointing [direction]");
-		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "Helpful graffiti is pointing [direction] for water");
-		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "Some bricks have been arranged in the shape of an arrow pointing [direction] and a crude symbol that might mean [n-target]");
-		DescriptionMapper.add("waymark", { sectorType: t_C }, "A store billboard has been painted over with the an arrow pointing [direction] and the word [n-target]");
-		DescriptionMapper.add("waymark", { sectorType: t_I }, "A street sign with directions has been painted over. Towards [direction] it says [n-target]");
-		DescriptionMapper.add("waymark", { sectorType: t_M }, "Pipes near the ceiling have arrows painted on them. One pointing [direction] is next to a symbol for [n-target]");
+		DescriptionMapper.add("waymark", { sectorType: wildcard }, "A wall by a corridor leading {direction} has been painted with a big {n-target} symbol");
+		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There is a graffiti with the word {n-target} and an arrow pointing {direction}");
+		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There is a small sign for a {n-target} pointing {direction}");
+		DescriptionMapper.add("waymark", { sectorType: wildcard }, "There are a few worn posters indicating there is {n-target} to the {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_CL }, "Someone has put up a sign pointing to {a} {n-target} to the {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_CM }, "You spot a few graffiti with arrows pointing {direction} and words like 'safe' and 'shelter'");
+		DescriptionMapper.add("waymark", { waymarkType: wt_CM }, "Graffiti pointing towards {direction} promises shelter");
+		DescriptionMapper.add("waymark", { waymarkType: wt_DS }, "An old sign points to {a} {n-district-type} district to the {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_DS }, "Official signage points to a {n-district-type} district to the {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_PO }, "There are multiple skull signs on walls when heading towards {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_PS }, "An orange emergency exit sign points {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_RD }, "There are multiple skull signs on walls when heading towards {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_SS }, "There is a metal plaque on a wall by a passage leading {direction} with the name '{n-settlement-name}'");
+		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "A blue arrow painted on the street is pointing {direction}");
+		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "Helpful graffiti is pointing {direction} for water");
+		DescriptionMapper.add("waymark", { waymarkType: wt_WW }, "Some bricks have been arranged in the shape of an arrow pointing {direction} and a crude symbol that might mean {n-target}");
+		DescriptionMapper.add("waymark", { sectorType: t_C }, "A store billboard has been painted over with the an arrow pointing {direction} and the word {n-target}");
+		DescriptionMapper.add("waymark", { sectorType: t_I }, "A street sign with directions has been painted over. Towards {direction} it says {n-target}");
+		DescriptionMapper.add("waymark", { sectorType: t_M }, "Pipes near the ceiling have arrows painted on them. One pointing {direction} is next to a symbol for {n-target}");
 	}
 	
 	function initBookTexts() {
@@ -1530,128 +1472,128 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		DescriptionMapper.add("book-intro", { bookType: t_H }, "You skim through the book.");
 		DescriptionMapper.add("book-intro", { bookType: t_E }, "You study the book.");
 		
-		DescriptionMapper.add("book-description", { bookType: wildcard }, "A passage describing [n-topic] catches your eye.");
-		DescriptionMapper.add("book-description", { bookType: wildcard }, "A section describing [n-topic] seems interesting.");
-		DescriptionMapper.add("book-description", { bookType: wildcard }, "You learn something about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: wildcard }, "It's rather [a-bad], but you learn something anyway.");
+		DescriptionMapper.add("book-description", { bookType: wildcard }, "A passage describing {n-topic} catches your eye.");
+		DescriptionMapper.add("book-description", { bookType: wildcard }, "A section describing {n-topic} seems interesting.");
+		DescriptionMapper.add("book-description", { bookType: wildcard }, "You learn something about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: wildcard }, "It's rather {a-bad}, but you learn something anyway.");
 		
-		DescriptionMapper.add("book-description", { bookLevel: l_1 }, "It gives you some insights into [n-topic].");
-		DescriptionMapper.add("book-description", { bookLevel: l_2 }, "It seems like a good source on [n-topic].");
-		DescriptionMapper.add("book-description", { bookLevel: l_3 }, "It is not easy to follow, but teaches you a lot about [n-topic].");
-		DescriptionMapper.add("book-description", { bookLevel: l_3 }, "It describes in great detail how [c-fact]");
-		DescriptionMapper.add("book-description", { bookLevel: l_3 }, "It describes in great detail [n-topic]");
+		DescriptionMapper.add("book-description", { bookLevel: l_1 }, "It gives you some insights into {n-topic}.");
+		DescriptionMapper.add("book-description", { bookLevel: l_2 }, "It seems like a good source on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookLevel: l_3 }, "It is not easy to follow, but teaches you a lot about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookLevel: l_3 }, "It describes in great detail how {c-fact}");
+		DescriptionMapper.add("book-description", { bookLevel: l_3 }, "It describes in great detail {n-topic}");
 		
 		DescriptionMapper.add("book-description", { bookType: t_S }, "It is a cook book, not much of it relevant to the ingredients available today.");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It is [a] [a-level] textbook on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It is [a] [a-style] textbook on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It is [a] [a-good] textbook on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It is [a] [a-bad] textbook on [n-topic], but you learn something new anyway.");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It describes [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "There are several interesting passages about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It is a rather dry text on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "It contains a description of [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "You learn that [c-fact].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "You find out that [c-fact].");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It is {a} {a-level} textbook on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It is {a} {a-style} textbook on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It is {a} {a-good} textbook on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It is {a} {a-bad} textbook on {n-topic}, but you learn something new anyway.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It describes {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "There are several interesting passages about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It is a rather dry text on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "It contains a description of {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "You learn that {c-fact}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "You find out that {c-fact}.");
 		DescriptionMapper.add("book-description", { bookType: t_S }, "It is a grammar book for the Kievan language.");
 		DescriptionMapper.add("book-description", { bookType: t_S }, "It is a grammar book for the Hansa language and its many dialects.");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It is an introductory text on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It is [a] [a-bad] book on [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It is an introductory text on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It is {a} {a-bad} book on {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It is a scout's handbook.");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It contains some basic information about [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It contains some basic information about {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "A description of a refining process offers clues to the kind of building materials used commonly before the Fall.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_1 }, "It contains a catalog of known animal life in the 'Dark Levels'. You recognize several.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "You notice old census data about people who are exposed daily to sunlight versus those who are not.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "It contains a detailed description of a sun-based calendar system you are unfamiliar with.");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "You find details about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "It contains detailed information about [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "You find details about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "It contains detailed information about {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "It is a survivor's cookbook, and contains a few useful tips.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_2 }, "It is an old book exploring the possibility of extending the City to cover oceans.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "You are spell-bound by a description of abundant plant-life on the Ground.");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "There is a wealth of information about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "It contains a dissertation on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "It contains in-depth information about [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "There is a wealth of information about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "It contains a dissertation on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "It contains in-depth information about {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "It is an ethical inquiry into lab grown meat versus keeping animals.");
 		DescriptionMapper.add("book-description", { bookType: t_S, bookLevel: l_3 }, "It explores the theoretical possibility of restarting human life outside the City, and concludes that it would be nearly impossible.");
 		
-		DescriptionMapper.add("book-description", { bookType: t_E }, "It is [a] [a-level] textbook on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "It is [a] [a-style] textbook on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "It is [a] [a-good] textbook on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "It is [a] [a-bad] textbook on [n-topic], but you learn something new anyway.");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "There are abandoned plans of [n-object].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "It contains a detailed description of [n-object].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "There is diagram explaining in detail how [n-object] worked.");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "It is an operation manual for [n-object].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "You learn a lot about how the [n-object].");
-		DescriptionMapper.add("book-description", { bookType: t_E }, "You learn that [c-fact].");
-		DescriptionMapper.add("book-description", { bookType: t_S }, "You find out that [c-fact].");
-		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_1 }, "There is an interesting diagram of [n-object].");
-		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_1 }, "It contains some basic information about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_2 }, "It contains many useful bits of information on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_2 }, "It contains detailed information about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_3 }, "There are technical drawings of [n-object]");
-		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_3 }, "It contains in-depth information about [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "It is {a} {a-level} textbook on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "It is {a} {a-style} textbook on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "It is {a} {a-good} textbook on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "It is {a} {a-bad} textbook on {n-topic}, but you learn something new anyway.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "There are abandoned plans of {n-object}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "It contains a detailed description of {n-object}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "There is diagram explaining in detail how {n-object} worked.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "It is an operation manual for {n-object}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "You learn a lot about how the {n-object}.");
+		DescriptionMapper.add("book-description", { bookType: t_E }, "You learn that {c-fact}.");
+		DescriptionMapper.add("book-description", { bookType: t_S }, "You find out that {c-fact}.");
+		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_1 }, "There is an interesting diagram of {n-object}.");
+		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_1 }, "It contains some basic information about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_2 }, "It contains many useful bits of information on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_2 }, "It contains detailed information about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_3 }, "There are technical drawings of {n-object}");
+		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_3 }, "It contains in-depth information about {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_E, bookLevel: l_3 }, "It is a legal book about the rights and obligations of robots and rules for programming their behaviour.");
 		
-		DescriptionMapper.add("book-description", { bookType: t_H }, "You find details about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It describes [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It describes [c-event].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It is a rather dry text on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It is [a] [a-style] overview of [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It is very [a-level] introduction [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "You learn that [c-fact].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It seems that [c-fact].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "You learn about [c-event].");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "You find details about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It describes {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It describes {c-event}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It is a rather dry text on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It is {a} {a-style} overview of {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It is very {a-level} introduction {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "You learn that {c-fact}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It seems that {c-fact}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "You learn about {c-event}.");
 		DescriptionMapper.add("book-description", { bookType: t_H }, "It describes the explosive urbanization that led to the formation of the City.");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "There is [a] [a-style] chapter on [c-event].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "A section on [c-event] catches your eye.");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "There are several references to [c-event].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It is [a] very [a-good] explanation of [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H }, "It is otherwise dull, but there is [a] [a-good] chapter on [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "There is {a} {a-style} chapter on {c-event}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "A section on {c-event} catches your eye.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "There are several references to {c-event}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It is {a} very {a-good} explanation of {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H }, "It is otherwise dull, but there is {a} {a-good} chapter on {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_H }, "It is a history of Donbalism, a monotheistic religion that has been popular in the City throughout its history.");
 		DescriptionMapper.add("book-description", { bookType: t_H }, "It is a history of Ugurism, a fairly new religion combining bleak apocalyptic spiritualism and a worship of the City as a sentient entity.");
 		DescriptionMapper.add("book-description", { bookType: t_H }, "A reference to the \"currently uninhabited levels\" of the City offers a perspective on the pre-Fall City.");
 		DescriptionMapper.add("book-description", { bookType: t_H }, "It is an old book predicting a huge population explosion in the City, driven by immigration and medical breakthroughs.");
 		DescriptionMapper.add("book-description", { bookType: t_H }, "It describes the Dictatorship era, how it rose to power from the Utopia, waged war against the Western Government, and finally collapsed to rebellion.");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is an introductory text on [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is an introductory text on {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is the autobiography of a famous athlete.");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It mentions [c-event].");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It discusses [c-event].");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It mentions {c-event}.");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It discusses {c-event}.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It discusses the utopistic roots of the City and how it was first built and imagined.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is a biased exposition of the charitable work of a religious group.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is a Government-produced text book in the history of the City, stressing class differences and the importance of unity.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is an art book featuring architecture from the earliest levels of the City, quiant with windows and ventilation and greenery.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is an overview of the Karboque architecture which the author believes is unjustly unpopular because of its associations with the Dictatorship era.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_1 }, "It is an ode to the architecture of the City States.");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "There is a long section about [c-event].");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "There is a long section about {c-event}.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "It is a history of the use of nuclear weapons, describing the first use by the City against a civilization outside, and then second use within the City by one City state against another.");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "It is a detailed exploration of [n-topic].");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "It is a detailed exploration of {n-topic}.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "It discusses the splintering of the original City Government into multiple City States within the City, their flourishing, war and collapse.");
 		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_2 }, "It discusses the gradual depopulation of the planet outside the City, first driven by economy, then pollution, and finally floods.");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_3 }, "You a wealth of information [c-event].");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_3 }, "You a wealth of information [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_3 }, "You find a detailed timeline of [c-event].");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_3 }, "You a wealth of information {c-event}.");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_3 }, "You a wealth of information {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_H, bookLevel: l_3 }, "You find a detailed timeline of {c-event}.");
 		
-		DescriptionMapper.add("book-description", { bookType: t_F }, "There is [a] [a-good] story about [c-theme].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is a tale about [c-theme].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is about [c-theme].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is story about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "A story about [c-theme] stays with you.");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "You are touched by a poem about [c-theme].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It contains [a] [a-good] description of [c-theme].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is [a] [a-style] novel dealing with [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is [a] [a-style] tale about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is a very [a-style] portrayal of [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is [a] [a-style] story about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It a collection of [a-style] short stories about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F }, "It is [a] [a-style] and [a-good] story about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_1 }, "It is a children's book featuring [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_1 }, "It's a simple story about [c-theme].");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "There is {a} {a-good} story about {c-theme}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is a tale about {c-theme}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is about {c-theme}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is story about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "A story about {c-theme} stays with you.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "You are touched by a poem about {c-theme}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It contains {a} {a-good} description of {c-theme}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is {a} {a-style} novel dealing with {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is {a} {a-style} tale about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is a very {a-style} portrayal of {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is {a} {a-style} story about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It a collection of {a-style} short stories about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F }, "It is {a} {a-style} and {a-good} story about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_1 }, "It is a children's book featuring {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_1 }, "It's a simple story about {c-theme}.");
 		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_1 }, "It seems to be aimed at school children.");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_2 }, "It is a classic novel about [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_2 }, "It is a [a-style] novel about [c-theme].");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_2 }, "It is a [a-style] story set in the time of the great Rebellion.");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_3 }, "It is quite a heavy book on [n-topic].");
-		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_3 }, "It is a [a-good] story about [c-theme].");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_2 }, "It is a classic novel about {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_2 }, "It is a {a-style} novel about {c-theme}.");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_2 }, "It is a {a-style} story set in the time of the great Rebellion.");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_3 }, "It is quite a heavy book on {n-topic}.");
+		DescriptionMapper.add("book-description", { bookType: t_F, bookLevel: l_3 }, "It is a {a-good} story about {c-theme}.");
 	}
 	
 	function initNewspaperTexts() {
@@ -1661,15 +1603,15 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		let l_2 = 2;
 		let l_3 = 3;
 		
-		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "There is an editorial about [n-topic].");
-		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "There is an opinion piece about [n-topic].");
-		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "There is a big story about [c-event].");
-		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "The issue revolves around [c-event].");
-		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "According to it, [c-fact].");
-		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "Contrary to rumours, [c-fact].");
+		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "There is an editorial about {n-topic}.");
+		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "There is an opinion piece about {n-topic}.");
+		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "There is a big story about {c-event}.");
+		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "The issue revolves around {c-event}.");
+		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "According to it, {c-fact}.");
+		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "Contrary to rumours, {c-fact}.");
 		DescriptionMapper.add("newspaper-description", { itemLevel: wildcard }, "It is a story about a settlement plagued by swarms of mechanical locusts, destroying all its stores including building materials whenever they appeared.");
 		DescriptionMapper.add("newspaper-description", { itemLevel: l_2 }, "It contains supposed stories of survivors who saw the Fall, all very different.");
-		DescriptionMapper.add("newspaper-description", { itemLevel: l_3 }, "There is an investigative story about [n-topic].");
+		DescriptionMapper.add("newspaper-description", { itemLevel: l_3 }, "There is an investigative story about {n-topic}.");
 	}
 	
 	function initResearchPaperTexts() {
@@ -1679,13 +1621,13 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		let l_2 = 2;
 		let l_3 = 3;
 		
-		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "It is about [n-topic].");
-		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "You learn that [c-fact].");
-		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "You deduce that [c-fact].");
-		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "It seems that [c-fact].");
-		DescriptionMapper.add("researchpaper-description", { itemLevel: l_1 }, "It is a basic overview of [n-topic].");
-		DescriptionMapper.add("researchpaper-description", { itemLevel: l_2 }, "It is an outline of [n-topic].");
-		DescriptionMapper.add("researchpaper-description", { itemLevel: l_3 }, "It is a detailed analysis of [n-topic].");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "It is about {n-topic}.");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "You learn that {c-fact}.");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "You deduce that {c-fact}.");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: wildcard }, "It seems that {c-fact}.");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: l_1 }, "It is a basic overview of {n-topic}.");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: l_2 }, "It is an outline of {n-topic}.");
+		DescriptionMapper.add("researchpaper-description", { itemLevel: l_3 }, "It is a detailed analysis of {n-topic}.");
 	}
 
     TextConstants.loadData(TextData);

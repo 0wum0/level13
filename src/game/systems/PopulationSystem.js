@@ -358,12 +358,13 @@ define([
 		
 		reassignWorkers: function (node) {
 			let improvements = node.entity.get(SectorImprovementsComponent);
+			let workerFactors = GameGlobals.campHelper.getWorkerFactors(node.position.level);
 
 			let reservedWorkers = {};
 			let foodConsumption = GameGlobals.campHelper.getFoodConsumptionPerSecond(node.camp.population);
-			let foodProduction = GameGlobals.campHelper.getFoodProductionPerSecond(1, improvements);
+			let foodProduction = GameGlobals.campHelper.getFoodProductionPerSecond(1, improvements, workerFactors);
 			let waterConsumption = GameGlobals.campHelper.getWaterConsumptionPerSecond(node.camp.population);
-			let waterProduction = GameGlobals.campHelper.getWaterProductionPerSecond(1, improvements);
+			let waterProduction = GameGlobals.campHelper.getWaterProductionPerSecond(1, improvements, workerFactors);
 			reservedWorkers[CampConstants.workerTypes.scavenger.id] = 1;
 			reservedWorkers[CampConstants.workerTypes.trapper.id] = Math.ceil(foodConsumption / foodProduction);
 			reservedWorkers[CampConstants.workerTypes.water.id] = Math.ceil(waterConsumption / waterProduction);

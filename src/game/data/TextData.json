@@ -9,7 +9,19 @@
 			"[sector_style_symmetric]": [ "humanist", "industrial", "karboque" ]
 		},
 		"defaultFilters": {
-			"hasVision": true
+			"campable": "*",
+			"hasVision": true,
+			"hasGrove": false,
+			"buildingDensity": "*"
+		},
+		"filterScores": {
+			"passageUp": 2,
+			"passageDown": 2,
+			"enemyTags": 2,
+			"flooded": 3,
+			"localeTypes": 3,
+			"sunlitReason": 3,
+			"levelFeatures": 30
 		},
 		"params": {
 			"n-sector": [
@@ -38,7 +50,7 @@
 				{ "text": [ "hall", "throughfare", "boulevard", "avenue", "arcade", "street" ], "filters": { "buildingDensity": [4, 8] } },
 				{ "text": [ "alley", "tunnel", "passageway", "hallway", "corridor" ], "filters": { "buildingDensity": [8, -1] } },
 				{ "text": [ "corner", "quarter" ], "filters": { "sectorStyle": "cittadinian" } },
-				{ "text": [ "section", "span" ], "filters": { "sectorStyle": "humanist" } },
+				{ "text": [ "section", "span" ], "filters": { "sectorStyle": "humanist", "wealth": [ -1, 8 ] } },
 				{ "text": [ "sector", "area" ], "filters": { "sectorStyle": "industrial" } },
 				{ "text": [ "sector", "zone", "block" ], "filters": { "sectorStyle": "karboque" } },
 				{ "text": [ "walkway" ], "filters": { "sectorStyle": "kievan" } },
@@ -135,8 +147,9 @@
 				{ "text": [ "hidden" ], "filters": { "localeTypes": "compound" } },
 				{ "text": [ "forgotten" ], "filters": { "localeTypes": "depot" } },
 				{ "text": [ "hidden" ], "filters": { "localeTypes": [ "seedDepot", "spacefactory" ] } },
-				{ "text": [ "desolate", "eerily quiet", "bleak", "dirty", "nondescript" ], "filters": { "hasVision": "*", "wear": [5, -1] } },
-				{ "text": [ "humming", "well-preserved" ], "filters": { "hasVision": "*", "wear": [0, 6], "damage": 0 } },
+				{ "text": [ "desolate", "eerily quiet", "bleak", "dirty", "nondescript" ], "filters": { "hasVision": "*", "wear": [5, -1], "campable": false } },
+				{ "text": [ "well-preserved" ], "filters": { "wear": [0, 6], "damage": 0 } },
+				{ "text": [ "humming" ], "filters": { "hasVision": "*", "wear": [0, 6], "damage": 0 } },
 				{ "text": [ "strange", "snug", "traditional", "unfamiliar", "quaint", "spacious", "round" ], "filters": { "sectorStyle": "cittadinian" } },
 				{ "text": [ "typical", "dense", "planter-dotted", "grey" ], "filters": { "sectorStyle": "humanist" } },
 				{ "text": [ "industrial", "blocky", "grey", "functional" ], "filters": { "sectorStyle": "industrial" } },
@@ -214,7 +227,7 @@
 				{ "text": [ "stranded benches", "broken elevators", "debris", "vending machines", "utility columns", "decorative columns" ], "filters": { "hasVision": true } },
 				{ "text": [ "persistent weeds" ], "filters": { "sunlit": 1 } },
 				{ "text": [ "tram tracks", "garbage", "garbage bins", "fake trees", "dead foliage", "abandoned vehicles" ], "filters": { "sectorType": "residential" } },
-				{ "text": [ "broken machinery", "abandoned vehicles", "colorful containers" ], "filters": { "sectorType": "industrial" } },
+				{ "text": [ "broken machinery", "abandoned vehicles", "colorful containers", "repair bays" ], "filters": { "sectorType": "industrial" } },
 				{ "text": [ "broken pipes", "broken trams", "electrical wiring", "ventilation ducts", "broken mirrors" ], "filters": { "sectorType": "maintenance" } },
 				{ "text": [ "empty fountains", "abandoned stalls", "broken glass" ], "filters": { "sectorType": "commercial" } },
 				{ "text": [ "withered trees", "trash", "dead trees" ], "filters": { "sectorType": "public" } },
@@ -322,7 +335,7 @@
 					},
 					{
 						"text": "{a} {a-street} {n-street} appearing even more expansive in the light.",
-						"filters": { "buildingDensity": [0, 6] }
+						"filters": { "buildingDensity": [0, 6], "isSurfaceLevel": false }
 					},
 					{
 						"text": "A sunlit {n-street} that reveals the infinite rows of buildings in all directions.",
@@ -350,7 +363,7 @@
 				"filters": { "hasVision": true },
 				"descriptions": [
 					{
-						"text": "A system of bridges and passages connecting several buildings around a dizzying opening to the level below",
+						"text": "A system of bridges and passages connecting several buildings around a dizzying chasm",
 						"filters": { "buildingDensity": [0, 4], "isGroundLevel": false, "campable": false, "numPOI": 0 }
 					},
 					{
@@ -363,7 +376,7 @@
 					},
 					{
 						"text": "Some kind of {a} {a-sectortype} complex with several narrow passages this way and that",
-						"filters": { "buildingDensity": [5, -1], "sunlit": 0, "campable": false, "wealth": [0, 6] }
+						"filters": { "buildingDensity": [4, 8], "sunlit": 0, "campable": false, "wealth": [1, 6], "sectorType": [ "residential", "commercial", "public" ] }
 					},
 					{
 						"text": "A narrow {n-street} between two colossal tower blocks.",
@@ -371,7 +384,7 @@
 					},
 					{
 						"text": "{a} {n-street} so dense and layered, it's easy to lose track of how far the level floor is.",
-						"filters": { "buildingDensity": [5, -1], "sunlit": 0, "campable": false, "wealth": [0, 6] }
+						"filters": { "buildingDensity": [6, -1], "sunlit": 0, "campable": false, "hasPassage": false, "wealth": [0, 6] }
 					},
 					{
 						"text": "{a} {a-street} corridor with scattered trash from long-gone inhabitants",
@@ -383,27 +396,23 @@
 					},
 					{
 						"text": "A wide and {a-street} concourse inside a former {n-sector}.",
-						"filters": { "buildingDensity": [0, 4], "sectorStyle": "[sector_style_modern]" }
+						"filters": { "buildingDensity": [0, 4], "sectorStyle": "[sector_style_recent]" }
 					},
 					{
 						"text": "{a} {a-street} concrete plain, perhaps once used for vehicles of some kind.",
-						"filters": { "buildingDensity": [2, -1], "sectorType": "maintenance", "campable": false, "numPOI": 0, "hasIngredients": false }
+						"filters": { "buildingDensity": [-1, 5], "sectorType": [ "maintenance", "public", "industrial" ], "campable": false, "numPOI": 0, "hasIngredients": false }
 					},
 					{
 						"text": "{a} {a-street} maze of staircases and corridors filling up some space between the neighbouring sectors.",
-						"filters": { "buildingDensity": [0, 4], "numNeighbours": [2, -1], "sectorStyle": "[sector_style_ornate]" }
+						"filters": { "buildingDensity": [0, 4], "numNeighbours": [2, -1], "sectorStyle": "[sector_style_ornate]", "isSurfaceLevel": false }
 					},
 					{
 						"text": "{a} {a-street} {n-street} beneath a vast {n-building}",
-						"filters": { "buildingDensity": [4, 8], "isSurfaceLevel": false, "sunlit": 0, "sectorType": [ "industrial", "commercial", "public" ] }
+						"filters": { "buildingDensity": [4, 7], "isSurfaceLevel": false, "sunlit": 0, "sectorType": [ "industrial", "commercial", "public" ] }
 					},
 					{
 						"text": "{a} {n-street} with multiple levels of passages crawling along the walls of the surrounding {a-sectortype} buildings",
 						"filters": { "buildingDensity": [4, 8], "isSurfaceLevel": false, "sectorType": [ "industrial", "commercial", "public" ], "sectorStyle": "[sector_style_ornate]" }
-					},
-					{
-						"text": "{a} {a-street} passage dotted with large pillars supporting the building above.",
-						"filters": { "buildingDensity": [4, 8], "isSurfaceLevel": false, "campable": false, "wealth": [4, 8], "sectorType": [ "industrial", "maintenance" ] }
 					},
 					{
 						"text": "Some sort of {a} {a-sectortype} corridor between two vast {n-buildings} with barely enough space to walk",
@@ -411,18 +420,14 @@
 					},
 					{
 						"text": "{a} {a-street} alley between two {a-building} {n-buildings}",
-						"filters": { "buildingDensity": [8, -1], "sectorStyle": "[sector_style_cozy]" }
+						"filters": { "buildingDensity": [7, -1], "sectorStyle": "[sector_style_cozy]" }
 					},
 					{
 						"text": "A tight passage with {n-material} walls pressing close on all sides.",
 						"filters": { "buildingDensity": [8, -1], "campable": false }
 					},
 					{
-						"text": "Some kind of {a} {n-sector} complex with narrow passages this way and that.",
-						"filters": { "buildingDensity": [8, -1], "campable": false }
-					},
-					{
-						"text": "{a} {a-street} covered passage between two bigger streets, lined with [an-decos].",
+						"text": "{a} {a-street} covered passage between two larger streets, lined with [an-decos].",
 						"filters": { "buildingDensity": [8, -1], "sunlit": 0, "numNeighbours": [2, -1], "campable": false }
 					},
 					{
@@ -435,7 +440,7 @@
 					},
 					{
 						"text": "A dusty {a-sectortype} cluster dominated by a warehouse placed there later, its bright yellow markings standing out from the {n-material} surroundings.",
-						"filters": { "numPOI": 0, "wear": [0, 4], "level": [ -1, 18 ], "wealth": [3, 8] }
+						"filters": { "numPOI": 0, "wear": [0, 4], "level": [ -1, 18 ], "wealth": [3, 8], "campable": false }
 					},
 					{
 						"text": "{a} {a-street} {n-street} between tall {n-buildings}, lined with withered trees that until recently must have thrived in artificial light",
@@ -448,10 +453,6 @@
 					{
 						"text": "A former {n-sector} with {a} {a-street} atmosphere",
 						"filters": { "numPOI": 0, "wear": [4, 8], "damage": 0 }
-					},
-					{
-						"text": "{a} {a-building} building whose original purpose is hard to determine, stripped down to bare concrete",
-						"filters": { "numPOI": 0, "wear": [8, -1], "sectorStyle": "[sector_style_symmetric]" }
 					},
 					{
 						"text": "{a} {a-street} {n-street} with a few large unidentifiable ruins looming over it",
@@ -475,7 +476,7 @@
 					},
 					{
 						"text": "{a} {n-street} with a collapsed skybridge hanging over it like a broken spine.",
-						"filters": { "numPOI": 0, "wear": [8, -1], "buildingDensity": [4, 8], "sectorType": "public" }
+						"filters": { "numPOI": 0, "wear": [8, -1], "buildingDensity": [1, 8], "sectorType": [ "public", "commercial" ], "sunlit": [ 0.5, -1] }
 					},
 					{
 						"text": "A forgotten space between spaces, all bare {n-material} walls and {a-building} support structures.",
@@ -486,28 +487,20 @@
 						"filters": { "numPOI": 0, "wealth": [0, 4], "sectorType": "commercial", "buildingDensity": [3, 8] }
 					},
 					{
-						"text": "A worn and dirty residential {n-street} which must've been crowded before the Fall.",
+						"text": "A worn and dirty residential {n-street} which must've been crowded once.",
 						"filters": { "numPOI": 0, "wealth": [0, 4], "sectorType": "residential" }
 					},
 					{
 						"text": "A glossy public {n-street}, floor lined with lights that would have once all shown in different colours, pulsing with life.",
-						"filters": { "numPOI": 0, "wealth": [4, 8], "sectorType": "public" }
+						"filters": { "numPOI": 0, "wealth": [4, 8], "sectorType": "public", "sectorStyle": "[sector_style_recent]" }
 					},
 					{
 						"text": "An upscale shopping {n-street}.",
 						"filters": { "numPOI": 0, "wealth": [8, -1], "sectorType": "commercial" }
 					},
 					{
-						"text": "A beautiful {a-sectortype} {n-street}, the kind of place you once dreamed of living in if you ever got rich.",
-						"filters": { "numPOI": 0, "wealth": [8, -1], "sectorType": "residential", "campable": false, "wear": [0, 6] }
-					},
-					{
-						"text": "{a} {a-street} {n-street} through an abandoned neighbourhood.",
-						"filters": { "numPOI": 0, "activity": [0, 4], "wear": [5, -1], "buildingDensity": [5, -1] }
-					},
-					{
 						"text": "{a} {a-street} {n-street} abandoned long before the Fall.",
-						"filters": { "numPOI": 0, "activity": [0, 6], "wear": [5, -1] }
+						"filters": { "numPOI": 0, "activity": [0, 5], "wear": [6, -1] }
 					},
 					{
 						"text": "A previously luxurious street now looted from anything half valuable since the Fall.",
@@ -530,10 +523,6 @@
 						"filters": { "damage": [3, 8], "level": [ -1, 18 ], "sectorStyle": "*" }
 					},
 					{
-						"text": "A badly damaged {n-sector} with a collapsed mid-level ceiling partially blocking the way",
-						"filters": { "damage": [5, -1], "hasHazards": false }
-					},
-					{
 						"text": "{a} {n-street} of ruined buildings, all concrete and steel rods and dust.",
 						"filters": { "damage": [5, -1] }
 					},
@@ -544,10 +533,6 @@
 					{
 						"text": "{a} {a-street} {n-street} flanked by shells of destroyed buildings",
 						"filters": { "damage": [5, -1], "buildingDensity": [0, 6] }
-					},
-					{
-						"text": "{a} {n-street} so full of rubble it is difficult to pass through",
-						"filters": { "damage": [5, -1], "buildingDensity": [5, -1] }
 					}
 				]
 			},
@@ -580,11 +565,11 @@
 					},
 					{
 						"text": "A cluster of small {a-building} residences have been extended and patched with different materials, overrun by {n-enemies}",
-						"filters": { "sectorType": "residential", "wealth": [0, 4] }
+						"filters": { "sectorType": "residential", "wealth": [0, 4], "hasEnemies": true }
 					},
 					{
 						"text": "{a} {a-street} {n-street} surrounded (and in parts, covered) by {a-building} dwellings that have been abandoned for some time",
-						"filters": { "sectorType": "residential", "wealth": [0, 4], "buildingDensity": [8, -1], "wear": [5, -1] }
+						"filters": { "sectorType": "residential", "wealth": [0, 4], "buildingDensity": [7, -1], "wear": [5, -1] }
 					},
 					{
 						"text": "A quarter with apartment blocks stacked atop older apartment blocks in mismatched layers.",
@@ -603,32 +588,24 @@
 						"filters": { "sectorType": "industrial", "wear": [0, 6], "sunlit": 0 }
 					},
 					{
-						"text": "A street running along a covered train track",
-						"filters": { "sectorType": "industrial", "campable": false }
-					},
-					{
 						"text": "{a} {a-street} path through a modern industrial area with dormant industrial machines.",
-						"filters": { "sectorType": "industrial", "wear": [0, 4] }
+						"filters": { "sectorType": "industrial", "campable": false, "wear": [0, 4] }
 					},
 					{
-						"text": "An empty square with some damaged containers and huge rusting mechanical arms",
-						"filters": { "sectorType": "industrial", "buildingDensity": [0, 4], "numPOI": 0 }
+						"text": "{A} {a-street} square with some damaged containers and huge rusting mechanical arms",
+						"filters": { "sectorType": "industrial", "buildingDensity": [0, 5], "numPOI": 0 }
 					},
 					{
 						"text": "A former warehouse reclaimed as a slum, pepperd with make-shift dwellings using a colourful array of materials.",
 						"filters": { "sectorType": "industrial", "wear": [3, 8] }
 					},
 					{
-						"text": "A huge hall that looks like it was used as some kind of a storage area, with automated hands rusting in the ceiling",
-						"filters": { "sectorType": "industrial", "level": [ -1, 18 ], "buildingDensity": [0, 6] }
-					},
-					{
 						"text": "A dusty, anonymous corridor between the some real places in the City",
 						"filters": { "sectorType": "maintenance", "buildingDensity": [3, 8], "numPOI": 0 }
 					},
 					{
-						"text": "A damaged maintenance corridor flanked by broken cables like metal viscera",
-						"filters": { "sectorType": "maintenance", "damage": [5, -1] }
+						"text": "A damaged maintenance corridor with broken pipes and cables like metal viscera",
+						"filters": { "sectorType": "maintenance", "damage": [3, -1] }
 					},
 					{
 						"text": "{a} {n-street} between maintenance facilities whose metal walls occationally rumble with the movement of hidden machinery.",
@@ -639,10 +616,6 @@
 						"filters": { "sectorType": "maintenance", "buildingDensity": [8, -1] }
 					},
 					{
-						"text": "A robot storage unit, with huge repair arms and useless charging capsules lining the walls.",
-						"filters": { "sectorType": "maintenance", "numPOI": 0, "wear": [0, 4], "campable": false }
-					},
-					{
 						"text": "An empty water cistern, all concrete and pillars.",
 						"filters": { "sectorType": "maintenance", "buildingDensity": [0, 6], "activity": [0, 6], "numPOI": 0 }
 					},
@@ -651,16 +624,12 @@
 						"filters": { "sectorType": "maintenance", "buildingDensity": [5, -1] }
 					},
 					{
-						"text": "{a} {a-street} maintenance corridor with a stubborn beep shooting through it at intervals, an alarm from a system frozen in an emergency.",
+						"text": "{a} {a-street} corridor with a sharp beep shooting through it at intervals, an alarm from a system frozen in an emergency.",
 						"filters": { "sectorType": "maintenance", "buildingDensity": [5, -1], "wear": [0, 6], "sunlit": 0 }
 					},
 					{
 						"text": "A corridor with thick utility conduits run along the walls and ceilings, humming softly with residual power.",
 						"filters": { "sectorType": "maintenance", "buildingDensity": [5, -1], "wear": [0, 4], "activity": [0, 6] }
-					},
-					{
-						"text": "A collapsed transit avenue with rusted kiosks and floating trash.",
-						"filters": { "sectorType": "maintenance", "buildingDensity": [3, 8], "wear": [5, -1] }
 					},
 					{
 						"text": "{a} {a-street} shopping {n-street} with the remains of various shops and cafés",
@@ -675,16 +644,12 @@
 						"filters": { "sectorType": "commercial", "level": [15, -1] }
 					},
 					{
-						"text": "a commercial street with many small shops which seem to have been recently plundered",
+						"text": "A commercial street with many small shops which seem to have been recently plundered",
 						"filters": { "sectorType": "commercial", "activity": [5, -1] }
 					},
 					{
 						"text": "A square built around a massive statue with {a-building} shop fronts surrounding it on every side",
 						"filters": { "sectorType": "commercial", "buildingDensity": [0, 6], "isSurfaceLevel": false, "sectorStyle": "[sector_style_symmetric]" }
-					},
-					{
-						"text": "A plaza under an elevated building with what must have once been a waterfall in the middle",
-						"filters": { "sectorType": "commercial", "buildingDensity": [0, 4], "wealth": [5, -1] }
 					},
 					{
 						"text": "{a} wide fenced terrace attached to a massive tower overlooking the {a-street} streets below",
@@ -693,10 +658,6 @@
 					{
 						"text": "A round courtyard enclosed by a {a-building} office building",
 						"filters": { "sectorType": "commercial", "buildingDensity": [3, 8], "wealth": [3, 8], "numPOI": 0 }
-					},
-					{
-						"text": "{a} {a-street} commercial tunnel, its aereographite walls dotted with dead signs",
-						"filters": { "sectorType": "commercial", "buildingDensity": [5, -1], "level": [15, -1] }
 					},
 					{
 						"text": "{a} {a-street} {n-street} lined with looted shops.",
@@ -708,7 +669,7 @@
 					},
 					{
 						"text": "A curving terrace hugging the wall of a massive {a-sectortype} building, lined with broken vending machines.",
-						"filters": { "sectorType": "commercial", "numPOI": 0, "sectorStyle": "[sector_style_ornate]" }
+						"filters": { "sectorType": "commercial", "numPOI": 0, "campable": false, "sectorStyle": "[sector_style_ornate]" }
 					},
 					{
 						"text": "{a} {n-street} dominated by huge building that looks like it was once a public facility of some kind",
@@ -720,7 +681,7 @@
 					},
 					{
 						"text": "A public square where recently a temporary camp seems to have been set up and then abandoned",
-						"filters": { "sectorType": "public", "level": [15, -1], "buildingDensity": [0, 6], "campable": false }
+						"filters": { "sectorType": "public", "level": [15, -1], "buildingDensity": [0, 6], "campable": false, "isSurfaceLevel": false }
 					},
 					{
 						"text": "A standard government office quarter with clear signs and big doors and reception areas, somehow welcoming and dehumanizing at the same time.",
@@ -729,10 +690,6 @@
 					{
 						"text": "{a} {a-street} {n-street} dominated a row of solemn statues",
 						"filters": { "sectorType": "public", "buildingDensity": [0, 6] }
-					},
-					{
-						"text": "An open space that looks like it might have once been dedicated to a sport of some kind",
-						"filters": { "sectorType": "public", "buildingDensity": [0, 4] }
 					},
 					{
 						"text": "{a} {a-street} empty space in the City, still waiting for development.",
@@ -747,22 +704,6 @@
 			"sector style": {
 				"filters": { "hasVision": true },
 				"descriptions": [
-					{
-						"text": "A distinctly warm and down-to-earth {a-sectortype} {n-street}",
-						"filters": { "sectorStyle": "cittadinian", "sectorType": [ "residential", "commercial" ] }
-					},
-					{
-						"text": "{a} {a-street} cluster of red-brown {a-sectortype} buildings with small spaces in between.",
-						"filters": { "sectorStyle": "cittadinian" }
-					},
-					{
-						"text": "A cluster of {a-sectortype} buildings in pastel colours, worn with time.",
-						"filters": { "sectorStyle": "cittadinian" }
-					},
-					{
-						"text": "A round square with a pretty mosaic pavement and several benches.",
-						"filters": { "sectorStyle": "cittadinian", "buildingDensity": [0, 6] }
-					},
 					{
 						"text": "A utilitarian and modern {a-sectortype} {n-street}.",
 						"filters": { "sectorStyle": "humanist" }
@@ -805,7 +746,7 @@
 					},
 					{
 						"text": "Narrow passages branching endlessly between apartment towers, each one nearly identical to the last.",
-						"filters": { "sectorStyle": "humanist", "sectorType": "residential", "buildingDensity": [8, -1] }
+						"filters": { "sectorStyle": "humanist", "sectorType": "residential", "buildingDensity": [7, -1] }
 					},
 					{
 						"text": "A market concourse overlooked by thousands of vacant balconies, aged but not worn, probably never inhabited.",
@@ -856,30 +797,6 @@
 						"filters": { "sectorStyle": "karboque", "sectorType": "residential", "sunlit": 0 }
 					},
 					{
-						"text": "A beautiful {n-street} lined with buildings in a historical style, all spires and windows and low arches and obsolete roof shapes designed to withstand weather that never existed here.",
-						"filters": { "sectorStyle": "kievan", "sectorType": "*", "sunlit": 0 }
-					},
-					{
-						"text": "An eclectic {n-street} built in a historical style.",
-						"filters": { "sectorStyle": "kievan", "wear": [3, 8] }
-					},
-					{
-						"text": "{a} {a-street} {n-street} rich in deep blues, greens and purples.",
-						"filters": { "sectorStyle": "kievan", "sectorType": "*" }
-					},
-					{
-						"text": "{a} {a-street} {n-street} decorated with vestigial features like windows and rainwater collection.",
-						"filters": { "sectorStyle": "kievan", "sectorType": "*" }
-					},
-					{
-						"text": "An office complex with moss green walls and bronze doors and endless corridors.",
-						"filters": { "sectorStyle": "kievan", "sectorType": "commercial", "wealth": [3, 8] }
-					},
-					{
-						"text": "A worn out apartment complex, its walls painted mossy green and floors tiled with imitation-stone.",
-						"filters": { "sectorStyle": "kievan", "sectorType": "residential" }
-					},
-					{
 						"text": "A dizzying modern {a-sectortype} {n-street} composed of non-gemoetrical shapes and continuous structures.",
 						"filters": { "sectorStyle": "modern", "buildingDensity": [3, 8] }
 					},
@@ -905,7 +822,7 @@
 					},
 					{
 						"text": "A bridge connecting two clusters of {a-building} buildings, with arches and decorative pillars that once supported a glass roof.",
-						"filters": { "sectorStyle": "modern" }
+						"filters": { "sectorStyle": "modern", "campable": false }
 					},
 					{
 						"text": "A hypermodern financial quarter rising in smooth black towers without windows.",
@@ -937,10 +854,10 @@
 					},
 					{
 						"text": "A bridge-street above an artificial canal, now clogged with debris.",
-						"filters": { "sectorStyle": "neo-western", "sectorType": "commercial", "wear": [5, -1] }
+						"filters": { "sectorStyle": "neo-western", "sectorType": "commercial", "wear": [3, -1] }
 					},
 					{
-						"text": "A clean white-and-wooden office building in multiple floors, with delicate looking but still unscarred bridges and staircases criss-crossing from one side and one floor to another, and meeting rooms enclosed in glass walls.",
+						"text": "A clean white-and-wooden office building in multiple floors, with delicate staircases criss-crossing from one side and one floor to another, and meeting rooms enclosed in glass walls.",
 						"filters": { "sectorStyle": "neo-western", "sectorType": "commercial", "wear": [0, 6] }
 					},
 					{
@@ -950,10 +867,6 @@
 					{
 						"text": "An office space with high artificial windows and room after room with rows of desks.",
 						"filters": { "sectorStyle": "neo-western", "sectorType": "commercial", "wealth": [3, 8] }
-					},
-					{
-						"text": "{a} {a-street} slum {a-street}.",
-						"filters": { "sectorStyle": "[sector_style_slum]" }
 					},
 					{
 						"text": "A deserted {a-sectortype} {a-street} between buildings, under a jungle of wires.",
@@ -968,12 +881,58 @@
 						"filters": { "sectorStyle": "[sector_style_slum]" }
 					},
 					{
-						"text": "{a} clearly ethnic {a-sectortype} {n-street}.",
-						"filters": { "sectorStyle": "slum-hun", "campable": false }
+						"text": "{a} {n-street} built in a historical style which evokes a nostalgy for a past beyond living memory.",
+						"filters": { "sectorStyle": "[sector_style_historical]" }
+					}
+				]
+			},
+			"sector style rare": {
+				"filters": { "hasVision": true },
+				"score": 10,
+				"descriptions": [
+					{
+						"text": "A distinctly warm and down-to-earth {a-sectortype} {n-street}",
+						"filters": { "sectorStyle": "cittadinian", "sectorType": [ "residential", "commercial" ] }
 					},
 					{
-						"text": "{a} {a-sectortype} sector criss-crossed by a maze of layered walkways.",
-						"filters": { "sectorStyle": "western" }
+						"text": "{a} {a-street} cluster of red-brown {a-sectortype} buildings with small spaces in between.",
+						"filters": { "sectorStyle": "cittadinian" }
+					},
+					{
+						"text": "A cluster of {a-sectortype} buildings in pastel colours, worn with time.",
+						"filters": { "sectorStyle": "cittadinian" }
+					},
+					{
+						"text": "A round square with a pretty mosaic pavement and several benches.",
+						"filters": { "sectorStyle": "cittadinian", "buildingDensity": [0, 6] }
+					},
+					{
+						"text": "A beautiful {n-street} lined with buildings in a historical style, all spires and windows and low arches and obsolete roof shapes designed to withstand weather that never existed here.",
+						"filters": { "sectorStyle": "kievan", "sectorType": "*", "sunlit": 0 }
+					},
+					{
+						"text": "An eclectic {n-street} built in a historical style.",
+						"filters": { "sectorStyle": "kievan", "wear": [3, 8] }
+					},
+					{
+						"text": "{a} {a-street} {n-street} rich in deep blues, greens and purples.",
+						"filters": { "sectorStyle": "kievan", "sectorType": "*" }
+					},
+					{
+						"text": "{a} {a-street} {n-street} decorated with vestigial features like windows and rainwater collection.",
+						"filters": { "sectorStyle": "kievan", "sectorType": "*" }
+					},
+					{
+						"text": "An office complex with moss green walls and bronze doors and endless corridors.",
+						"filters": { "sectorStyle": "kievan", "sectorType": "commercial", "wealth": [3, 8] }
+					},
+					{
+						"text": "A worn out apartment complex, its walls painted mossy green and floors tiled with imitation-stone.",
+						"filters": { "sectorStyle": "kievan", "sectorType": "residential" }
+					},
+					{
+						"text": "{a} clearly ethnic {a-sectortype} {n-street}.",
+						"filters": { "sectorStyle": "slum-hun", "campable": false }
 					},
 					{
 						"text": "{a} {a-sectortype} {n-street} with many distinct, separate buildings.",
@@ -1001,16 +960,13 @@
 					},
 					{
 						"text": "A historical residential sector with a spiderweb of paths and passages connecting {a-street} yards and balconies",
-						"filters": { "sectorStyle": "western", "sectorType": "residential", "level": [ -1, 18 ] }
-					},
-					{
-						"text": "{a} {n-street} built in a historical style which evokes a nostalgy for a past beyond living memory.",
-						"filters": { "sectorStyle": "[sector_style_historical]" }
+						"filters": { "sectorStyle": "western", "sectorType": "residential" }
 					}
 				]
 			},
 			"special levels": {
 				"filters": { "hasVision": true },
+				"score": 10,
 				"descriptions": [
 					{
 						"text": "{a} {a-street} passage between two defunct, walled-off nuclear reactors",
@@ -1021,32 +977,12 @@
 						"filters": { "level": 14, "buildingDensity": [3, 8] }
 					},
 					{
-						"text": "{a} {a-sectortype} corridor that must have once looked sterile, but is now littered with debris",
-						"filters": { "level": 14, "buildingDensity": [5, -1] }
-					},
-					{
 						"text": "A wide open space beneath the City with mud, grass and other plants pushing their way through cracks in the concrete floor",
 						"filters": { "isGroundLevel": true, "buildingDensity": [0, 4] }
 					},
 					{
 						"text": "An open space, perhaps once a park, now overrun strange plants and mushrooms",
 						"filters": { "isGroundLevel": true, "buildingDensity": [0, 4] }
-					},
-					{
-						"text": "An effulgent {a-street} lined with modern residential towers, now all deserted",
-						"filters": { "isGroundLevel": true, "buildingDensity": [0, 4], "sectorType": "residential" }
-					},
-					{
-						"text": "{a} {a-street} street between crumbling ancient {a-sectortype} buildings",
-						"filters": { "isGroundLevel": true, "buildingDensity": [4, 8] }
-					},
-					{
-						"text": "An open street with no ceiling, the next floor of the City hovering high above and ruins on either side",
-						"filters": { "isGroundLevel": true, "buildingDensity": [4, 8] }
-					},
-					{
-						"text": "A big square dominated by an ornate public building in the middle",
-						"filters": { "isSurfaceLevel": true, "buildingDensity": [0, 6], "sectorType": "public" }
 					},
 					{
 						"text": "{a} {a-street} street dotted by billboards and dead screens and surrounded by tall buildings",
@@ -1083,18 +1019,14 @@
 					},
 					{
 						"text": "{a} {a-street} {a-sectortype} {n-street} where the invisible ventilation systems are wheezing in overdrive.",
-						"filters": { "sectorType": "*", "cold": [1, -1], "wear": [0, 6] }
+						"filters": { "sectorType": "*", "cold": [1, -1], "wear": [0, 6], "numPOI": 0 }
 					},
 					{
 						"text": "{a} {a-sectortype} {n-street} made all the more unwelcoming by the cold.",
-						"filters": { "sectorType": "*", "cold": [1, -1] }
+						"filters": { "sectorType": "*", "cold": [1, -1], "numPOI": 0 }
 					},
 					{
 						"text": "A debris-strewn {a-sectortype} {n-street}, its original features obscure.",
-						"filters": { "sectorType": "*", "debris": [1, -1] }
-					},
-					{
-						"text": "{a} {a-sectortype} {n-street} made difficult to navigate by debris.",
 						"filters": { "sectorType": "*", "debris": [1, -1] }
 					},
 					{
@@ -1110,16 +1042,12 @@
 						"filters": { "sectorType": "*", "flooded": [1, -1] }
 					},
 					{
-						"text": "{a} {a-sectortype} {n-street} just above the waterline.",
-						"filters": { "sectorType": "*", "flooded": [1, -1] }
-					},
-					{
 						"text": "An empty {a-sectortype} {n-sector} with the quiet sound of dripping echoing through it.",
 						"filters": { "sectorType": "*", "flooded": [1, -1] }
 					},
 					{
-						"text": "A flooded {n-material} tunnel under a collapsed building, with water up to the ankles covering random pieces of debris and a quiet sound of dripping echoing without direction.",
-						"filters": { "sectorType": "*", "flooded": [1, -1] }
+						"text": "A flooded {n-material} tunnel under a collapsed building, with water up to the ankles and a quiet sound of dripping echoing without direction.",
+						"filters": { "sectorType": "*", "flooded": [1, -1], "wear": [ 5, -1 ] }
 					},
 					{
 						"text": "{a} {n-street} along a vertical public garden, still partially watered by pipes that leak steadily into the streets below.",
@@ -1142,10 +1070,6 @@
 						"filters": { "sectorType": "*", "poison": [1, -1] }
 					},
 					{
-						"text": "A regular {n-sector}, abandoned long before the Fall due to the radiation.",
-						"filters": { "sectorType": "*", "radiation": [1, -1], "wear": [5, -1] }
-					},
-					{
 						"text": "{a} {n-street} with an an eerie quiet that makes you wonder if the air is safe.",
 						"filters": { "sectorType": "*", "radiation": [1, -1] }
 					},
@@ -1154,15 +1078,7 @@
 						"filters": { "sectorType": "*", "radiation": [1, -1], "wear": [5, -1], "sunlit": 0 }
 					},
 					{
-						"text": "{a} {a-street} {n-street} with long-abandoned buildings covered in strange moss",
-						"filters": { "sectorType": "*", "radiation": [1, -1], "isSurfaceLevel": false, "wear": [5, -1], "sunlit": 0, "campable": false }
-					},
-					{
 						"text": "{a} {a-street} {a-sectortype} {n-street} with signs of clear gang presence.",
-						"filters": { "sectorType": "*", "territory": [1, -1] }
-					},
-					{
-						"text": "A former {a-sectortype} {n-street} now under gang control.",
 						"filters": { "sectorType": "*", "territory": [1, -1] }
 					},
 					{
@@ -1189,6 +1105,10 @@
 					{
 						"text": "A {a-street} {n-street} by the train tracks.",
 						"filters": { "localeTypes": "train", "wealth": "*" }
+					},
+					{
+						"text": "A lush park overrun by plant-life. In the middle there is a grove of tall trees. Though strange and wild, it also seems somehow peaceful",
+						"filters": { "hasGrove": true, "localeTypes": "grove" }
 					}
 				]
 			},
@@ -1255,6 +1175,7 @@
 			},
 			"campable": {
 				"filters": { "campable": true },
+				"score": 10,
 				"descriptions": [
 					{
 						"text": "A sheltered and {a-street} {n-street} with a welcoming air.",
@@ -1281,15 +1202,11 @@
 						"filters": { "sectorType": "maintenance", "sectorStyle": "*" }
 					},
 					{
-						"text": "A cluster of inactive repair bays with ample sheltered space.",
-						"filters": { "sectorType": "maintenance", "sectorStyle": "*" }
-					},
-					{
 						"text": "{a} {a-street} {n-street} with easy access to the surrounding area.",
 						"filters": { "sectorType": "commercial", "sectorStyle": "*" }
 					},
 					{
-						"text": "{a} {a-street} civic plaza populated only by benches and civic planters.",
+						"text": "{a} {a-street} civic plaza populated only by benches and empty planters.",
 						"filters": { "sectorType": "public", "sectorStyle": "*" }
 					}
 				]
@@ -1326,16 +1243,12 @@
 						"filters": { "levelFeatures": "giga" }
 					},
 					{
-						"text": "{a} {a-street} {n-street} by a gigantic pillar supporting the level above.",
+						"text": "{a} {a-street} {n-street} at the base of a gigantic pillar supporting the level above.",
 						"filters": { "levelFeatures": "pillar" }
 					},
 					{
 						"text": "A dark maze of little alleys and stairs between improvised buildings that seem to have organically grown around a level support pillar.",
 						"filters": { "levelFeatures": "pillar", "buildingDensity": [3, 8], "wealth": [0, 6] }
-					},
-					{
-						"text": "{a} {n-street} at the base of an enormous pillar supporting the level above",
-						"filters": { "levelFeatures": "pillar", "isSurfaceLevel": false }
 					},
 					{
 						"text": "{a} {a-street} {n-street} by some recently built train tracks.",
@@ -1427,16 +1340,12 @@
 						"filters": { "sectorType": "*", "affiliation": "agricorp" }
 					},
 					{
-						"text": "A former farm, with futuristic pedestals and automatic watering systems for fruit trees now grey and lifeless.",
-						"filters": { "affiliation": "agricorp", "sectorType": "industrial", "wear": [0, 6] }
-					},
-					{
 						"text": "{a} {a-street} {n-street} with a large orange G logo on several of the buildings.",
 						"filters": { "sectorType": "*", "affiliation": "minecorp" }
 					},
 					{
 						"text": "{a} {a-street} {n-street} with the water conduits exposed.",
-						"filters": { "hasCollectableWateration": true, "wear": [5, -1], "campable": false }
+						"filters": { "hasCollectableWater": true, "wear": [5, -1], "campable": false }
 					},
 					{
 						"text": "{a} {a-sectortype} {n-street} which seems promising for scavenging.",

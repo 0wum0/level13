@@ -28,8 +28,9 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		},
 
 		loadDescriptionData: function (type, data) {
-			let macros = data.macros;
-			let defaultFilters = data.defaultFilters;
+			let macros = data.macros || {};
+			let defaultFilters = data.defaultFilters || {};
+			let filterScores = data.filterScores || {};
 			let params = data.params;
 			let descriptions = data.descriptions;
 
@@ -69,6 +70,10 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 						this.params[type][paramID].push(param);
 					}
 				}
+			}
+
+			for (let feature in filterScores) {
+				DescriptionMapper.setParamScore("sector-description", feature, filterScores[feature]);
 			}
 		},
 
@@ -181,9 +186,6 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 		getSectorDescription: function (hasVision, features) {
 			features.hasVision = hasVision;
 			let template = DescriptionMapper.get("sector-description", features);
-			if (features.hasGrove) {
-				template = "{a} {a-street} park overrun by plant-life. In the middle there is a grove of tall trees. Though strange and wild, it also seems somehow peaceful";
-			}
 			let params = this.getSectorTextParams(features, hasVision);
 			let phrase = TextBuilder.build(template, params);
 			return Text.capitalize(phrase);
@@ -1392,19 +1394,6 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 			return { textFragments: fragments };
 		}
 	};
-		
-	function initSectorTexts() {
-		// settings
-		// - default value for filter props that shouldn't make the description more likely to be chosen
-		DescriptionMapper.setDefaultValue("sector-vision", "buildingDensity", DescriptionMapper.WILDCARD);
-		DescriptionMapper.setDefaultValue("sector-vision", "sectorType", DescriptionMapper.WILDCARD);
-		// - default value for required props that if sector has non-default value should only use templates matching that
-		// DescriptionMapper.setDefaultValue("sector-vision", "isSurfaceLevel", false);
-		// DescriptionMapper.setDefaultValue("sector-vision", "isGroundLevel", false);
-		// - score for important props that should be selected more often
-		DescriptionMapper.setParamScore("sector-vision", "localeTypes", 2);
-		DescriptionMapper.setParamScore("sector-vision", "levelFeatures", 10);
-	}
 	
 	function initWaymarkTexts() {
 		var wildcard = DescriptionMapper.WILDCARD;
@@ -1632,7 +1621,6 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 
     TextConstants.loadData(TextData);
 	
-	initSectorTexts();
 	initWaymarkTexts();
 	initBookTexts();
 	initNewspaperTexts();

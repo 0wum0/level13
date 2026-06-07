@@ -14,8 +14,8 @@ define(function () {
 		
 		WILDCARD: "*",
 
-		descriptions: {},
-		scores: {},
+		descriptions: {}, // type -> list
+		scores: {}, // type -> key -> int
 		
 		add: function (type, filters, text, score) {
 			if (!this.descriptions[type]) this.descriptions[type] = [];
@@ -71,7 +71,7 @@ define(function () {
 		},
 
 		setParamScore: function (type, filter, score) {
-			if (!this.scores[type]) this.scores[type] = [];
+			if (!this.scores[type]) this.scores[type] = {};
 			this.scores[type][filter] = score;
 		},
 		
@@ -89,23 +89,31 @@ define(function () {
 
 				let isPropsValueArray = propsValue && typeof propsValue == "object" && propsValue.length && propsValue.length > 0;
 				let isDescValueArray = value && typeof value == "object" && value.length && value.length > 0;
+				let isDescValueRange = isDescValueArray && value.length == 2 && typeof value[0] == "number" &&  typeof value[1] == "number";
 
 				// test for range (props has value, desc has range)
-				if (isDescValueArray && value.length == 2 && typeof value[0] == "number" &&  typeof value[1] == "number") {
+				if (isDescValueRange) {
 					let min = value[0];
 					let max = value[1];
 					if (max == -1) max = 99999;
 					if (propsValue >= min && propsValue < max) continue;
 				}
 
-				// test for array of possible values in props (props has array, desc has one value)
+				// test for array of possible values in props (props has array, desc has one value that should be in props)
 				if (isPropsValueArray && !isDescValueArray) {
 					if (propsValue.indexOf(value) >= 0) continue;
 				}
 
-				// test for array of possible values in desc (props has one value, desc has array)
-				if (!isPropsValueArray && isDescValueArray) {
+				// test for array of possible values in desc (props has one value, desc has array one of which should be in props)
+				if (!isPropsValueArray && isDescValueArray && !isDescValueRange) {
 					if (value.indexOf(propsValue) >= 0) continue;
+				}
+
+				// test for array of possible values in both (both have array, at least one should match)
+				if (isPropsValueArray && isDescValueArray) {
+					for (let i in propsValue) {
+						if (value.indexOf(propsValue[i]) >= 0) continue;
+					}
 				}
 
 				return false;

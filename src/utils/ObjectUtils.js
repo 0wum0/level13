@@ -8,7 +8,7 @@ define([], function () {
 			for (let key in o2) {
 				let value = o2[key];
 
-				if (typeof value === "object") {
+				if (typeof value === "object" && !Array.isArray(value)) {
 					if (o1[key]) {
 						value = Object.assign({}, value);
 						ObjectUtils.assignValues(value, o1[key]);

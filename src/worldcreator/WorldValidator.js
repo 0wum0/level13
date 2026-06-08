@@ -133,10 +133,9 @@ define([
 				"stages",
 			];
 			let notSavedKeysLevel = [ 
-				// derived data (no need to save in template per sector but available in LevelVO for convenience)
+				// derived data (no need to save in template but available in LevelVO for convenience)
 				"localeSectors", 
 				"paths", 
-				"raidDangerFactor", 
 				"requiredPositions",
 				"sectorNeighourCountCache",
 				"sectorsByPos", 

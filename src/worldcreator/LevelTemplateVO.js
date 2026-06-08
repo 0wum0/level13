@@ -13,6 +13,7 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 
 			this.additionalCampPositions = levelVO.additionalCampPositions;
 			this.campPosition = levelVO.campPosition;
+			this.diseaseFrequecyFactor = levelVO.diseaseFrequecyFactor;
 			this.districts = levelVO.districts.map(d => d.clone());
 			this.features = levelVO.features;
 			this.gangs = levelVO.gangs;
@@ -35,12 +36,14 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			this.passageUpPosition = levelVO.passageUpPosition;
 			this.passageUpType = levelVO.passageUpType;
 			this.predefinedExplorers = levelVO.predefinedExplorers;
+			this.raidDangerFactor  = levelVO.raidDangerFactor;
 			this.seed = levelVO.seed;
-			this.workerMetalFactor = levelVO.workerMetalFactor;
-			this.workerFoodFactor = levelVO.workerFoodFactor;
-			this.workerWaterFactor = levelVO.workerWaterFactor;
-			this.workerArtisanFactor = levelVO.workerArtisanFactor;
+			this.traderFrequencyFactor  = levelVO.traderFrequencyFactor;
 			this.workerAcademicFactor = levelVO.workerAcademicFactor;
+			this.workerArtisanFactor = levelVO.workerArtisanFactor;
+			this.workerFoodFactor = levelVO.workerFoodFactor;
+			this.workerMetalFactor = levelVO.workerMetalFactor;
+			this.workerWaterFactor = levelVO.workerWaterFactor;
 			this.workerHopeFactor = levelVO.workerHopeFactor;
 			this.workshopPositions = levelVO.workshopPositions;
 			this.workshopResource = levelVO.workshopResource;
@@ -68,6 +71,7 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			copy.habitability = this.habitability;
 			copy.isCampable = this.isCampable;
 			copy.isHard = this.isHard;
+			copy.diseaseFrequecyFactor  = this.diseaseFrequecyFactor  || 1;
 			copy.levelStyle = this.levelStyle;
 			copy.luxuryResources = this.luxuryResources;
 			copy.maxX = this.maxX;
@@ -83,7 +87,9 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			if (this.passageUpPosition) copy.passageUpPosition = this.passageUpPosition.getCustomSaveObjectWithoutCamp();
 			copy.passageUpType = this.passageUpType;
 			if (this.predefinedExplorers.length > 0) copy.predefinedExplorers = this.predefinedExplorers;
+			copy.raidDangerFactor = this.raidDangerFactor || 1;
 			copy.seed = this.seed;
+			copy.traderFrequencyFactor  = this.traderFrequencyFactor  || 1;
 			if (this.workshopResource) copy.workshopResource = this.workshopResource;
 			if (this.workshopPositions) copy.workshopPositions = this.workshopPositions;
 			copy.workerMetalFactor = this.workerMetalFactor;
@@ -119,6 +125,7 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 				vo.customLoadFromSave(districtData);
 				return vo;}
 			) : [];
+			this.diseaseFrequecyFactor = saveObject.diseaseFrequecyFactor || 1;
 			this.gangs = saveObject.gangs;
 			this.habitability = saveObject.habitability;
 			this.isCampable = saveObject.isCampable;
@@ -149,7 +156,9 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			this.passageUpType = saveObject.passageUpType;
 
 			this.predefinedExplorers = saveObject.predefinedExplorers || [];
+			this.raidDangerFactor = saveObject.raidDangerFactor || 1;
 			this.seed = saveObject.seed;
+			this.traderFrequencyFactor = saveObject.traderFrequencyFactor || 1;
 
 			this.workerMetalFactor = saveObject.workerMetalFactor || 1;
 			this.workerFoodFactor = saveObject.workerFoodFactor || 1;

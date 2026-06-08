@@ -14,10 +14,11 @@ define(['ash',
 	'game/constants/SectorConstants',
 	'game/constants/PositionConstants',
 	'game/constants/MovementConstants',
+	'game/constants/UpgradeConstants',
 	'game/constants/TradeConstants',
 	'game/constants/WorldConstants',
 ],
-function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextBuilder, GameConstants, CampConstants, EnemyConstants, ItemConstants, SectorConstants, PositionConstants, MovementConstants, TradeConstants, WorldConstants) {
+function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextBuilder, GameConstants, CampConstants, EnemyConstants, ItemConstants, SectorConstants, PositionConstants, MovementConstants, UpgradeConstants, TradeConstants, WorldConstants) {
 	
 	let TextConstants = {
 
@@ -1172,6 +1173,15 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 			}
 			
 			return Text.t(key);
+		},
+
+		getUpgradeDisplayName: function (id) {
+			let key = UpgradeConstants.getDisplayNameTextKey(id);
+			if (Text.hasKey(key)) {
+				return Text.t(key);
+			}
+
+			return UpgradeConstants.getUpgrade(id).name;
 		},
 		
 		getEnemyText: function (enemyList, sectorControlComponent) {

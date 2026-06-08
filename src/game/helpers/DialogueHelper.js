@@ -6,9 +6,10 @@ define(['ash',
     'game/constants/ItemConstants',
     'game/constants/PositionConstants',
     'game/constants/StoryConstants',
+    'game/constants/TextConstants',
     'game/components/common/PositionComponent',
     'game/nodes/player/DialogueNode' 
-], function (Ash, Text, GameGlobals, DialogueConstants, ExplorerConstants, ItemConstants, PositionConstants, StoryConstants, PositionComponent, DialogueNode) {
+], function (Ash, Text, GameGlobals, DialogueConstants, ExplorerConstants, ItemConstants, PositionConstants, StoryConstants, TextConstants, PositionComponent, DialogueNode) {
         
         let DialogueHelper = Ash.Class.extend({
 
@@ -203,14 +204,14 @@ define(['ash',
                     let type = dialogueVO.conditions.missedUpgrade;
                     let upgradeIDs = GameGlobals.tribeHelper.getMissedUpgrades(type);
                     let upgradeID = upgradeIDs.length > 0 ? upgradeIDs[0] : "?";
-                    result.upgradeName = Text.t("game.upgrades." + upgradeID + "_name");
+                    result.upgradeName = TextConstants.getUpgradeDisplayName(upgradeID);
                 }
 
                 if (dialogueVO.conditions.upgrades) {
                     let upgradeIDs = Object.keys(dialogueVO.conditions.upgrades);
                     if (upgradeIDs.length > 0) {
                         let upgradeID = upgradeIDs[0];
-                        result.upgradeName = Text.t("game.upgrades." + upgradeID + "_name");
+                        result.upgradeName = TextConstants.getUpgradeDisplayName(upgradeID);
                     }
                 }
 

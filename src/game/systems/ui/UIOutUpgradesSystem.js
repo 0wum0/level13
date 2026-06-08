@@ -184,7 +184,7 @@ define([
 				var isUnlocked = this.tribeNodes.head.upgrades.hasUpgrade(definition.id);
 				var isAvailable = GameGlobals.playerActionsHelper.checkRequirements(definition.id, false).value > 0;
 				var statusS = isUnlocked ? "researched" : isAvailable ? "available" : "locked";
-				let name = Text.t(UpgradeConstants.getDisplayNameTextKey(definition.id));
+				let name = TextConstants.getUpgradeDisplayName(definition.id);
 				let description = Text.t(UpgradeConstants.getDescriptionTextKey(definition.id));
 				$("#upgrade-details-status").text(statusS);
 				$("#upgrade-details-name").text(name);
@@ -286,7 +286,7 @@ define([
 					break;
 			}
 
-			let name = Text.t(UpgradeConstants.getDisplayNameTextKey(upgradeDefinition.id));
+			let name = TextConstants.getUpgradeDisplayName(upgradeDefinition.id);
 
 			if (GameConstants.isDebugVersion) name += " <span class='debug-info'>" + upgradeDefinition.campOrdinal  + "</span>";
 
@@ -344,7 +344,7 @@ define([
 					for (let i = 0; i < researchIDs.length; i++) {
 						let researchStatus = GameGlobals.tribeHelper.getUpgradeStatus(researchIDs[i]);
 						let researchID = UpgradeConstants.upgradeDefinitions[researchIDs[i]].id;
-						let researchName = Text.t(UpgradeConstants.getDisplayNameTextKey(researchID))
+						let researchName = TextConstants.getUpgradeDisplayName(researchID)
 
 						switch (researchStatus) {
 							case UpgradeConstants.upgradeStatus.HIDDEN:

@@ -3030,7 +3030,7 @@ define(['ash',
 			if (!automatic && !GameGlobals.playerActionsHelper.checkAvailability(upgradeID, true)) return;
 			
 			GameGlobals.playerActionsHelper.deductCosts(upgradeID);
-			let name = Text.t(UpgradeConstants.getDisplayNameTextKey(upgradeID));
+			let name = TextConstants.getUpgradeDisplayName(upgradeID);
 			let textFragment = { textKey: "ui.log.upgrade_researched_message", textParams: { name: name } };
 			GameGlobals.playerHelper.addLogMessage(LogConstants.getUniqueID(), textFragment, { visibility: LogConstants.MSG_VISIBILITY_CAMP });
 			this.tribeUpgradesNodes.head.upgrades.addUpgrade(upgradeID);
@@ -3040,14 +3040,14 @@ define(['ash',
 			let unlockedResearchIDs = GameGlobals.upgradeEffectsHelper.getUnlockedResearchIDs(upgradeID);
 			
 			let title = "Research complete";
-			let upgradeName = Text.t(UpgradeConstants.getDisplayNameTextKey(upgradeID));
+			let upgradeName = TextConstants.getUpgradeDisplayName(upgradeID);
 			let message = "<p>You've researched <span class='hl-functionality'>" + upgradeName + "</span>.</p>";
 			message += "<p class='p-meta'>" + GameGlobals.upgradeEffectsHelper.getEffectDescription(upgradeID, true) + "</p>";
 			
 			if (unlockedResearchIDs.length > 0) {
 				let unlockedResearchNames = unlockedResearchIDs
 					.filter(upgradeID => GameGlobals.playerActionsHelper.isVisible(upgradeID))
-					.map(upgradeID => Text.t(UpgradeConstants.getDisplayNameTextKey(upgradeID)));
+					.map(upgradeID => TextConstants.getUpgradeDisplayName(upgradeID));
 				if (unlockedResearchNames.length > 0) {
 					message += "<p class='p-meta'>new research:<br/>" + unlockedResearchNames.join("<br/>") + "</p>";
 				}

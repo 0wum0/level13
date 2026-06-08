@@ -748,7 +748,7 @@ define([
 					for (let upgradeID in upgradeRequirements) {
 						let requiredValue = upgradeRequirements[upgradeID];
 						let currentValue = this.tribeUpgradesNodes.head.upgrades.hasUpgrade(upgradeID);
-						let name = Text.t(UpgradeConstants.getDisplayNameTextKey(upgradeID));
+						let name = TextConstants.getUpgradeDisplayName(upgradeID);
 						let trueReason = this.getDisabledReasonVO(null, null, PlayerActionConstants.DISABLED_REASON_UPGRADE, "Upgrade already researched (" + name + ")");
 						let falseReason = this.getDisabledReasonVO("ui.actions.disabled_reason_upgrade_missing", name, PlayerActionConstants.DISABLED_REASON_UPGRADE);
 						let result = this.checkRequirementsBoolean(requiredValue, currentValue, trueReason, falseReason);

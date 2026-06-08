@@ -56,6 +56,7 @@ function (Ash, UpgradeData, PlayerActionConstants, WorldConstants, UpgradeVO) {
 			};
 			
 			UpgradeConstants.upgradeDefinitions[def.id] = new UpgradeVO(def.id);
+			UpgradeConstants.upgradeDefinitions[def.id].name = def.name;
 			UpgradeConstants.upgradeDefinitions[def.id].campOrdinal = def.campOrdinal;
 			
 			if (def.blueprintPieces) {
@@ -90,6 +91,10 @@ function (Ash, UpgradeData, PlayerActionConstants, WorldConstants, UpgradeVO) {
 					addUpgradeEffectToList(UpgradeConstants.improvingUpgradesByEvent, occurrence, def.id);
 				}
 			}
+		},
+
+		getUpgrade: function (id) {
+			return this.upgradeDefinitions[id];
 		},
 
 		hasUpgrade: function (id) {

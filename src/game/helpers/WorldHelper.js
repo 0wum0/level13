@@ -1,10 +1,11 @@
 // wrapper around world generation for a running game
-// parses necessary information from a save, loads/generates the world, keeps track of world state and generates more levels as needed
+// parses necessary information from a save, loads/generates the world, keeps track of world state and generates more levels as needed, and reports changes to world from save
 define([
 	'ash',
 	'utils/ObjectUtils',
 	'game/GameGlobals',
 	'game/constants/GameConstants',
+	'game/constants/WorldConstants',
 	'worldcreator/WorldCreator',
 	'worldcreator/WorldCreatorHelper',
 	'worldcreator/WorldCreatorRandom',
@@ -15,6 +16,7 @@ define([
 	ObjectUtils,
 	GameGlobals,
 	GameConstants,
+	WorldConstants,
 	WorldCreator,
 	WorldCreatorHelper,
 	WorldCreatorRandom,
@@ -25,7 +27,12 @@ define([
 	let WorldHelper = Ash.Class.extend({
 
 		worldVO: null,
+		worldChangesVO: null, // changes from last call to prepareWorld (compared to save)
 		isBusy: false,
+
+		CHANGE_TYPE_LOCALE_ADDED: "locale_added",
+		CHANGE_TYPE_LOCALE_REMOVED: "locale_removed",
+		CHANGE_TYPE_LEVEL_PROPERTY_CHANGED: "level_property_changed",
 
 		constructor: function () {},
 
@@ -36,14 +43,20 @@ define([
 				let saveData = this.parseSave(save);
 				let worldSeed = GameGlobals.saveHelper.getWorldSeedFromSave(save) || WorldCreatorRandom.getNewSeed();
 				let levels = saveData.levels || [ 13 ];
+				let worldTemplateVO = saveData.worldTemplateVO;
 				
-				this.generateWorld(worldSeed, saveData.worldTemplateVO, saveData.hasSave)
+				this.generateWorld(worldSeed, worldTemplateVO, saveData.hasSave)
 				.then(worldVO => {
 					this.worldVO = worldVO;
 					GameGlobals.worldState.worldSeed = worldVO.seed;
 				})
-				.then(() => this.generateLevels(levels, saveData.worldTemplateVO))
-				.then(() => this.saveWorld(saveData.worldTemplateVO))
+				.then(() => this.generateLevels(levels, worldTemplateVO))
+				.then(() => this.saveWorld(worldTemplateVO))
+				.then(() => this.detectWorldChanges(this.worldVO, worldTemplateVO, levels))
+				.then((worldChangesVO) => {
+					this.worldChangesVO = worldChangesVO;
+					this.logChanges(worldChangesVO);
+				})
 				.then(() => {
 					log.i("world created (seed: " + this.worldVO.seed + ") (" + GameConstants.getTimeSinceStart() + ")", "start");
 					resolve(this.worldVO);
@@ -170,8 +183,8 @@ define([
 			}.bind(this));
 		},
 
-		generateLevel: function (level, cb) {
-			return this.generateLevels([ level ], cb);
+		generateLevel: function (level) {
+			return this.generateLevels([ level ]);
 		},
 
 		generateLevels: function (levels, worldTemplateVO) {
@@ -182,23 +195,20 @@ define([
 					this.logWorldNotGenerated("generateLevels");
 					reject();
 				};
+
 				if (this.isBusy) {
-					log.e("already busy")
+					log.e("WorldHelper already busy", "world")
 					reject();
 				}
 
 				this.isBusy = true;
 
 				WorldCreator.generateLevels(this.worldVO.seed, this.worldVO, worldTemplateVO, levels, GameGlobals.itemsHelper, progessionConfig)
-				.then(worldVO => {
-					this.validateLevels(levels, worldTemplateVO);
-					resolve(worldVO);
-				})
+				.then(() => this.validateLevels(levels, worldTemplateVO))
 				.then(() => this.saveWorld(worldTemplateVO))
-				.then(() => this.logChanges(worldTemplateVO, levels))
-				.then(worldVO => {
+				.then(() => {
 					this.isBusy = false;
-					resolve(worldVO);
+					resolve(this.worldVO);
 				})
 				.catch(error => {
 					this.isBusy = false;
@@ -225,38 +235,68 @@ define([
 			GameGlobals.worldState.worldTemplateVO = worldTemplateVO;
 		},
 
-		logChanges: function (worldTemplateVO, levels) {
-			// detect and log changes in the world if there was an existing template, to be later shown to the player
+		detectWorldChanges: function (worldVO, worldTemplateVO, levels) {
+			// detect changes made to an existing world (worldTemplateVO) by world gen, likely due to a new version, to be highlighted to the user
 
-			// TODO format better and return as result to be shown to the player somehow
+			let result = { changes: [] };
 
-			if (!worldTemplateVO) return;
-			for (let i = 0; i < levels.length; i++) {
-				let level = levels[i];
-				let levelVO = this.worldVO.levels[level];
-				let levelTemplateVO = worldTemplateVO.levels[level];
-				this.logLevelChanges(levelVO, levelTemplateVO);
+			if (!worldTemplateVO) return result;
+
+			result.worldGeneratorVersion = WorldConstants.version;
+			result.worldVersion = worldVO.version;
+			result.worldTemplateVersion = worldTemplateVO.version;
+
+			for (let l = worldVO.topLevel; l >= worldVO.bottomLevel; l--) {
+				if (!this.isLevelGeneratedInWorld(worldVO, l)) continue;
+				let levelVO = worldVO.levels[l];
+				let levelTemplateVO = worldTemplateVO.levels[l];
+				let levelChanges = this.getLevelChanges(levelVO, levelTemplateVO);
+				if (levelChanges.length > 0) result.changes = result.changes.concat(levelChanges);
 			}
+
+			return result;
 		},
 
-		logLevelChanges: function (levelVO, levelTemplateVO) {
-			if (!levelTemplateVO) return;
+		getLevelChanges: function (levelVO, levelTemplateVO) {
+			let result = [];
+
+			if (!levelTemplateVO) return result;
+
+			let level = levelVO.level;
+
+			let keys = Object.keys(levelTemplateVO);
+			for (let i in keys) {
+				let prop = keys[i];
+				let oldValue = levelTemplateVO[prop];
+				let newValue = levelVO[prop];
+				if (typeof oldValue == "object") continue;
+				if (levelVO[prop] !== levelTemplateVO[prop]) {
+					result.push({ level: level, type: this.CHANGE_TYPE_LEVEL_PROPERTY_CHANGED, detail: "property " + prop + " changed " + levelVO[prop] + " -> " + levelTemplateVO[prop] });
+				}
+			}
 
 			for (let s = 0; s < levelVO.sectors.length; s++) {
 				let sectorVO = levelVO.sectors[s];
 				let sectorTemplateVO = levelTemplateVO.sectors[s];
-				this.logSectorChanges(sectorVO, sectorTemplateVO);
+
+				let sectorChanges = this.checkSectorChanges(sectorVO, sectorTemplateVO);
+				if (sectorChanges.length > 0) result = result.concat(sectorChanges);
 			}
+
+			return result;
 		},
 
-		logSectorChanges: function (sectorVO, sectorTemplateVO) {
-			// TODO add more checks
+		checkSectorChanges: function (sectorVO, sectorTemplateVO) {
+			let result = [];
+			let level = sectorVO.position.level;
 
+			// - added or removed locales
 			let sectorLocales = sectorVO.locales.concat();
 			let sectorTemplateLocales = sectorTemplateVO.locales.concat();
 
 			let notFoundLocales = sectorTemplateLocales.concat();
 			let extraLocales = [];
+
 			for (let i = 0; i < sectorLocales.length; i++) {
 				let localeVO = sectorLocales[i];
 				let matchingVOs = notFoundLocales.filter(sectorTemplateLocaleVO => ObjectUtils.diff(localeVO, sectorTemplateLocaleVO).total == 0);
@@ -270,8 +310,51 @@ define([
 				}
 			}
 
-			if (extraLocales.length > 0) log.i("world changes: added " + extraLocales.length + " locales at sector " + sectorVO.position);
-			if (notFoundLocales.length > 0) log.i("world changes: removed " + notFoundLocales.length + " locales at sector " + sectorVO.position);
+			for (let i = 0 ; i < extraLocales.length; i++) {
+				result.push({ level: level, type: this.CHANGE_TYPE_LOCALE_ADDED, detail: "added locale " + extraLocales[i].type + " at " + sectorVO.position, seen: false })
+			}
+
+			for (let i = 0 ; i < notFoundLocales.length; i++) {
+				result.push({ level: level, type: this.CHANGE_TYPE_LOCALE_REMOVED, detail: "removed locale " + notFoundLocales[i].type + " at " + sectorVO.position, seen: false })
+			}
+			
+			// TODO add more checks
+
+			return result;
+		},
+
+		logChanges: function (worldChangesVO) {
+			for (let i = 0; i < worldChangesVO.changes.length; i++) {
+				let change = worldChangesVO.changes[i];
+				log.w("world change: level " + change.level + " " + change.type + " " + change.detail, "world");
+			}
+		},
+
+		getUnseenChangesLevels: function () {
+			if (!this.worldChangesVO) return 0;
+			let result = [];
+
+			for (let i = 0; i < this.worldChangesVO.changes.length; i++) {
+				let change = this.worldChangesVO.changes[i];
+				if (change.seen !== false) continue;
+				let level = change.level;
+				if (result.indexOf(level) < 0) result.push(level);
+			}
+
+			return result;
+		},
+
+		setChangesSeen: function (level) {
+			if (!this.worldChangesVO) return;
+			let result = [];
+
+			for (let i = 0; i < this.worldChangesVO.changes.length; i++) {
+				let change = this.worldChangesVO.changes[i];
+				if (change.level !== level) continue;
+				change.seen = true;
+			}
+
+			return result;
 		},
 
 		getGeneratedLevels: function () {
@@ -286,12 +369,16 @@ define([
 			return result;
 		},
 
-		isWorldGenerated: function () {
+		isWorldGenerated: function (worldVO) {
 			return this.worldVO != null;
 		},
 
 		isLevelGenerated: function (level) {
-			return this.worldVO && this.worldVO.levels[level] && this.worldVO.levels[level].sectors && this.worldVO.levels[level].sectors.length > 0;
+			return this.isLevelGeneratedInWorld(this.worldVO, level);
+		},
+
+		isLevelGeneratedInWorld: function (worldVO, level) {
+			return worldVO && worldVO.levels[level] && worldVO.levels[level].sectors && worldVO.levels[level].sectors.length > 0;
 		},
 
 		// helpers used when creating entities

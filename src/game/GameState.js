@@ -253,7 +253,7 @@ define(['ash'], function (Ash) {
 			if (this.playedVersions.indexOf(version) < 0) {
 				this.playedVersions.push(version);
 			}
-			log.i("played versions: " + this.playedVersions.join(","));
+			log.i("played versions: " + this.playedVersions.join(","), this);
 		},
 
 		isSimpleStat: function (name) {

@@ -194,6 +194,10 @@ define([
 					setTimeout(function () {
 						// updates to game state that should be done at start but can wait until the player is unblocked
 						GlobalSignals.gameStateRefreshSignal.dispatch();
+
+						let version = GameGlobals.changeLogHelper.getCurrentVersionNumber();
+						GameGlobals.gameState.savePlayedVersion(version);
+						GameGlobals.metaState.savePlayedVersion(version);
 					}, 1);
 				}, 1);
 			}, 250);
@@ -265,7 +269,6 @@ define([
 					}
 				}
 				GameGlobals.gameState.pendingUpdateTime = 0;
-				GameGlobals.gameState.savePlayedVersion(GameGlobals.changeLogHelper.getCurrentVersionNumber());
 				GameGlobals.gameState.isPaused = false;
 				resolve(save);
 			});

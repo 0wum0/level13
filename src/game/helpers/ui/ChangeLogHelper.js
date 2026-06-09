@@ -93,28 +93,40 @@ function (Ash, GameGlobals, GlobalSignals, GameConstants) {
 			return { major: parts2[0], minor: parts2[1], patch: parts2[2] };
 		},
 		
-		isOldVersion: function (version) {
+		isUnsupportedVersion: function (version) {
 			if (!version) return true;
 			
-			var currentVersionNumber = this.getCurrentVersionNumber();
-			var currentVersionDetails = this.getCurrentVersion();
-			var requiredVersion = currentVersionDetails && currentVersionDetails.requiredVersion || currentVersionNumber;
-			var requiredVersionDigits = this.getVersionDigits(requiredVersion);
-			var compareVersionDigits = this.getVersionDigits(version);
+			let currentVersionNumber = this.getCurrentVersionNumber();
+			let currentVersionDetails = this.getCurrentVersion();
+			let requiredVersion = currentVersionDetails && currentVersionDetails.requiredVersion || currentVersionNumber;
+			let requiredVersionDigits = this.getVersionDigits(requiredVersion);
+			let compareVersionDigits = this.getVersionDigits(version);
 			
-			log.i("isOldVersion? " + version + ", current: " + currentVersionNumber + ", required: " + requiredVersion);
+			log.i("isUnsupportedVersion? " + version + ", current: " + currentVersionNumber + ", required: " + requiredVersion);
 			if (!requiredVersionDigits) return false;
 			if (!compareVersionDigits) return false;
 			return compareVersionDigits.major < requiredVersionDigits.major || compareVersionDigits.minor < requiredVersionDigits.minor || compareVersionDigits.patch < requiredVersionDigits.patch;
 		},
 
-		hasPlayedOnOldVersion: function () {
+		isOldVersion: function (version) {
+			if (!version) return true;
+			
+			let currentVersion = this.getCurrentVersionNumber();
+			let currentVersionDigits = this.getVersionDigits(currentVersion);
+			let compareVersionDigits = this.getVersionDigits(version);
+			
+			if (!currentVersionDigits) return false;
+			if (!compareVersionDigits) return false;
+			return compareVersionDigits.major < currentVersionDigits.major || compareVersionDigits.minor < currentVersionDigits.minor || compareVersionDigits.patch < currentVersionDigits.patch;
+		},
+
+		hasPlayedOnUnsupportedVersion: function () {
 			let playedVersions = GameGlobals.gameState.playedVersions;
 			if (!playedVersions) return false;
 
 			for (let i = 0; i < playedVersions.length; i++) {
 				let version = playedVersions[i];
-				if (this.isOldVersion(version)) return true;
+				if (this.isUnsupportedVersion(version)) return true;
 			}
 
 			return false;

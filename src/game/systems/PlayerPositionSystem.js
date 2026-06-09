@@ -209,6 +209,8 @@ define([
 			
 			this.previousLocation = this.currentLocation;
 			this.currentLocation = sector;
+
+			GameGlobals.worldHelper.setChangesSeen(position.level);
 			
 			GlobalSignals.playerLocationChangedSignal.dispatch();
 		},

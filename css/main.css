@@ -891,6 +891,9 @@ ul.buttonlist {
   display: flex;
   flex-wrap: wrap;
 }
+.text-list-entry {
+  display: block;
+}
 .item-slot {
   background: inherit !important;
   margin: 0px 2px 2px 0px;
@@ -1627,11 +1630,11 @@ table .camp-unique-feature-icon-list {
   border-radius: 3px;
   align-content: center;
 }
+.camp-unique-feature-label {
+  margin-left: 2px;
+}
 #milestone-next-unlocks {
   margin: 1em 0;
-}
-.unlocks-list-entry {
-  display: block;
 }
 .reqs-list-entry {
   display: inline-block;

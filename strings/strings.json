@@ -2677,7 +2677,13 @@
 			"player_stats_button_label": "Stats",
 			"quick_save_button_label": "Save",
 			"restart_button_label": "Restart",
-			"settings_button_label": "Settings"
+			"settings_button_label": "Settings",
+			"world_change_entry_locale_added_label": "{num}x locales added on Level {level}",
+			"world_change_entry_locale_removed_label": "{num}x locales removed on Level {level}",
+			"world_change_entry_level_property_changed_label": "Something subtle changed on Level {level}",
+			"world_change_intro": "The City has undergone the following changes:",
+			"world_change_outro_default": "Stay alert as you continue your journey.",
+			"world_change_outro_old_levels": "This might be a good time to revisit old levels."
 		},
 		"milestones": {
 			"population_progress_label": "Population: {current} / {max}"

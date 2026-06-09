@@ -311,7 +311,7 @@ function (Ash, UIList, FileUtils, GameGlobals, GlobalSignals, GameConstants, UIC
 
 		showSaveVersionWarning: function (saveObject) {			
 			let version = saveObject ? saveObject.version : null;
-			return GameGlobals.changeLogHelper.isOldVersion(version);
+			return GameGlobals.changeLogHelper.isUnsupportedVersion(version);
 		},
 
 		getSaveSystem: function () {

@@ -1,5 +1,6 @@
 define([
 	'ash',
+	'text/Text',
 	'core/ExceptionHandler',
 	'game/GameGlobals',
 	'game/GlobalSignals',
@@ -14,6 +15,7 @@ define([
 	'game/systems/SaveSystem',
 ], function (
 	Ash,
+	Text,
 	ExceptionHandler,
 	GameGlobals,
 	GlobalSignals,
@@ -154,8 +156,9 @@ define([
 			})
 			// create entities that depend on world structure (levels, sectors, gangs)
 			.then(w => this.createWorldEntities(worldVO, GameGlobals.worldHelper.getGeneratedLevels()))
-			// set entity state from save
+			// set entity state from save (if there is one) (also triggers version warning pop-ups)
 			.then(() => this.loadEntityState(save))
+			.then(() => this.checkWorldChanges())
 			.then(() => {
 				if (save) {
 					this.syncLoadedGameState();
@@ -393,13 +396,29 @@ define([
 					
 					log.i("entity state loaded (" + GameConstants.getTimeSinceStart() + ")", "start");
 					
-					if (!saveWarningShown && GameGlobals.changeLogHelper.isOldVersion(save.version)) {
+					if (!saveWarningShown && GameGlobals.changeLogHelper.isUnsupportedVersion(save.version)) {
 						this.showVersionWarning(save.version, () => { resolve(); });
+					} else if (!saveWarningShown && GameGlobals.changeLogHelper.isOldVersion(save.version)) {
+						this.showUpdateNote(save.version, () => { resolve(); });
 					} else {
 						resolve();
 					}
 				}
-			})
+			});
+		},
+
+		checkWorldChanges: function () {
+			return new Promise((resolve, reject) => {
+				let changes = GameGlobals.worldHelper.worldChangesVO;
+
+				if (!changes) {
+					resolve();
+				}
+
+				this.showWorldChangesPopup(changes, () => {
+					resolve();
+				});
+			});
 		},
 
 		generateLevel: function (level) {
@@ -461,9 +480,57 @@ define([
 				this.creator.syncSector(node.entity);
 			}
 		},
+
+		showWorldChangesPopup: function (worldChangesVO, cb) {
+			if (!worldChangesVO || !worldChangesVO.changes || worldChangesVO.changes.length == 0) {
+				cb();
+				return;
+			}
+			
+			// - summarize changes
+			let changesSummary = {};
+			let changesLevels = [];
+			let changesTypes = [];
+			for (let i = 0; i < worldChangesVO.changes.length; i++) {
+				let change = worldChangesVO.changes[i];
+				let key = change.level + "-" + change.type;
+				if (changesLevels.indexOf(change.level) < 0) changesLevels.push(change.level);
+				if (changesTypes.indexOf(change.type) < 0) changesTypes.push(change.type);
+				if (!changesSummary[key]) {
+					changesSummary[key] = { num: 0, type: change.type, level: change.level };
+				}
+				changesSummary[key].num++;
+			}
+
+			let msg = "";
+
+			// - intro
+			msg += "<p>" + Text.t("ui.meta.world_change_intro") + "</p>";
+
+			// - changes list
+			msg += "<div class='scrollable-container'>";
+			for (let key in changesSummary) {
+				let change = changesSummary[key];
+				let num  = change.num;
+				let changeTextKey = "ui.meta.world_change_entry_" + change.type + "_label";
+				msg += "<span class='text-list-entry'>" + Text.t(changeTextKey, { num: change.num, level: change.level }) + "</span>";
+			}
+			msg += "</div>";
+
+			// - outro
+			let maxLevelOrdinal = GameGlobals.gameState.level;
+			let hasOldLevelChanges = changesLevels.length > 1 || (changesLevels.length == 1 && GameGlobals.worldState.getLevelOrdinal(changesLevels[0]) < maxLevelOrdinal);
+			if (hasOldLevelChanges) {
+				msg += "<p>" + Text.t("ui.meta.world_change_outro_old_levels") + "</p>";
+			} else {
+				msg += "<p>" + Text.t("ui.meta.world_change_outro_default") + "</p>";
+			}
+
+			GameGlobals.uiFunctions.showInfoPopup("City Update", msg, null, null, cb, true, false);
+		},
 		
 		showSaveWarning: function (saveVersion) {
-			var currentVersion = GameGlobals.changeLogHelper.getCurrentVersionNumber();
+			let currentVersion = GameGlobals.changeLogHelper.getCurrentVersionNumber();
 			GameGlobals.uiFunctions.showQuestionPopup(
 				"Warning",
 				"Part of the save could not be loaded. Most likely your save is old and incompatible with the current version. Restart the game or continue at your own risk.<br><br/>Save version: " + saveVersion + "<br/>Current version: " + currentVersion,
@@ -477,6 +544,32 @@ define([
 					GameGlobals.uiFunctions.showGame();
 				},
 				true
+			);
+		},
+
+		showUpdateNote: function (saveVersion, continueCallback) {
+			let currentVersion = GameGlobals.changeLogHelper.getCurrentVersionNumber();
+
+			// skip if player has seen this version already, just loading an old save
+			if (GameGlobals.metaState.playedVersions.indexOf(currentVersion) >= 0) {
+				continueCallback();
+				return;
+			}
+
+			let changelogLink = "<a href='changelog.html' target='changelog'>changelog</a>";
+			let message = "";
+			message += "<p>The game has been updated.</p>";
+			message += "<span class='text-list-entry p-meta'>Save version: " + saveVersion + "</span>";
+			message += "<span class='text-list-entry p-meta'>Current version: " + currentVersion + "</span>";
+			message += "<p>See the " + changelogLink + " for details.</p>";
+			GameGlobals.uiFunctions.showInfoPopup(
+				"Update",
+				message,
+				null,
+				null,
+				continueCallback,
+				true,
+				false
 			);
 		},
 		

@@ -389,7 +389,7 @@ define([
 			   "\n\nSeed: " + GameGlobals.worldState.worldSeed + "\nPosition: " + pos + "\nStacktrace:\n" + stackTrace);
 			let url = "https://github.com/nroutasuo/level13/issues/new?title=" + bugTitle + "&body=" + bugBody + "&labels=exception";
 
-			let hasPlayedOnIncompatibleVersions = GameGlobals.changeLogHelper.hasPlayedOnOldVersion();
+			let hasPlayedOnIncompatibleVersions = GameGlobals.changeLogHelper.hasPlayedOnUnsupportedVersion();
 			let hasCheated = GameGlobals.gameState.hasCheated;
 			let showReportBugNudge = !hasPlayedOnIncompatibleVersions && !hasCheated;
 

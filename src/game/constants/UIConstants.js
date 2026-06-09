@@ -1034,7 +1034,7 @@ define(['ash',
 			let baseReputation = Math.max(milestone.baseReputation || 0, previousMilestone.baseReputation || 0);
 			
 			let addValue = function (label, value) {
-				html += "<span class='unlocks-list-entry'>";
+				html += "<span class='text-list-entry'>";
 				html += label;
 				if (value || value === 0) {
 					html += ": ";

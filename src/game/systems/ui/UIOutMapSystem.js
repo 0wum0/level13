@@ -103,9 +103,14 @@ define([
 
 		updateBubble: function () {
 			let bubbleNumber = 0;
+			let numUnseenWorldChanges = GameGlobals.worldHelper.getUnseenChangesLevels().length;
+			bubbleNumber += numUnseenWorldChanges;
 			if (!GameGlobals.gameState.hasSeenTab(GameGlobals.uiFunctions.elementIDs.tabs.map)) bubbleNumber = "!";
 			GameGlobals.uiFunctions.updateBubble("#switch-map .bubble", this.bubbleNumber, bubbleNumber);
 			this.bubbleNumber = bubbleNumber;
+
+			$("#select-map-level-bubble").toggle(numUnseenWorldChanges > 0);
+			$("#select-map-level-bubble").text(numUnseenWorldChanges);
 		},
 		
 		updateHeight: function () {
@@ -145,22 +150,25 @@ define([
 		updateLevelSelector: function () {
 			let surfaceLevel = GameGlobals.worldState.getSurfaceLevel();
 			let groundLevel = GameGlobals.worldState.getGroundLevel();
+			let unseenWorldChanges = GameGlobals.worldHelper.getUnseenChangesLevels();
+
 			let countVisible = 0;
 			for (let i = surfaceLevel; i >= groundLevel; i--) {
 				let isVisible = GameGlobals.uiMapHelper.isMapRevealed || GameGlobals.levelHelper.isVisited(i);
 				let $elem = $("#map-level-selector-level-" + i);
 				let levelStats = GameGlobals.levelHelper.getLevelStats(i);
 				let isCleared = levelStats.percentClearedSectors >= 1;
+				let hasUnseenChanges = unseenWorldChanges.indexOf(i) >= 0;
 				GameGlobals.uiFunctions.toggle($elem, isVisible);
 				if (isVisible) {
-					$elem.text(this.getLevelSelectorOptionLabel(i, isCleared));
+					$elem.text(this.getLevelSelectorOptionLabel(i, isCleared, hasUnseenChanges));
 					countVisible++;
 				}
 			}
 			GameGlobals.uiFunctions.toggle($("#select-header-level"), countVisible > 1);
 		},
 
-		getLevelSelectorOptionLabel: function (level, isCleared) {
+		getLevelSelectorOptionLabel: function (level, isCleared, hasUnseenChanges) {
 				let surfaceLevel = GameGlobals.worldState.getSurfaceLevel();
 				let groundLevel = GameGlobals.worldState.getGroundLevel();
 
@@ -169,7 +177,8 @@ define([
 				if (level == surfaceLevel) result = "Surface";
 				if (level == groundLevel) result = "Ground";
 
-				if (isCleared) result += " (x)";
+				if (hasUnseenChanges) result += "(!)";
+				else if (isCleared) result += " (x)";
 				else result += " (-)";
 
 				return result;
@@ -185,6 +194,7 @@ define([
 				this.updateSector();
 				this.centerMap();
 				this.updateMapCompletionHint();
+				this.updateLevelSelector();
 			});
 		},
 
@@ -267,6 +277,8 @@ define([
 				$("#mainmap-container-ascii textarea").attr("rows", rows)
 				$("#mainmap-ascii-legend").text(GameGlobals.uiMapHelper.getASCIILegend(this.selectedMapMode));
 			}
+
+			GameGlobals.worldHelper.setChangesSeen(mapPosition.level);
 		},
 
 		updateSector: function () {

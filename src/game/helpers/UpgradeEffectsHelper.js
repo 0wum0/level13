@@ -39,6 +39,8 @@ define([
 			config.unlockCampOrdinalAndSteps.staminaPerk1 = GameGlobals.upgradeEffectsHelper.getExpectedCampAndStepForUpgrade("improve_building_hospital");
 			config.unlockCampOrdinalAndSteps.staminaPerk2 = GameGlobals.upgradeEffectsHelper.getExpectedCampAndStepForUpgrade("improve_building_hospital_3");
 
+			config.blueprintPiecesByCampOrdinal = UpgradeConstants.getAllBlueprintPiecesByCampOrdinal();
+
 			return config;
 		},
 		

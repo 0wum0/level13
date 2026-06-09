@@ -23,7 +23,7 @@
 	];
 	
 	require(deps, function(GameGlobalsInitializer) {
-        GameGlobalsInitializer.init();
+        GameGlobalsInitializer.init(null, null, true);
         setTimeout(() => {
             QUnit.start();
         }, 500);

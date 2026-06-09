@@ -185,6 +185,17 @@ function (Ash, UpgradeData, PlayerActionConstants, WorldConstants, UpgradeVO) {
 			}
 			return pieceCount;
 		},
+
+		getAllBlueprintPiecesByCampOrdinal: function () {
+			let result = {};
+			for (let campOrdinal in this.blueprintsByCampOrdinal) {
+				result[campOrdinal] = {};
+				result[campOrdinal][0] = this.getPiecesByCampOrdinal(campOrdinal, this.BLUEPRINT_BRACKET_EARLY, 0, 2);
+				result[campOrdinal][1] = this.getPiecesByCampOrdinal(campOrdinal, this.BLUEPRINT_BRACKET_LATE, 0, 2);
+				result[campOrdinal][2] = this.getPiecesByCampOrdinal(campOrdinal, this.BLUEPRINT_BRACKET_LATE, 1, 2);
+			}
+			return result;
+		},
 		
 		getRequiredTech: function (upgradeID) {
 			var reqs = PlayerActionConstants.requirements[upgradeID];

@@ -1,13 +1,14 @@
 define([
 	'test/TestUtils',
 	'worldcreator/WorldCreator', 
+	'game/constants/UpgradeConstants', 
 	'game/constants/WorldConstants', 
 	'worldcreator/WorldCreatorDebug', 
 	'worldcreator/WorldCreatorRandom', 
 	'worldcreator/WorldValidator',
 	'worldcreator/WorldTemplateVO',
 	'game/helpers/ItemsHelper',
-], function (TestUtils, WorldCreator, WorldConstants, WorldCreatorDebug, WorldCreatorRandom, WorldValidator, WorldTemplateVO, ItemsHelper) {
+], function (TestUtils, WorldCreator, UpgradeConstants, WorldConstants, WorldCreatorDebug, WorldCreatorRandom, WorldValidator, WorldTemplateVO, ItemsHelper) {
 
 	let worldSeeds = [ 24, 7534, WorldCreatorRandom.getNewSeed(), WorldCreatorRandom.getNewSeed() ];
 
@@ -528,6 +529,96 @@ define([
 					assert.notPropEqual(luxuryResources[i], luxuryResources[j], "luxury resources are different in world seeds (" + s1 + " vs " + s2 + ")")
 				}
 			}
+		});
+	});
+
+	QUnit.module("world/changes", function (hooks) {		
+		let itemsHelper = new ItemsHelper();
+
+		let testUpgrade1 = "test1";
+
+		let getNumLocalesOnLevel = function (levelVO) {
+			let result = 0;
+			for (let i = 0; i < levelVO.sectors.length; i++) {
+				result += levelVO.sectors[i].locales.length;
+			}
+			return result;
+		};
+
+		let getNumLocalesInWorld = function (worldVO) {
+			let result = 0;
+			for (let l = worldVO.topLevel; l >= worldVO.bottomLevel; l--) {
+				let levelVO = worldVO.levels[l];
+				result += getNumLocalesOnLevel(levelVO);
+			}
+			return result;
+		}
+
+		QUnit.test.each("when upgrade added, locales are added", worldSeeds, async function (assert, seed) {
+			let levels = [ 13, 12, 11 ];
+			let oldValue  = defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0];
+			let newValue = oldValue + 3;
+
+			let worldVO1 = await WorldCreator.createWorld(seed, null, defaultProgressionConfig);
+			await WorldCreator.generateLevels(seed, worldVO1, null, levels, itemsHelper, defaultProgressionConfig);
+			let worldTemplateVO = new WorldTemplateVO(worldVO1);
+
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0] = newValue;
+			let worldVO2 = await WorldCreator.createWorld(seed, worldTemplateVO, defaultProgressionConfig);
+			await WorldCreator.generateLevels(seed, worldVO2, worldTemplateVO, levels, itemsHelper, defaultProgressionConfig);
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0] = oldValue;
+
+			let numLocales1 = getNumLocalesInWorld(worldVO1);
+			let numLocales2 = getNumLocalesInWorld(worldVO2);
+
+			assert.true(numLocales2 > numLocales1, "locales were added (before:" + numLocales1 + " after: " + numLocales2 + ")");
+		});
+
+		QUnit.test.each("when upgrade removed, locales are not removed", worldSeeds, async function (assert, seed) {
+			let levels = [ 13, 12, 11 ];
+			let oldValue  = defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0];
+			let newValue = 0;
+
+			let worldVO1 = await WorldCreator.createWorld(seed, null, defaultProgressionConfig);
+			await WorldCreator.generateLevels(seed, worldVO1, null, levels, itemsHelper, defaultProgressionConfig);
+			let worldTemplateVO = new WorldTemplateVO(worldVO1);
+
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0] = newValue;
+			let worldVO2 = await WorldCreator.createWorld(seed, worldTemplateVO, defaultProgressionConfig);
+			await WorldCreator.generateLevels(seed, worldVO2, worldTemplateVO, levels, itemsHelper, defaultProgressionConfig);
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0] = oldValue;
+
+			let numLocales1 = getNumLocalesInWorld(worldVO1);
+			let numLocales2 = getNumLocalesInWorld(worldVO2);
+
+			assert.true(numLocales2 == numLocales1, "locales were not removed (before:" + numLocales1 + " after: " + numLocales2 + ")");
+		});
+
+		QUnit.test.each("when upgrade moved, locales added to new level", worldSeeds, async function (assert, seed) {
+			let levels = [ 13, 12, 11 ];
+			let oldValueC1 = defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0];
+			let newValueC1 = 0;
+			let oldValueC2 = defaultProgressionConfig.blueprintPiecesByCampOrdinal[2][0];
+			let newValueC2 = oldValueC2 + oldValueC1;
+
+			let worldVO1 = await WorldCreator.createWorld(seed, null, defaultProgressionConfig);
+			await WorldCreator.generateLevels(seed, worldVO1, null, levels, itemsHelper, defaultProgressionConfig);
+			let worldTemplateVO = new WorldTemplateVO(worldVO1);
+
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0] = newValueC1;
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[2][0] = newValueC2;
+			let worldVO2 = await WorldCreator.createWorld(seed, worldTemplateVO, defaultProgressionConfig);
+			await WorldCreator.generateLevels(seed, worldVO2, worldTemplateVO, levels, itemsHelper, defaultProgressionConfig);
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[1][0] = oldValueC1;
+			defaultProgressionConfig.blueprintPiecesByCampOrdinal[2][0] = oldValueC2;
+
+			let numLocalesW1C1 = getNumLocalesOnLevel(worldVO1.levels[13]);
+			let numLocalesW1C2 = getNumLocalesOnLevel(worldVO1.levels[12]);
+			let numLocalesW2C1 = getNumLocalesOnLevel(worldVO2.levels[13]);
+			let numLocalesW2C2 = getNumLocalesOnLevel(worldVO2.levels[12]);
+
+			assert.true(numLocalesW2C1 == numLocalesW1C1, "locales on old level were not removed (before:" + numLocalesW1C1 + " after: " + numLocalesW2C1 + ")");
+			assert.true(numLocalesW2C2 > numLocalesW1C2, "locales on new level were added (before:" + numLocalesW1C2 + " after: " + numLocalesW2C2 + ")");
 		});
 	});
 

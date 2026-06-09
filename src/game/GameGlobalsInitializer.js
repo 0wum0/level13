@@ -69,7 +69,7 @@ define([
 ) {
 	let GameGlobalsInitializer = {
 		
-		init: function (engine, gameManager) {
+		init: function (engine, gameManager, headless) {
 			GameGlobals.engine = engine;
 			GameGlobals.gameManager = gameManager;
 
@@ -116,7 +116,9 @@ define([
 				GameGlobals.campVisHelper = new CampVisHelper();
 			}
 			
-			GameGlobals.uiFunctions = new UIFunctions();
+			if (!headless) {
+				GameGlobals.uiFunctions = new UIFunctions();
+			}
 		}
 		
 	};

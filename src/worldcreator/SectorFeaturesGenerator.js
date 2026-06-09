@@ -1913,7 +1913,19 @@ define([
 		generateLocalesForBlueprints: function (seed, worldVO, levelTemplateVO, levelVO) {
 			let l = levelVO.level;
 			let campOrdinal = WorldCreatorHelper.getCampOrdinal(seed, levelVO.level);
+			let levelIndex = WorldCreatorHelper.getLevelIndexForCamp(seed, campOrdinal, levelVO.level);
+			let maxLevelIndex = WorldCreatorHelper.getMaxLevelIndexForCamp(seed, campOrdinal, levelVO.level);
+
 			let generator = this;
+
+			let blueprintPiecesByCampOrdinal = WorldCreatorHelper.progressionConfig.blueprintPiecesByCampOrdinal;
+			let getNumBlueprints = (isEarly) => {
+				let result = 0;
+				if (isEarly) result += blueprintPiecesByCampOrdinal[campOrdinal][0];
+				if (!isEarly && levelIndex == 0) result += blueprintPiecesByCampOrdinal[campOrdinal][1];
+				if (!isEarly && levelIndex == maxLevelIndex) result += blueprintPiecesByCampOrdinal[campOrdinal][2];
+				return result;				
+			};
 
 			let getPathConstraints = function (isEarly) {
 				let pathConstraints = [];
@@ -1985,9 +1997,7 @@ define([
 			
 			// min number of (easy) locales ensures that player can get all upgrades intended for that level
 			// two brackets of locales for critical paths, those on path 2 can require tech from path 1 to reach but not the other way around
-			let levelIndex = WorldCreatorHelper.getLevelIndexForCamp(seed, campOrdinal, levelVO.level);
-			let maxLevelIndex = WorldCreatorHelper.getMaxLevelIndexForCamp(seed, campOrdinal, levelVO.level);
-			let numEarlyBlueprints = UpgradeConstants.getPiecesByCampOrdinal(campOrdinal, UpgradeConstants.BLUEPRINT_BRACKET_EARLY, levelIndex, maxLevelIndex);
+			let numEarlyBlueprints = getNumBlueprints(true);
 			if (numEarlyBlueprints) {
 				let minEarly = WorldCreatorConstants.getMinLocales(numEarlyBlueprints);
 				let maxEarly = WorldCreatorConstants.getMaxLocales(numEarlyBlueprints);
@@ -1995,7 +2005,7 @@ define([
 				createLocales(worldVO, levelVO, true, countEarly - numExistingEarly, minEarly - numExistingEarly);
 			}
 
-			let numLateBlueprints = UpgradeConstants.getPiecesByCampOrdinal(campOrdinal, UpgradeConstants.BLUEPRINT_BRACKET_LATE, levelIndex, maxLevelIndex);
+			let numLateBlueprints = getNumBlueprints(false);
 			if (numLateBlueprints > 0) {
 				let minLate = WorldCreatorConstants.getMinLocales(numLateBlueprints);
 				let maxLate = WorldCreatorConstants.getMaxLocales(numLateBlueprints);

@@ -1,6 +1,6 @@
 // debug helpers for the WorldCreator
-define(['ash', 'core/ConsoleLogger', 'game/constants/WorldConstants', 'worldcreator/WorldCreatorHelper', 'worldcreator/WorldCreatorLogger'],
-function (Ash, ConsoleLogger, WorldConstants, WorldCreatorHelper, WorldCreatorLogger) {
+define(['ash', 'core/ConsoleLogger', 'game/constants/UpgradeConstants', 'game/constants/WorldConstants', 'worldcreator/WorldCreatorHelper', 'worldcreator/WorldCreatorLogger'],
+function (Ash, ConsoleLogger, UpgradeConstants, WorldConstants, WorldCreatorHelper, WorldCreatorLogger) {
 
 	let WorldCreatorDebug = {
 
@@ -17,6 +17,8 @@ function (Ash, ConsoleLogger, WorldConstants, WorldCreatorHelper, WorldCreatorLo
 			config.unlockCampOrdinalAndSteps = {};
 			config.unlockCampOrdinalAndSteps.staminaPerk1 = { campOrdinal: 11, step: WorldConstants.CAMP_STEP_POI_2 };
 			config.unlockCampOrdinalAndSteps.staminaPerk2 = { campOrdinal: 13, step: WorldConstants.CAMP_STEP_POI_2 };
+
+			config.blueprintPiecesByCampOrdinal = UpgradeConstants.getAllBlueprintPiecesByCampOrdinal();
 
 			return config;
 		},

@@ -62,6 +62,7 @@ define([
 		},
 		
 		generateWorldFeatures: function (seed, worldTemplateVO, levelCenterPositions) {
+			// TODO change so that old features from template are kept but new ones can be added
 			if (worldTemplateVO && worldTemplateVO.features && worldTemplateVO.features.length > 0) return worldTemplateVO.features;
 
 			let result = [];

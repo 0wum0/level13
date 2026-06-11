@@ -41,6 +41,8 @@ define([
 			let campOrdinal = WorldCreatorHelper.getCampOrdinal(seed, l);
 			let isCampableLevel = WorldCreatorHelper.isCampableLevel(seed, l);
 
+			let isLevelGenerated = levelTemplateVO?.sectors?.length > 0;
+
 			// basics derived directly from seed
 			levelVO.seed = seed;
 			levelVO.levelOrdinal = levelOrdinal;
@@ -55,7 +57,7 @@ define([
 
 			this.generateWorkerFactors(seed, worldVO, levelTemplateVO, levelVO);
 
-			let numSectors = WorldCreatorHelper.getNumSectorsForLevel(seed, l);
+			let numSectors = isLevelGenerated ? levelTemplateVO.numSectors : WorldCreatorHelper.getNumSectorsForLevel(seed, l);
 			levelVO.numSectors = numSectors;
 			levelVO.maxSectors = numSectors + WorldCreatorConstants.getMaxSectorOverflow(levelOrdinal);
 			
@@ -68,8 +70,12 @@ define([
 			levelVO.passagePositions = [];
 			if (levelVO.passageUpPosition) levelVO.passagePositions.push(levelVO.passageUpPosition);
 			if (levelVO.passageDownPosition) levelVO.passagePositions.push(levelVO.passageDownPosition);
-			levelVO.numSectorsByStage[WorldConstants.CAMP_STAGE_EARLY] = WorldCreatorHelper.getNumSectorsForLevelStage(worldVO.seed, levelVO.campOrdinal, levelVO.level, WorldConstants.CAMP_STAGE_EARLY);
-			levelVO.numSectorsByStage[WorldConstants.CAMP_STAGE_LATE] = WorldCreatorHelper.getNumSectorsForLevelStage(worldVO.seed, levelVO.campOrdinal, levelVO.level, WorldConstants.CAMP_STAGE_LATE);
+			levelVO.numSectorsByStage[WorldConstants.CAMP_STAGE_EARLY] 
+				= isLevelGenerated ? levelTemplateVO.numSectorsByStage[WorldConstants.CAMP_STAGE_EARLY] 
+				: WorldCreatorHelper.getNumSectorsForLevelStage(worldVO.seed, levelVO.campOrdinal, levelVO.level, WorldConstants.CAMP_STAGE_EARLY);
+			levelVO.numSectorsByStage[WorldConstants.CAMP_STAGE_LATE] 
+				= isLevelGenerated ? levelTemplateVO.numSectorsByStage[WorldConstants.CAMP_STAGE_LATE] 
+				: WorldCreatorHelper.getNumSectorsForLevelStage(worldVO.seed, levelVO.campOrdinal, levelVO.level, WorldConstants.CAMP_STAGE_LATE);
 
 			levelVO.levelMapCenterPosition = worldVO.levelCenterPositions[l];
 			levelVO.requiredPositions = worldVO.requiredPositions[l] || [];

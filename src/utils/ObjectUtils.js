@@ -33,7 +33,10 @@ define([], function () {
 			return true;
 		},
 
-		diff: function (obj1, obj2) {
+		diff: function (obj1, obj2, settings) {
+			let maxDepth = settings?.maxDepth || 999;
+			let ignoredKeys = settings?.ignoredKeys || [];
+
 			const summary = { total: 0, byKey: {}, examples: {} };
 
 			function recordDiff(key, val1, val2, context) {
@@ -45,7 +48,10 @@ define([], function () {
 				}
 			}
 
-			function recurse(o1, o2, parentKey = null, context = null) {
+			function recurse(o1, o2, currentDepth, parentKey = null, context = null) {
+				if (currentDepth > maxDepth) {
+					return;
+				}
 
 				// If both are arrays → compare element by element
 				if (Array.isArray(o1) && Array.isArray(o2)) {
@@ -57,7 +63,7 @@ define([], function () {
 							typeof v1 === "object" && v1 !== null &&
 							typeof v2 === "object" && v2 !== null
 						) {
-							recurse(v1, v2, parentKey, context); // keep attribution to parent key
+							recurse(v1, v2, currentDepth + 1, parentKey, context); // keep attribution to parent key
 						} else if (v1 !== v2) {
 							recordDiff(parentKey || "array", v1, v2, context);
 						}
@@ -66,13 +72,13 @@ define([], function () {
 				}
 
 				// If both are plain objects → compare by keys
-				if (
-					typeof o1 === "object" && o1 !== null &&
-					typeof o2 === "object" && o2 !== null
-				) {
+				if (typeof o1 === "object" && o1 !== null && typeof o2 === "object" && o2 !== null) {
 					const keys = new Set([...Object.keys(o1), ...Object.keys(o2)]);
 					for (let key of keys) {
-						recurse(o1[key], o2[key], key, (context ? context + "." : "") + key);
+						if (ignoredKeys.indexOf(key) >= 0) {
+							continue;
+						}
+						recurse(o1[key], o2[key], currentDepth + 1, key, (context ? context + "." : "") + key);
 					}
 					return;
 				}
@@ -83,7 +89,8 @@ define([], function () {
 				}
 			}
 
-			recurse(obj1, obj2);
+			recurse(obj1, obj2, 0);
+
 			return summary;
 		},
 

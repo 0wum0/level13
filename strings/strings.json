@@ -2353,6 +2353,8 @@
 			"explorer_injured_in_party_hint": "Switch this explorer out of the exploration party so they can heal their injuries"
 		},
 		"common": {
+			"amount_many_label": "Several",
+			"amount_simple_template": "{value}x",
 			"continue_button_label": "Continue",
 			"item_count_field": "{value}x",
 			"list_template_cropped_delimiter": ", ",
@@ -2365,8 +2367,8 @@
 			"list_template_two": "{value1} and {value2}",
 			"list_template_zero": "(none)",
 			"sentence_separator": " ",
-			"value_detail_postfix": "({value})",
 			"value_and_name": "{value} {name}",
+			"value_detail_postfix": "({value})",
 			"value_simple_template": "{value}",
 			"value_unknown": "?"
 		},
@@ -2678,9 +2680,11 @@
 			"quick_save_button_label": "Save",
 			"restart_button_label": "Restart",
 			"settings_button_label": "Settings",
-			"world_change_entry_locale_added_label": "{num}x locales added on Level {level}",
-			"world_change_entry_locale_removed_label": "{num}x locales removed on Level {level}",
-			"world_change_entry_level_property_changed_label": "Something subtle changed on Level {level}",
+			"world_change_entry_locale_added_label": "{amount} locales added on Level {level}",
+			"world_change_entry_locale_removed_label": "{amount} locales removed on Level {level}",
+			"world_change_entry_generic_label": "Something subtle changed on Level {level}",
+			"world_change_entry_movement_blocker_changed_label": "{amount} movement blockers changed on {level}",
+			"world_change_entry_global_label": "Something vague changed in the whole City.",
 			"world_change_intro": "The City has undergone the following changes:",
 			"world_change_outro_default": "Stay alert as you continue your journey.",
 			"world_change_outro_old_levels": "This might be a good time to revisit old levels."

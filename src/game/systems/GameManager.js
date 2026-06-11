@@ -5,6 +5,7 @@ define([
 	'game/GameGlobals',
 	'game/GlobalSignals',
 	'game/constants/GameConstants',
+	'game/constants/TextConstants',
 	'game/EntityCreator',
 	'game/nodes/sector/SectorNode',
 	'game/nodes/player/PlayerStatsNode',
@@ -20,6 +21,7 @@ define([
 	GameGlobals,
 	GlobalSignals,
 	GameConstants,
+	TextConstants,
 	EntityCreator,
 	SectorNode, 
 	PlayerStatsNode, 
@@ -488,16 +490,25 @@ define([
 			}
 			
 			// - summarize changes
+			let NO_LEVEL = "N"
 			let changesSummary = {};
 			let changesLevels = [];
+			let significantChangesLevels = [];
 			let changesTypes = [];
 			for (let i = 0; i < worldChangesVO.changes.length; i++) {
 				let change = worldChangesVO.changes[i];
-				let key = change.level + "-" + change.type;
-				if (changesLevels.indexOf(change.level) < 0) changesLevels.push(change.level);
-				if (changesTypes.indexOf(change.type) < 0) changesTypes.push(change.type);
+				let type = change.type;
+				let level = change.level;
+				if (!level && level !== 0) level = NO_LEVEL;
+				let key = level + "-" + type;
+				
+				let isSignificant = type.seen === false;
+
+				if (changesLevels.indexOf(level) < 0) changesLevels.push(level);
+				if (isSignificant && significantChangesLevels.indexOf(level) < 0) significantChangesLevels.push(level);
+				if (changesTypes.indexOf(type) < 0) changesTypes.push(type);
 				if (!changesSummary[key]) {
-					changesSummary[key] = { num: 0, type: change.type, level: change.level };
+					changesSummary[key] = { num: 0, type: type, level: level };
 				}
 				changesSummary[key].num++;
 			}
@@ -511,15 +522,22 @@ define([
 			msg += "<div class='scrollable-container'>";
 			for (let key in changesSummary) {
 				let change = changesSummary[key];
-				let num  = change.num;
+				let num = change.num;
+
 				let changeTextKey = "ui.meta.world_change_entry_" + change.type + "_label";
-				msg += "<span class='text-list-entry'>" + Text.t(changeTextKey, { num: change.num, level: change.level }) + "</span>";
+				if (change.level === NO_LEVEL) {
+					changeTextKey = "ui.meta.world_change_entry_global_label";
+				}
+
+				let amount = TextConstants.getAmountLabel(num, 10);
+
+				msg += "<span class='text-list-entry'>" + Text.t(changeTextKey, { amount: amount, level: change.level }) + "</span>";
 			}
 			msg += "</div>";
 
 			// - outro
 			let maxLevelOrdinal = GameGlobals.gameState.level;
-			let hasOldLevelChanges = changesLevels.length > 1 || (changesLevels.length == 1 && GameGlobals.worldState.getLevelOrdinal(changesLevels[0]) < maxLevelOrdinal);
+			let hasOldLevelChanges = significantChangesLevels.length > 1 || (significantChangesLevels.length == 1 && GameGlobals.worldState.getLevelOrdinal(significantChangesLevels[0]) < maxLevelOrdinal);
 			if (hasOldLevelChanges) {
 				msg += "<p>" + Text.t("ui.meta.world_change_outro_old_levels") + "</p>";
 			} else {

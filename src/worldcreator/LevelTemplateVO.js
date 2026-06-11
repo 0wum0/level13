@@ -87,9 +87,9 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			if (this.passageUpPosition) copy.passageUpPosition = this.passageUpPosition.getCustomSaveObjectWithoutCamp();
 			copy.passageUpType = this.passageUpType;
 			if (this.predefinedExplorers.length > 0) copy.predefinedExplorers = this.predefinedExplorers;
-			copy.raidDangerFactor = this.raidDangerFactor || 1;
+			copy.raidDangerFactor = this.raidDangerFactor;
 			copy.seed = this.seed;
-			copy.traderFrequencyFactor  = this.traderFrequencyFactor  || 1;
+			copy.traderFrequencyFactor  = this.traderFrequencyFactor;
 			if (this.workshopResource) copy.workshopResource = this.workshopResource;
 			if (this.workshopPositions) copy.workshopPositions = this.workshopPositions;
 			copy.workerMetalFactor = this.workerMetalFactor;
@@ -156,9 +156,9 @@ function (Ash, SectorTemplateVO, PositionVO, DistrictVO) {
 			this.passageUpType = saveObject.passageUpType;
 
 			this.predefinedExplorers = saveObject.predefinedExplorers || [];
-			this.raidDangerFactor = saveObject.raidDangerFactor || 1;
+			this.raidDangerFactor = saveObject.raidDangerFactor;
 			this.seed = saveObject.seed;
-			this.traderFrequencyFactor = saveObject.traderFrequencyFactor || 1;
+			this.traderFrequencyFactor = saveObject.traderFrequencyFactor;
 
 			this.workerMetalFactor = saveObject.workerMetalFactor || 1;
 			this.workerFoodFactor = saveObject.workerFoodFactor || 1;

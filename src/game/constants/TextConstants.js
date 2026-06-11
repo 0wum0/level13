@@ -1366,6 +1366,14 @@ function (Ash, TextData, ArrayUtils, ObjectUtils, DescriptionMapper, Text, TextB
 				return defaultWord;
 			}
 		},
+
+		getAmountLabel: function (value, maxDisplayValue) {
+			if (value <= maxDisplayValue) {
+				return Text.t("ui.common.amount_simple_template", value);
+			} else {
+				return Text.t("ui.common.amount_many_label");
+			}
+		},
 		
 		getListText: function (list, max) {
 			let textPieceVO = this.getListTextVO(list, max);

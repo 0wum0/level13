@@ -32,7 +32,8 @@ define([
 
 		CHANGE_TYPE_LOCALE_ADDED: "locale_added",
 		CHANGE_TYPE_LOCALE_REMOVED: "locale_removed",
-		CHANGE_TYPE_LEVEL_PROPERTY_CHANGED: "level_property_changed",
+		CHANGE_TYPE_MOVEMENT_BLOCKER_CHANGED: "movement_blocker_changed",
+		CHANGE_TYPE_GENERIC: "generic",
 
 		constructor: function () {},
 
@@ -240,55 +241,65 @@ define([
 
 			let result = { changes: [] };
 
-			if (!worldTemplateVO) return result;
-
 			result.worldGeneratorVersion = WorldConstants.version;
 			result.worldVersion = worldVO.version;
 			result.worldTemplateVersion = worldTemplateVO.version;
+
+			let resultWorldTemplateVO = new WorldTemplateVO(worldVO);
+
+			let diff = ObjectUtils.diff(worldTemplateVO, resultWorldTemplateVO, { ignoredKeys: [ "levels" ] });
+			for (let key in diff.byKey) {
+				result.changes.push({ level: null, type: this.CHANGE_TYPE_GENERIC, detail: "world property " + key + " changed" });
+			}
 
 			for (let l = worldVO.topLevel; l >= worldVO.bottomLevel; l--) {
 				if (!this.isLevelGeneratedInWorld(worldVO, l)) continue;
 				let levelVO = worldVO.levels[l];
 				let levelTemplateVO = worldTemplateVO.levels[l];
-				let levelChanges = this.getLevelChanges(levelVO, levelTemplateVO);
+				let resultLevelTemplateVO = resultWorldTemplateVO.levels[l];
+				let levelChanges = this.getLevelChanges(levelVO, levelTemplateVO, resultLevelTemplateVO);
 				if (levelChanges.length > 0) result.changes = result.changes.concat(levelChanges);
 			}
 
 			return result;
 		},
 
-		getLevelChanges: function (levelVO, levelTemplateVO) {
+		getLevelChanges: function (levelVO, levelTemplateVO, resultLevelTemplateVO) {
 			let result = [];
 
 			if (!levelTemplateVO) return result;
 
 			let level = levelVO.level;
 
-			let keys = Object.keys(levelTemplateVO);
-			for (let i in keys) {
-				let prop = keys[i];
-				let oldValue = levelTemplateVO[prop];
-				let newValue = levelVO[prop];
-				if (typeof oldValue == "object") continue;
-				if (levelVO[prop] !== levelTemplateVO[prop]) {
-					result.push({ level: level, type: this.CHANGE_TYPE_LEVEL_PROPERTY_CHANGED, detail: "property " + prop + " changed " + levelVO[prop] + " -> " + levelTemplateVO[prop] });
-				}
+			// - generic
+			let diff = ObjectUtils.diff(levelTemplateVO, resultLevelTemplateVO, { ignoredKeys: [ "sectors" ] });
+			for (let key in diff.byKey) {
+				result.push({ level: level, type: this.CHANGE_TYPE_GENERIC, detail: "level property " + key + " changed" });
 			}
 
+			// - sectors
 			for (let s = 0; s < levelVO.sectors.length; s++) {
 				let sectorVO = levelVO.sectors[s];
 				let sectorTemplateVO = levelTemplateVO.sectors[s];
+				let resultSectorTemplateVO = resultLevelTemplateVO.sectors[s];
 
-				let sectorChanges = this.checkSectorChanges(sectorVO, sectorTemplateVO);
+				let sectorChanges = this.checkSectorChanges(sectorVO, sectorTemplateVO, resultSectorTemplateVO);
 				if (sectorChanges.length > 0) result = result.concat(sectorChanges);
 			}
 
 			return result;
 		},
 
-		checkSectorChanges: function (sectorVO, sectorTemplateVO) {
+		checkSectorChanges: function (sectorVO, sectorTemplateVO, resultSectorTemplateVO) {
 			let result = [];
+
 			let level = sectorVO.position.level;
+
+			// - generic 
+			let diff = ObjectUtils.diff(sectorTemplateVO, resultSectorTemplateVO, { ignoredKeys: [ "locales", "movementBlockers" ] });
+			for (let key in diff.byKey) {
+				result.push({ level: level, type: this.CHANGE_TYPE_GENERIC, detail: "sector property " + key + " changed" });
+			}
 
 			// - added or removed locales
 			let sectorLocales = sectorVO.locales.concat();
@@ -311,14 +322,18 @@ define([
 			}
 
 			for (let i = 0 ; i < extraLocales.length; i++) {
-				result.push({ level: level, type: this.CHANGE_TYPE_LOCALE_ADDED, detail: "added locale " + extraLocales[i].type + " at " + sectorVO.position, seen: false })
+				result.push({ level: level, type: this.CHANGE_TYPE_LOCALE_ADDED, detail: "added locale " + extraLocales[i].type + " at " + sectorVO.position, seen: false });
 			}
 
 			for (let i = 0 ; i < notFoundLocales.length; i++) {
-				result.push({ level: level, type: this.CHANGE_TYPE_LOCALE_REMOVED, detail: "removed locale " + notFoundLocales[i].type + " at " + sectorVO.position, seen: false })
+				result.push({ level: level, type: this.CHANGE_TYPE_LOCALE_REMOVED, detail: "removed locale " + notFoundLocales[i].type + " at " + sectorVO.position, seen: false });
 			}
-			
-			// TODO add more checks
+
+			// - movement blockers
+			let movementBlockersDiff = ObjectUtils.diff(sectorTemplateVO.movementBlockers, resultSectorTemplateVO.movementBlockers);
+			if (movementBlockersDiff.total > 0) {
+				result.push({ level: level, type: this.CHANGE_TYPE_MOVEMENT_BLOCKER_CHANGED, detail: "changed movement blockers at " + sectorVO.position });
+			}
 
 			return result;
 		},

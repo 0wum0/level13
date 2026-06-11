@@ -416,9 +416,11 @@ define([
 		},
 		
 		generateMovementBlockers: function (seed, worldVO, levelVO) {
-			var l = levelVO.level;
-			var levelOrdinal = WorldCreatorHelper.getLevelOrdinal(seed, l);
-			var campOrdinal = WorldCreatorHelper.getCampOrdinal(seed, l);
+			// TODO use existing from template where applicable (for random ones)
+
+			let l = levelVO.level;
+			let levelOrdinal = WorldCreatorHelper.getLevelOrdinal(seed, l);
+			let campOrdinal = WorldCreatorHelper.getCampOrdinal(seed, l);
 			
 			var blockerTypesEarly = SectorGeneratorHelper.getLevelBlockerTypes(worldVO, levelVO, WorldConstants.CAMP_STAGE_EARLY);
 			var blockerTypesLate = SectorGeneratorHelper.getLevelBlockerTypes(worldVO, levelVO, WorldConstants.CAMP_STAGE_LATE);

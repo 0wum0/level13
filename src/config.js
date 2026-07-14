@@ -18,7 +18,7 @@ require.config({
 
     config: {
         'level13-app': {
-            version: '0.7.1-node22',
+            version: '0.7.2-sublevel',
             isDebugVersion: false,
             isCheatsEnabled: false,
             isDebugOutputEnabled: false,
@@ -27,6 +27,6 @@ require.config({
         }
     },
 
-    urlArgs: 'v=0.7.1-node22'
+    urlArgs: 'v=0.7.2-sublevel'
 
 });

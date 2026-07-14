@@ -26,9 +26,12 @@ define(function () {
         });
     }
 
+    function currentUserID() {
+        return bootstrapData && bootstrapData.user ? String(bootstrapData.user.id) : 'unknown';
+    }
+
     function userKey(suffix) {
-        let userID = bootstrapData && bootstrapData.user ? bootstrapData.user.id : 'unknown';
-        return 'sublevel-user-' + userID + '-' + suffix;
+        return 'sublevel-user-' + currentUserID() + '-' + suffix;
     }
 
     function getLegacySave() {
@@ -39,12 +42,20 @@ define(function () {
         }
     }
 
+    function clearGenericSave() {
+        try {
+            localStorage.removeItem('save-default');
+            localStorage.removeItem('save');
+        } catch (error) {}
+    }
+
     function setLocalSave(data) {
         if (!data) return;
         try {
             localStorage.setItem('save-default', data);
             localStorage.setItem('save', data);
             localStorage.setItem(userKey('save-default'), data);
+            localStorage.setItem('sublevel-active-save-owner', currentUserID());
         } catch (error) {
             if (typeof log !== 'undefined' && log.w) log.w('Could not store database save locally: ' + error);
         }
@@ -52,27 +63,42 @@ define(function () {
 
     function prepareLocalStorage(data) {
         try {
+            let userID = currentUserID();
+            let activeSaveOwner = localStorage.getItem('sublevel-active-save-owner');
             let userSave = localStorage.getItem(userKey('save-default'));
+            let legacySave = getLegacySave();
+
             if (data.save && data.save.data) {
                 setLocalSave(data.save.data);
                 saveRevision = data.save.revision || 0;
             } else if (userSave) {
                 setLocalSave(userSave);
                 pushSave(userSave);
-            } else {
-                let legacySave = getLegacySave();
+            } else if (!activeSaveOwner || activeSaveOwner === userID) {
                 if (legacySave) {
                     setLocalSave(legacySave);
                     pushSave(legacySave);
+                } else {
+                    clearGenericSave();
+                    localStorage.setItem('sublevel-active-save-owner', userID);
                 }
+            } else {
+                clearGenericSave();
+                localStorage.setItem('sublevel-active-save-owner', userID);
             }
 
+            let activeMetaOwner = localStorage.getItem('sublevel-active-meta-owner');
             let userMeta = localStorage.getItem(userKey('meta-state'));
             if (userMeta) {
                 localStorage.setItem('meta-state', userMeta);
-            } else {
+                localStorage.setItem('sublevel-active-meta-owner', userID);
+            } else if (!activeMetaOwner || activeMetaOwner === userID) {
                 let legacyMeta = localStorage.getItem('meta-state');
                 if (legacyMeta) localStorage.setItem(userKey('meta-state'), legacyMeta);
+                localStorage.setItem('sublevel-active-meta-owner', userID);
+            } else {
+                localStorage.removeItem('meta-state');
+                localStorage.setItem('sublevel-active-meta-owner', userID);
             }
         } catch (error) {
             if (typeof log !== 'undefined' && log.w) log.w('User storage preparation skipped: ' + error);
@@ -86,7 +112,10 @@ define(function () {
             body: JSON.stringify({ data: data, revision: saveRevision, clientVersion: clientVersion || null })
         }).then(function (result) {
             saveRevision = result.revision || saveRevision;
-            try { localStorage.setItem(userKey('save-default'), data); } catch (error) {}
+            try {
+                localStorage.setItem(userKey('save-default'), data);
+                localStorage.setItem('sublevel-active-save-owner', currentUserID());
+            } catch (error) {}
             return result;
         }).catch(function (error) {
             if (typeof log !== 'undefined' && log.w) log.w('Database save failed: ' + error.message);
@@ -95,12 +124,17 @@ define(function () {
     }
 
     function clearSave() {
+        clearGenericSave();
+        try { localStorage.removeItem(userKey('save-default')); } catch (error) {}
         return request('/api/game/save', { method: 'DELETE', body: '{}' }).catch(function () { return null; });
     }
 
     function storeMetaState(data) {
         if (!data) return;
-        try { localStorage.setItem(userKey('meta-state'), data); } catch (error) {}
+        try {
+            localStorage.setItem(userKey('meta-state'), data);
+            localStorage.setItem('sublevel-active-meta-owner', currentUserID());
+        } catch (error) {}
     }
 
     function language() {
@@ -117,7 +151,7 @@ define(function () {
             if (!bootstrapData || !bootstrapData.user || document.getElementById('sublevel-account-controls')) return;
             let container = document.createElement('div');
             container.id = 'sublevel-account-controls';
-            container.style.cssText = 'position:fixed;right:12px;top:12px;z-index:1200;display:flex;align-items:center;gap:7px;font:12px/1.2 sans-serif;';
+            container.style.cssText = 'position:fixed;right:12px;top:12px;z-index:1200;display:flex;align-items:center;gap:7px;font:12px/1.2 sans-serif;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 24px);';
 
             let label = document.createElement('span');
             label.textContent = bootstrapData.user.username;
@@ -174,11 +208,19 @@ define(function () {
         });
     }
 
+    function enforceMaintenance(data) {
+        let maintenance = data && data.settings ? data.settings['game.maintenance'] : null;
+        if (!maintenance || !maintenance.enabled || data.user.role === 'guardian') return;
+        let message = data.user.language === 'EN_GB' ? maintenance.message_en : maintenance.message_de;
+        throw new Error(message || (data.user.language === 'EN_GB' ? 'Sublevel is currently under maintenance.' : 'Sublevel befindet sich derzeit im Wartungsmodus.'));
+    }
+
     function bootstrap() {
         if (bootstrapPromise) return bootstrapPromise;
         bootstrapPromise = request('/api/game/bootstrap').then(function (data) {
             bootstrapData = data;
             csrfToken = data.csrfToken;
+            enforceMaintenance(data);
             prepareLocalStorage(data);
             installAccountUI();
             showAnnouncements();

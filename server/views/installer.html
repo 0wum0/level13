@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de-DE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sublevel – Installation</title>
+  <link rel="stylesheet" href="/auth/sublevel-auth.css?v=0.8.0-sublevel">
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-card" aria-labelledby="installer-title">
+      <header class="auth-header">
+        <div class="brand"><div class="brand-mark">S</div><div><h1 id="installer-title">Sublevel</h1><p data-i18n="subtitle">Sichere Ersteinrichtung</p></div></div>
+        <div class="language-switch" aria-label="Sprache"><button type="button" data-language="DE_DE" class="active">DE</button><button type="button" data-language="EN_GB">EN</button></div>
+      </header>
+      <div class="auth-body">
+        <div class="stepper" aria-label="Installationsschritte">
+          <div class="step active" data-step-indicator="0"><strong>01</strong><span data-i18n="stepWelcome">Willkommen</span></div>
+          <div class="step" data-step-indicator="1"><strong>02</strong><span data-i18n="stepDatabase">Datenbank</span></div>
+          <div class="step" data-step-indicator="2"><strong>03</strong><span data-i18n="stepGuardian">Wächter</span></div>
+        </div>
+        <section class="panel active" data-step="0">
+          <h2 data-i18n="welcomeTitle">Willkommen bei Sublevel</h2>
+          <p data-i18n="welcomeText">Dieser Installer verbindet Sublevel mit deiner MySQL- oder MariaDB-Datenbank, erstellt alle benötigten Tabellen und legt den ersten Wächter-Account an. Sicherheitswerte werden automatisch erzeugt und die Datenbank-Zugangsdaten verschlüsselt gespeichert.</p>
+          <div class="notice info visible" data-i18n="welcomeInfo">Der Installer verändert keine vorhandenen Tabellen außerhalb des Präfixes „sublevel_“.</div>
+          <div class="actions end"><button class="button primary" type="button" data-next data-i18n="continue">Weiter</button></div>
+        </section>
+        <section class="panel" data-step="1">
+          <h2 data-i18n="databaseTitle">Datenbankverbindung</h2>
+          <p data-i18n="databaseText">Trage die Zugangsdaten der Datenbank ein, die du bei deinem Hoster angelegt hast. Sublevel erstellt darin ausschließlich eigene Tabellen.</p>
+          <form id="database-form" class="form-grid" autocomplete="off">
+            <div class="field"><label for="db-host" data-i18n="dbHost">Host</label><input id="db-host" name="host" required placeholder="localhost"></div>
+            <div class="field"><label for="db-port" data-i18n="dbPort">Port</label><input id="db-port" name="port" type="number" min="1" max="65535" value="3306" required></div>
+            <div class="field"><label for="db-name" data-i18n="dbName">Datenbankname</label><input id="db-name" name="database" required autocomplete="off"></div>
+            <div class="field"><label for="db-user" data-i18n="dbUser">Datenbank-Benutzer</label><input id="db-user" name="user" required autocomplete="username"></div>
+            <div class="field full"><label for="db-password" data-i18n="dbPassword">Datenbank-Passwort</label><input id="db-password" name="password" type="password" autocomplete="new-password"></div>
+            <label class="checkbox field full"><input id="db-ssl" name="ssl" type="checkbox"><span data-i18n="dbSsl">SSL-Verbindung verwenden</span></label>
+          </form>
+          <div id="database-notice" class="notice" role="status"></div>
+          <div class="actions"><button class="button secondary" type="button" data-back data-i18n="back">Zurück</button><div class="toolbar"><button id="test-database" class="button secondary" type="button" data-i18n="testConnection">Verbindung testen</button><button class="button primary" type="button" data-next data-i18n="continue">Weiter</button></div></div>
+        </section>
+        <section class="panel" data-step="2">
+          <h2 data-i18n="guardianTitle">Ersten Wächter anlegen</h2>
+          <p data-i18n="guardianText">Der Wächter ist der geschützte Hauptaccount für Spielverwaltung, Benutzer, Gegenstände, Meldungen, Spielstände und Systemeinstellungen.</p>
+          <form id="guardian-form" class="form-grid" autocomplete="off">
+            <div class="field"><label for="guardian-username" data-i18n="username">Benutzername</label><input id="guardian-username" name="username" minlength="3" maxlength="64" required autocomplete="username"></div>
+            <div class="field"><label for="guardian-email" data-i18n="email">E-Mail-Adresse</label><input id="guardian-email" name="email" type="email" maxlength="190" required autocomplete="email"></div>
+            <div class="field"><label for="guardian-password" data-i18n="password">Passwort</label><input id="guardian-password" name="password" type="password" minlength="10" required autocomplete="new-password"><small data-i18n="passwordHint">Mindestens 10 Zeichen.</small></div>
+            <div class="field"><label for="guardian-password-confirm" data-i18n="passwordConfirm">Passwort wiederholen</label><input id="guardian-password-confirm" name="passwordConfirm" type="password" minlength="10" required autocomplete="new-password"></div>
+            <div class="field full"><label for="guardian-language" data-i18n="accountLanguage">Standardsprache</label><select id="guardian-language" name="language"><option value="DE_DE">Deutsch</option><option value="EN_GB">English</option></select></div>
+          </form>
+          <div id="install-notice" class="notice" role="status"></div>
+          <div class="actions"><button class="button secondary" type="button" data-back data-i18n="back">Zurück</button><button id="complete-installation" class="button primary" type="button" data-i18n="install">Sublevel installieren</button></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="/auth/installer.js?v=0.8.0-sublevel" defer></script>
+</body>
+</html>

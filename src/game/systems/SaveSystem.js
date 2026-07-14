@@ -5,8 +5,9 @@ define([
     'game/constants/GameConstants',
     'lzstring/lz-string',
     'game/nodes/common/SaveNode',
+    'network/SublevelAPI',
     'network/SocketClient'
-], function (Ash, GameGlobals, GlobalSignals, GameConstants, LZString, SaveNode, SocketClient) {
+], function (Ash, GameGlobals, GlobalSignals, GameConstants, LZString, SaveNode, SublevelAPI, SocketClient) {
     var SaveSystem = Ash.System.extend({
 
         engine: null,
@@ -87,7 +88,11 @@ define([
             if (isDefaultSlot) {
                 this.error = success ? null : 'Failed to save';
                 this.lastDefaultSaveTimestamp = new Date().getTime();
-                if (success) SocketClient.pushSave(data);
+                if (success) {
+                    SocketClient.pushSave(data);
+                    let clientVersion = GameGlobals.changeLogHelper ? GameGlobals.changeLogHelper.getCurrentVersionNumber() : null;
+                    SublevelAPI.pushSave(data, clientVersion);
+                }
             }
         },
 
@@ -124,6 +129,7 @@ define([
             const data = this.getCompressedMetaStateJSON();
             try {
                 localStorage.setItem('meta-state', data);
+                SublevelAPI.storeMetaState(data);
                 log.i('Saved meta state');
                 return true;
             } catch (ex) {
@@ -158,12 +164,10 @@ define([
             const version = GameGlobals.changeLogHelper.getCurrentVersionNumber();
             const entitiesObject = {};
             let entityObject;
-            let nodes = 0;
 
             for (let node = this.saveNodes.head; node; node = node.next) {
                 entityObject = this.getEntitySaveObject(node);
                 if (entityObject && Object.keys(entityObject).length > 0) {
-                    nodes++;
                     entitiesObject[node.save.entityKey] = entityObject;
                 }
             }
@@ -176,7 +180,6 @@ define([
             save.worldState.worldTemplateVO = GameGlobals.worldState.worldTemplateVO.getCustomSaveObject();
             save.timeStamp = new Date();
             save.version = version;
-
             return this.getSaveJSONForObject(save, 'save');
         },
 
@@ -191,29 +194,15 @@ define([
 
         getEntitySaveObject: function (node) {
             const entityObject = {};
-            let biggestComponent = null;
-            let biggestComponentSize = 0;
-            let totalSize = 0;
-
             for (let i = 0; i < node.save.components.length; i++) {
                 const componentType = node.save.components[i];
                 const component = node.entity.get(componentType);
                 if (!component) continue;
-
                 const componentKey = component.getSaveKey ? component.getSaveKey() : componentType;
                 let saveObject = component;
                 if (component.getCustomSaveObject) saveObject = component.getCustomSaveObject();
                 if (saveObject) entityObject[componentKey] = saveObject;
-
-                const saveString = this.getSaveJSONForObject(saveObject, 'component:' + componentKey) || '{}';
-                const size = saveString.length;
-                if (size > biggestComponentSize) {
-                    biggestComponent = saveObject;
-                    biggestComponentSize = size;
-                }
-                totalSize += size;
             }
-
             return entityObject;
         },
 
@@ -253,6 +242,7 @@ define([
         onRestart: function (resetSave) {
             if (!resetSave) return;
             this.clearSlot(GameConstants.SAVE_SLOT_DEFAULT);
+            SublevelAPI.clearSave();
         }
 
     });

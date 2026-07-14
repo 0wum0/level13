@@ -1,66 +1,93 @@
 # Level 13
 
-Level 13 is an text-based incremental science fiction browser adventure where the player must survive in a dark, decayed City, (re-)discover old and new technologies, and rebuild a civilization that has collapsed.
+Level 13 ist ein textbasiertes, inkrementelles Science-Fiction-Browserabenteuer. Der Spieler überlebt in einer dunklen, verfallenen Stadt, entdeckt alte und neue Technologien und baut eine zusammengebrochene Zivilisation wieder auf.
 
-The game is in active development. It is a personal side project but has also received some fixes from the community along the way. Bug reports and feedback are very welcome, but please check the [contributing guidelines](docs/CONTRIBUTING.md) first.
+Die bestehende Browser-Spielarchitektur mit RequireJS, jQuery und Ash.js bleibt erhalten. Ausgeliefert wird sie nun über eine Node.js-22-Anwendung mit Express und Socket.IO.
 
-## Quick Links
-* Play the game [here](https://nroutasuo.github.io/level13/)
-* Read about how to report bugs, suggest features, or submit fixes to the project in the [contributing guidelines](docs/CONTRIBUTING.md)
-* Chat about the game or get help on the [discussions page](https://github.com/nroutasuo/level13/discussions), the [subreddit](https://www.reddit.com/r/level13/), or the [Discord server](https://discord.gg/BzMbATyKph)
+## Funktionen
 
-## Game Overview
+- Überleben, Erkundung und Ressourcenmanagement
+- Lagerbau und zufällig erzeugte Karten
+- Gegenstände, Ausrüstung und Umweltgefahren
+- Technologien und schrittweise freigeschaltete Spielsysteme
+- Mehrsprachige Oberfläche mit Deutsch als Standardsprache
+- Englisch als vollständige Rückfallsprache
+- Finnisch bleibt als vorhandene Sprache verfügbar
+- Echtzeitverbindung und optionale Spielstand-Synchronisierung über Socket.IO
 
-### Features
+## Lokal starten
 
-* Survival and exploration
-* Base-building and resource-management
-* Randomly generated maps
-* Items, equipment and environmental hazards
-* Technologies that slowly unlock new aspects of the game
+Voraussetzungen: Node.js 22 und npm 10 oder neuer.
 
-## Code Overview
+```bash
+nvm use
+npm install
+npm start
+```
 
-The project uses [jQuery](https://jquery.com/), [Require.js](http://requirejs.org/), and [Ash.js](https://github.com/brejep/ash-js) and is structured according to an entity system framework into entities, components and systems.
+Danach ist das Spiel standardmäßig unter `http://localhost:3000` erreichbar. Während der Entwicklung kann der Server mit automatischem Neustart gestartet werden:
 
-### Branches
-* **master** is a development branch and can contain unfinished and buggy features
-* **gh-pages** is more stable and contains whatever is currently live
+```bash
+npm run dev
+```
 
-### Entities and Components
+Die JavaScript-Syntax der Serverdateien wird geprüft mit:
 
-All game data is stored in various [Components](https://github.com/nroutasuo/level13/tree/master/src/game/components) that are attached to entities such as the player or a sector. Entities are simply containers for Components. The [EntityCreator](https://github.com/nroutasuo/level13/blob/master/src/game/EntityCreator.js) gives a good overview of what kind of entities have what kind of components.
+```bash
+npm run check
+```
 
-### Systems
+## Konfiguration
 
-Various independent [Systems](https://github.com/nroutasuo/level13/tree/master/src/game/systems) use and change data on Components and make stuff happen in the game. They generate resources, update movement options, resolve fights and so on. Each area of the UI is taken care of by its own [UI system](https://github.com/nroutasuo/level13/tree/master/src/game/systems/ui).
+Kopiere `.env.example` nach `.env` oder hinterlege die Variablen in der Hosting-Oberfläche:
 
-### Player Actions
+- `PORT`: HTTP-Port, standardmäßig `3000`
+- `ALLOWED_ORIGINS`: Kommagetrennte Origins für Socket.IO; leer bedeutet Same-Origin-Betrieb
+- `TRUST_PROXY`: Hinter einem vertrauenswürdigen Reverse Proxy auf `true` setzen
+- `MAX_LIVE_SESSIONS`: Maximale Zahl zwischengespeicherter Live-Sitzungen
+- `LIVE_SESSION_TTL_MS`: Ablaufzeit inaktiver Live-Sitzungen
 
-Everything that the player can do in the game - mainly button clicks - are called "player actions". Each action has an associated name, costs, requirements, cooldown and so on. The [PlayerActionFunctions](https://github.com/nroutasuo/level13/blob/master/src/game/PlayerActionFunctions.js) class contains a function for each action and handles their results. Various helpers take care of checking requirements, deducting costs, unifying random encounters and so on.
+Der Statusendpunkt liegt unter `/healthz`.
 
-### World Creator
+## Sprachen
 
-At the start of a new game, a seed value is assigned to the game. The [World Creator](https://github.com/nroutasuo/level13/tree/master/src/worldcreator) generates a unique world based on this seed and only the seed needs to be saved between sessions.
+Die Sprache kann im Einstellungsfenster direkt gewechselt werden. Neue und bestehende Spielstände ohne gespeicherte Sprachwahl starten mit `DE_DE`.
 
-![samplelevel2](/docs/samplelevel2.PNG)  ![samplelevel3](/docs/samplelevel3.PNG)
+Übersetzungsdateien:
 
-(Sample level structure)
+- `strings/strings-de.json` – Deutsch
+- `strings/strings.json` – Englisch und Rückfalltexte
+- `strings/strings-fi.json` – Finnisch
 
-The world is generated in roughly the following steps:
-* [WorldGenerator](https://github.com/nroutasuo/level13/blob/master/src/worldcreator/WorldGenerator.js) determines rough structure of the entire world and important points like camp and passage locations
-* [LevelGenerator](https://github.com/nroutasuo/level13/blob/master/src/worldcreator/LevelGenerator.js) adds more details to each level
-* [StructureGenerator](https://github.com/nroutasuo/level13/blob/master/src/worldcreator/StructureGenerator.js) determines the structure of each level, placing sectors and paths according to constraints set in the previous steps
-* [SectorGenerator](https://github.com/nroutasuo/level13/blob/master/src/worldcreator/SectorGenerator.js) populates the sectors with features like resources, item stashes, environmental hazards, movement blockers etc
+Fehlt ein deutscher oder finnischer Schlüssel, verwendet das Spiel automatisch den englischen Originaltext. Zusätzlich übersetzt `src/text/LocaleBootstrap.js` ältere, direkt im HTML hinterlegte Oberflächentexte und stellt sie beim Wechsel zu Englisch oder Finnisch wieder her.
 
-Two important units for balancing the world are the camp ordinal and the level ordinal. Level 13 where the player always starts has level ordinal 1 and camp ordinal 1.
+## Socket.IO
 
-## Other games
+Der Browser verbindet sich automatisch mit demselben Host. Die Verbindung stellt Präsenzinformationen, Serverzeit und eine versionierte Synchronisierung des Standard-Spielstands bereit.
 
-Level 13 is heavily inspired by [A Dark Room]( http://adarkroom.doublespeakgames.com/). Other great text-based and / or incremental games that the game owes much inspiration to include:
+Wichtige Ereignisse:
 
-* [Kittens Game](http://bloodrizer.ru/games/kittens/)
-* [Shark Game](http://cirri.al/sharks/)
-* [Crank](https://faedine.com/games/crank/b39/)
-* [CivClicker](http://civclicker.sourceforge.net/civclicker/civclicker.html)
-* [Prosperity](https://home.prosperity-game.com/)
+- `game:join`
+- `presence:update`
+- `client:language`
+- `server:time`
+- `save:push`
+- `save:pull`
+- `save:updated`
+
+Die Live-Spielstände werden derzeit nur im Arbeitsspeicher des Node-Prozesses gehalten. Sie sind kein dauerhaftes Benutzerkonto oder Cloud-Backup und gehen bei einem Serverneustart verloren. Der lokale Browser-Spielstand bleibt davon unabhängig erhalten.
+
+## Projektstruktur
+
+- `server.js` – Express- und HTTP-Server
+- `server/socket-server.js` – Socket.IO-Protokoll und Sitzungsspeicher
+- `src/network/SocketClient.js` – fehlertoleranter Browser-Client
+- `src/text/TextLoader.js` – Sprachwahl und Übersetzungs-Fallback
+- `src/text/LocaleBootstrap.js` – Übersetzung älterer statischer Texte
+- `src/game/systems/SaveSystem.js` – lokale Speicherung und Live-Synchronisierung
+
+Die Spiellogik bleibt weiterhin nach Entity-Component-System-Prinzip in Komponenten und Systemen organisiert. Weitere Hinweise für Beiträge stehen in [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+## Ursprung
+
+Das ursprüngliche Level-13-Projekt stammt von Noora Routasuo und ist unter anderem von *A Dark Room*, *Kittens Game*, *Shark Game*, *Crank*, *CivClicker* und *Prosperity* inspiriert.

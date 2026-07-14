@@ -14,3 +14,12 @@ balancing.html
 worldcreator.html
 .vscode/
 *_unused_*
+
+# Node.js runtime
+node_modules/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+coverage/
+.DS_Store

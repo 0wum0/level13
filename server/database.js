@@ -1,6 +1,23 @@
-import mysql from 'mysql2/promise';
-
 const DATABASE_NAME_PATTERN = /^[A-Za-z0-9_$-]{1,64}$/;
+
+let mysqlModulePromise = null;
+
+async function loadMysqlModule() {
+  if (!mysqlModulePromise) {
+    mysqlModulePromise = import('mysql2/promise')
+      .then(module => module.default || module)
+      .catch(error => {
+        mysqlModulePromise = null;
+        const driverError = new Error(
+          'Der MySQL-Treiber mysql2 ist auf dem Server nicht installiert. Starte beim Deployment die Installation der npm-Abhängigkeiten neu.',
+        );
+        driverError.code = 'MYSQL_DRIVER_MISSING';
+        driverError.cause = error;
+        throw driverError;
+      });
+  }
+  return mysqlModulePromise;
+}
 
 function normalizeBoolean(value) {
   return value === true || value === 'true' || value === 1 || value === '1';
@@ -55,13 +72,27 @@ export class DatabaseManager {
     this.pool = null;
     this.config = null;
     this.lastError = null;
+    this.driverLoaded = false;
   }
 
   get isReady() {
     return Boolean(this.pool);
   }
 
+  async getDriver() {
+    try {
+      const mysql = await loadMysqlModule();
+      this.driverLoaded = true;
+      return mysql;
+    } catch (error) {
+      this.driverLoaded = false;
+      this.lastError = error;
+      throw error;
+    }
+  }
+
   async test(config) {
+    const mysql = await this.getDriver();
     const connection = await mysql.createConnection(connectionOptions(config));
     try {
       const [rows] = await connection.query('SELECT VERSION() AS version, DATABASE() AS databaseName');
@@ -77,6 +108,7 @@ export class DatabaseManager {
 
   async connect(config) {
     await this.disconnect();
+    const mysql = await this.getDriver();
     const normalized = normalizeDatabaseConfig(config);
     const pool = mysql.createPool({
       ...connectionOptions(normalized),
@@ -289,6 +321,9 @@ export class DatabaseManager {
 
 export function databaseErrorMessage(error) {
   const code = error?.code || '';
+  if (code === 'MYSQL_DRIVER_MISSING' || code === 'ERR_MODULE_NOT_FOUND') {
+    return 'Der MySQL-Treiber mysql2 fehlt auf dem Server. Führe beim Deployment npm install aus und starte die Node.js-Anwendung anschließend neu.';
+  }
   if (code === 'ER_ACCESS_DENIED_ERROR') return 'Zugriff verweigert. Prüfe Benutzername und Passwort.';
   if (code === 'ER_BAD_DB_ERROR') return 'Die angegebene Datenbank existiert nicht oder ist nicht erreichbar.';
   if (code === 'ENOTFOUND') return 'Der Datenbank-Host wurde nicht gefunden.';

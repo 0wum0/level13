@@ -1,0 +1,21 @@
+{
+  "name": "level13-node",
+  "version": "0.7.1",
+  "private": true,
+  "description": "Level 13 browser game served by Node.js 22, Express and Socket.IO.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check server/socket-server.js"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  }
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de-DE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sublevel – Anmeldung</title>
+  <link rel="stylesheet" href="/auth/sublevel-auth.css?v=0.8.0-sublevel">
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-card login-card" aria-labelledby="login-title">
+      <header class="auth-header">
+        <div class="brand"><div class="brand-mark">S</div><div><h1 id="login-title">Sublevel</h1><p data-i18n="subtitle">Anmeldung</p></div></div>
+        <div class="language-switch" aria-label="Sprache"><button type="button" data-language="DE_DE" class="active">DE</button><button type="button" data-language="EN_GB">EN</button></div>
+      </header>
+      <div class="auth-body">
+        <form id="login-form" class="form-grid">
+          <div class="field full"><label for="identifier" data-i18n="identifier">Benutzername oder E-Mail-Adresse</label><input id="identifier" name="identifier" required autocomplete="username" autofocus></div>
+          <div class="field full"><label for="password" data-i18n="password">Passwort</label><input id="password" name="password" type="password" required autocomplete="current-password"></div>
+          <div class="field full"><button id="login-button" class="button primary" type="submit" data-i18n="login">Anmelden</button></div>
+        </form>
+        <div id="login-notice" class="notice" role="status"></div>
+        <div class="login-meta"><span data-i18n="secure">Geschützte Anmeldung mit serverseitiger Sitzung.</span><span>Sublevel</span></div>
+      </div>
+    </section>
+  </main>
+  <script src="/auth/login.js?v=0.8.0-sublevel" defer></script>
+</body>
+</html>

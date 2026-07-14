@@ -67,7 +67,7 @@ define([
             'disease': 'Krankheit',
             'storage': 'Lager',
             'production': 'Produktion',
-            'Level 13 isn\'t optimized for mobile. The layout works best on larger screens and many elements rely on hover effects. For the best experience, please come back on a different device.': 'Level 13 ist noch nicht vollständig für Mobilgeräte optimiert. Auf größeren Bildschirmen funktioniert die Oberfläche am besten.',
+            'Level 13 isn\'t optimized for mobile. The layout works best on larger screens and many elements rely on hover effects. For the best experience, please come back on a different device.': 'Sublevel ist noch nicht vollständig für Mobilgeräte optimiert. Auf größeren Bildschirmen funktioniert die Oberfläche am besten.',
             'If you want to try it out anyway,': 'Du kannst es trotzdem ausprobieren:',
             'click here': 'hier tippen',
             'to dismiss this message.': 'um diesen Hinweis zu schließen.',
@@ -94,7 +94,22 @@ define([
             'Other items': 'Andere Gegenstände',
             'Use': 'Benutzen',
             'Craft': 'Herstellen',
-            'Repair': 'Reparieren'
+            'Repair': 'Reparieren',
+            'ERROR': 'FEHLER',
+            'Error': 'Fehler',
+            'You\'ve found a bug! Please reload the page to continue playing.': 'Es ist ein Fehler aufgetreten. Bitte lade die Seite neu, um weiterzuspielen.',
+            'If reloading doesn\'t help, you can clear your data and restart the game, but you will lose all your progress.': 'Falls das Neuladen nicht hilft, kannst du die lokalen Daten löschen und das Spiel neu starten. Dabei geht dein Fortschritt verloren.',
+            'You can also help the developer by': 'Du kannst dem Entwickler außerdem helfen, indem du',
+            'reporting': 'den Fehler meldest',
+            'the problem on GitHub.': 'auf GitHub.',
+            'reload': 'neu laden',
+            'clear data': 'Daten löschen',
+            'Warning': 'Warnung',
+            'Update': 'Aktualisierung',
+            'The game has been updated.': 'Das Spiel wurde aktualisiert.',
+            'See the': 'Sieh im',
+            'for details.': 'nach weiteren Informationen.',
+            'City Update': 'Stadt-Aktualisierung'
         }
     };
 
@@ -115,6 +130,8 @@ define([
     }
 
     function translateTextNode(node, dictionary) {
+        if (!node || typeof node.nodeValue !== 'string') return;
+
         const current = node.nodeValue;
         const currentTrimmed = current.trim();
         const savedOriginal = originalText.get(node);
@@ -149,13 +166,14 @@ define([
     }
 
     function applyToRoot(root, dictionary) {
-        if (!root) return;
+        if (!root || typeof Node === 'undefined') return;
         if (root.nodeType === Node.TEXT_NODE) {
             translateTextNode(root, dictionary);
             return;
         }
         if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) return;
         if (root.nodeType === Node.ELEMENT_NODE && shouldSkipElement(root)) return;
+        if (typeof document.createTreeWalker !== 'function' || typeof NodeFilter === 'undefined') return;
 
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode(node) {
@@ -174,7 +192,7 @@ define([
 
     function applyDocumentMetadata(language) {
         document.documentElement.lang = languageTag(language);
-        document.title = language === 'DE_DE' ? 'Level 13 – Überleben in der Stadt' : 'Level 13';
+        document.title = language === 'DE_DE' ? 'Sublevel – Überleben in der Tiefe' : 'Sublevel';
 
         const description = document.querySelector('meta[name="description"]');
         if (description) {
@@ -182,23 +200,36 @@ define([
                 ? 'Ein textbasiertes Science-Fiction-Abenteuer über Überleben, Erkundung und den Wiederaufbau einer gefallenen Zivilisation.'
                 : 'A text-based science fiction adventure game.');
         }
+
+        const openGraphTitle = document.querySelector('meta[property="og:title"]');
+        if (openGraphTitle) openGraphTitle.setAttribute('content', 'Sublevel');
     }
 
     function apply() {
-        const language = getLanguage();
-        const dictionary = dictionaries[language] || null;
-        applyDocumentMetadata(language);
-        applyToRoot(document.body, dictionary);
+        try {
+            if (typeof document === 'undefined' || !document.body) return;
+            const language = getLanguage();
+            const dictionary = dictionaries[language] || null;
+            applyDocumentMetadata(language);
+            applyToRoot(document.body, dictionary);
+        } catch (error) {
+            // Static text translation is an enhancement and must never interrupt gameplay.
+            if (typeof log !== 'undefined' && log.w) log.w('Locale bootstrap skipped: ' + error);
+        }
     }
 
     function startObserver() {
-        if (observer || !document.body) return;
+        if (observer || !document.body || typeof MutationObserver === 'undefined') return;
         observer = new MutationObserver(mutations => {
-            const language = getLanguage();
-            const dictionary = dictionaries[language] || null;
-            mutations.forEach(mutation => {
-                mutation.addedNodes.forEach(node => applyToRoot(node, dictionary));
-            });
+            try {
+                const language = getLanguage();
+                const dictionary = dictionaries[language] || null;
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => applyToRoot(node, dictionary));
+                });
+            } catch (error) {
+                if (typeof log !== 'undefined' && log.w) log.w('Locale observer skipped: ' + error);
+            }
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }

@@ -1,8 +1,10 @@
 define([
     'text/Text',
+    'game/GameGlobals',
+    'game/constants/WorldConstants',
     'game/constants/TextConstants',
     'game/systems/ui/UIOutLevelSystem'
-], function (Text, TextConstants, UIOutLevelSystem) {
+], function (Text, GameGlobals, WorldConstants, TextConstants, UIOutLevelSystem) {
     'use strict';
 
     let applied = false;

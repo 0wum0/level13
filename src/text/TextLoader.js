@@ -36,7 +36,11 @@ define([
                     '/strings/de/story-dialogue-6.json',
                     '/strings/de/story-dialogue-7.json',
                     '/strings/de/story-other.json',
-                    '/strings/de/ui.json'
+                    '/strings/de/ui.json',
+                    '/strings/de/ui-characters.json',
+                    '/strings/de/ui-exploration.json',
+                    '/strings/de/ui-inventory.json',
+                    '/strings/de/ui-rest.json'
                 ]
             },
             EN_GB: { language: 'EN_GB', sources: ['/strings/strings.json'], name: 'English' },

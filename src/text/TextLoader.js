@@ -29,6 +29,10 @@ define([
                     '/strings/de/game-world.json',
                     '/strings/de/game-upgrades.json',
                     '/strings/de/story.json',
+                    '/strings/de/story-dialogue-2.json',
+                    '/strings/de/story-dialogue-3.json',
+                    '/strings/de/story-dialogue-4.json',
+                    '/strings/de/story-other.json',
                     '/strings/de/ui.json'
                 ]
             },
@@ -43,15 +47,12 @@ define([
         getCurrentLanguage: function () {
             GameGlobals.metaState = GameGlobals.metaState || {};
             GameGlobals.metaState.settings = GameGlobals.metaState.settings || {};
-
             const settings = GameGlobals.metaState.settings;
             const hasCurrentPreference = settings.languagePreferenceVersion === this.languagePreferenceVersion;
             const hasManualPreference = settings.languageManuallySelected === true;
             let language = settings.language;
-
             if (!hasCurrentPreference && !hasManualPreference) language = this.defaultLanguage;
             if (!this.isSupportedLanguage(language)) language = this.defaultLanguage;
-
             settings.language = language;
             settings.languagePreferenceVersion = this.languagePreferenceVersion;
             return language;
@@ -61,7 +62,6 @@ define([
             const languageRules = language === 'DE_DE' ? LangGerman : LangEnglish;
             Text.language = languageRules;
             TextBuilder.language = languageRules;
-
             if (typeof document !== 'undefined') {
                 const languageTags = { DE_DE: 'de-DE', EN_GB: 'en-GB', FI_FI: 'fi-FI' };
                 document.documentElement.lang = languageTags[language] || 'de-DE';
@@ -82,10 +82,8 @@ define([
         loadCurrentLanguageTexts: function (language) {
             language = language || this.getCurrentLanguage();
             this.applyLanguageRules(language);
-
             if (Text.hasCurrentLanguage(language)) return Promise.resolve();
             if (!this.isSupportedLanguage(language)) return Promise.reject(new Error('Unsupported language: ' + language));
-
             return this.loadTextsSource(this.textSources[language]).catch(error => {
                 log.w('Locale files unavailable, using fallback: ' + language);
                 Text.setTexts(language, {});
@@ -109,11 +107,9 @@ define([
             const urls = source.sources || (source.source ? [source.source] : []);
             const merged = {};
             let chain = Promise.resolve();
-
             urls.forEach(url => {
                 chain = chain.then(() => this.loadJSON(url)).then(json => this.mergeDeep(merged, json));
             });
-
             return chain.then(() => Text.setTexts(source.language, merged));
         },
 

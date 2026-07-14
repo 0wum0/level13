@@ -5,6 +5,7 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+.sublevel-data
 .vscode
 coverage
 nbproject

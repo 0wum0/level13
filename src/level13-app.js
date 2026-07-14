@@ -23,7 +23,7 @@ define([
 ) {
     'use strict';
 
-    function Level13App() {
+    function SublevelApp() {
 
         this.initialise = function (config) {
             GameConstants.startTime = new Date().getTime();
@@ -50,7 +50,7 @@ define([
                         dsn: 'https://d29c47d03c8a4b17b9fd914320b105ea@app.glitchtip.com/12081',
                         tracesSampleRate: 0.01,
                         environment: config.isDebugVersion ? 'development' : 'production',
-                        release: 'l13-' + config.version,
+                        release: 'sublevel-' + config.version,
                         beforeSend: function (event) {
                             errorCount++;
                             if (errorCount > errorLimit) return null;
@@ -67,16 +67,19 @@ define([
             TextBuilder.isDebugMode = config.isDebugVersion;
             TextBuilder.language = LangGerman;
 
-            const level13 = new Level13(config.plugins);
+            // Install visible branding and error localization before asynchronous game setup
+            // begins, so even an early startup problem is understandable to the player.
             LocaleBootstrap.init();
             SocketClient.init();
 
+            const sublevel = new Level13(config.plugins);
+
             if (GameConstants.isCheatsEnabled) {
-                window.app = level13;
+                window.app = sublevel;
             }
         };
 
     }
 
-    new Level13App().initialise(module.config());
+    new SublevelApp().initialise(module.config());
 });

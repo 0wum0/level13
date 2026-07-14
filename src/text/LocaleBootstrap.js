@@ -5,6 +5,8 @@ define([
     'use strict';
 
     const originalText = new WeakMap();
+    const originalAttributes = new WeakMap();
+    const translatedAttributes = ['value', 'title', 'aria-label', 'data-label'];
     let observer = null;
 
     const dictionaries = {
@@ -89,12 +91,19 @@ define([
             'Locales': 'Orte',
             'Build': 'Bauen',
             'Search': 'Suchen',
+            'Scavenge': 'Plündern',
+            'scavenge': 'plündern',
+            'Scout': 'Erkunden',
             'Wander': 'Umherziehen',
             'Equipment': 'Ausrüstung',
             'Other items': 'Andere Gegenstände',
             'Use': 'Benutzen',
             'Craft': 'Herstellen',
             'Repair': 'Reparieren',
+            'false': 'Nein',
+            'False': 'Nein',
+            'true': 'Ja',
+            'True': 'Ja',
             'ERROR': 'FEHLER',
             'Error': 'Fehler',
             'You\'ve found a bug! Please reload the page to continue playing.': 'Es ist ein Fehler aufgetreten. Bitte lade die Seite neu, um weiterzuspielen.',
@@ -139,7 +148,7 @@ define([
         if (!dictionary) {
             if (!savedOriginal) return;
             const germanTranslation = dictionaries.DE_DE[savedOriginal.trim()];
-            if (germanTranslation && currentTrimmed === germanTranslation) {
+            if (germanTranslation && currentTrimmed === germanTranslation && node.nodeValue !== savedOriginal) {
                 node.nodeValue = savedOriginal;
             }
             return;
@@ -149,7 +158,8 @@ define([
             const originalTrimmed = savedOriginal.trim();
             const savedTranslation = dictionary[originalTrimmed];
             if (savedTranslation && (currentTrimmed === originalTrimmed || currentTrimmed === savedTranslation)) {
-                node.nodeValue = replaceTrimmed(savedOriginal, savedTranslation);
+                const translated = replaceTrimmed(savedOriginal, savedTranslation);
+                if (node.nodeValue !== translated) node.nodeValue = translated;
             }
             return;
         }
@@ -157,7 +167,56 @@ define([
         const translation = dictionary[currentTrimmed];
         if (!translation) return;
         originalText.set(node, current);
-        node.nodeValue = replaceTrimmed(current, translation);
+        const translated = replaceTrimmed(current, translation);
+        if (node.nodeValue !== translated) node.nodeValue = translated;
+    }
+
+    function getOriginalAttributeMap(element) {
+        let values = originalAttributes.get(element);
+        if (!values) {
+            values = {};
+            originalAttributes.set(element, values);
+        }
+        return values;
+    }
+
+    function translateElementAttribute(element, attributeName, dictionary) {
+        if (!element || !element.hasAttribute || !element.hasAttribute(attributeName)) return;
+        const current = element.getAttribute(attributeName);
+        if (typeof current !== 'string') return;
+
+        const originals = getOriginalAttributeMap(element);
+        const savedOriginal = originals[attributeName];
+        const currentTrimmed = current.trim();
+
+        if (!dictionary) {
+            if (savedOriginal === undefined) return;
+            const germanTranslation = dictionaries.DE_DE[String(savedOriginal).trim()];
+            if (germanTranslation && currentTrimmed === germanTranslation && current !== savedOriginal) {
+                element.setAttribute(attributeName, savedOriginal);
+            }
+            return;
+        }
+
+        if (savedOriginal !== undefined) {
+            const originalTrimmed = String(savedOriginal).trim();
+            const savedTranslation = dictionary[originalTrimmed];
+            if (!savedTranslation) return;
+            const translated = replaceTrimmed(savedOriginal, savedTranslation);
+            if (current !== translated) element.setAttribute(attributeName, translated);
+            return;
+        }
+
+        const translation = dictionary[currentTrimmed];
+        if (!translation) return;
+        originals[attributeName] = current;
+        const translated = replaceTrimmed(current, translation);
+        if (current !== translated) element.setAttribute(attributeName, translated);
+    }
+
+    function translateElementAttributes(element, dictionary) {
+        if (!element || element.nodeType !== Node.ELEMENT_NODE) return;
+        translatedAttributes.forEach(attributeName => translateElementAttribute(element, attributeName, dictionary));
     }
 
     function shouldSkipElement(element) {
@@ -175,7 +234,16 @@ define([
         if (root.nodeType === Node.ELEMENT_NODE && shouldSkipElement(root)) return;
         if (typeof document.createTreeWalker !== 'function' || typeof NodeFilter === 'undefined') return;
 
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        if (root.nodeType === Node.ELEMENT_NODE) translateElementAttributes(root, dictionary);
+
+        const elementWalker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+        let element = elementWalker.nextNode();
+        while (element) {
+            if (!shouldSkipElement(element)) translateElementAttributes(element, dictionary);
+            element = elementWalker.nextNode();
+        }
+
+        const textWalker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode(node) {
                 return shouldSkipElement(node.parentElement)
                     ? NodeFilter.FILTER_REJECT
@@ -183,10 +251,10 @@ define([
             }
         });
 
-        let node = walker.nextNode();
+        let node = textWalker.nextNode();
         while (node) {
             translateTextNode(node, dictionary);
-            node = walker.nextNode();
+            node = textWalker.nextNode();
         }
     }
 
@@ -225,13 +293,27 @@ define([
                 const language = getLanguage();
                 const dictionary = dictionaries[language] || null;
                 mutations.forEach(mutation => {
+                    if (mutation.type === 'characterData') {
+                        applyToRoot(mutation.target, dictionary);
+                        return;
+                    }
+                    if (mutation.type === 'attributes') {
+                        translateElementAttribute(mutation.target, mutation.attributeName, dictionary);
+                        return;
+                    }
                     mutation.addedNodes.forEach(node => applyToRoot(node, dictionary));
                 });
             } catch (error) {
                 if (typeof log !== 'undefined' && log.w) log.w('Locale observer skipped: ' + error);
             }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: translatedAttributes
+        });
     }
 
     const LocaleBootstrap = {

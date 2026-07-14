@@ -51,7 +51,7 @@ define(function () {
 				key = key.textKey;
 			}
 
-			fallbackKey || key.replace(/_\d*_/, "_");
+			fallbackKey = fallbackKey || key.replace(/_\d*_/, "_");
 
 			if (!this.hasKey(key) && this.hasKey(fallbackKey)) {
 				key = fallbackKey;
@@ -125,11 +125,18 @@ define(function () {
 			return this.currentLanguage == language;
 		},
 
+		isStrictLanguage: function () {
+			return this.currentLanguage === "DE_DE";
+		},
+
 		hasKey: function (key, skipFallback) {
 			let hasLanguage = this.hasCurrentLanguage();
 			skipFallback = skipFallback && hasLanguage;
 			
 			if (key in this.currentTexts) return true;
+			// German is a complete language pack. Never silently render an English fallback;
+			// treat a missing German key as an explicit translation error instead.
+			if (hasLanguage && this.isStrictLanguage() && key in this.defaultTexts) return true;
 			if (!skipFallback && key in this.defaultTexts) return true;
 
 			return false;
@@ -141,6 +148,10 @@ define(function () {
 
 			if (hasLanguage) {
 				if (key in this.currentTexts) return this.currentTexts[key];
+				if (this.isStrictLanguage() && key in this.defaultTexts) {
+					log.e("missing required German translation for key [" + key + "]");
+					return "[Übersetzung fehlt: " + key + "]";
+				}
 				log.w("no text found for key [" + key + "] in current texts");
 			}
 			if (!skipFallback) {
@@ -161,18 +172,19 @@ define(function () {
 			let wildcard = this.TEXT_PARAM_WILDCARD;
 
 			let regex = /{(\w+)}/ig;
+			let unknownValue = this.currentLanguage === "DE_DE" ? "noch unbekannt" : "?";
 
 			result = result.replace(regex, function(match, p) { 
 				let isValidValue = (value) => value || value === 0;
 
-				let value = "?";
+				let value = unknownValue;
 
 				if (isValidValue(options[p])) {
 					value = options[p];
 				} else if (isValidValue(options[wildcard])) {
 					value = options[wildcard];
 				} else {
-					if (this.isDebugMode) log.w("no parameter value [" + p + "] provided for key [" + key + "]");
+					if (Text.isDebugMode) log.w("no parameter value [" + p + "] provided for key [" + key + "]");
 					return value;
 				}
 

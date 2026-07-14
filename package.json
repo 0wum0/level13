@@ -1,6 +1,6 @@
 {
   "name": "sublevel-game",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "private": true,
   "description": "Sublevel browser game served by Node.js 22, Express and Socket.IO.",
   "type": "module",

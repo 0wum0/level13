@@ -10,6 +10,7 @@ define([
     'text/lang/LangGerman',
     'text/GermanSectorDescription',
     'text/GermanGameplayPatch',
+    'text/GermanHardcodedUIPatch',
     'text/LocaleBootstrap',
     'network/SocketClient'
 ], function (
@@ -24,6 +25,7 @@ define([
     LangGerman,
     GermanSectorDescription,
     GermanGameplayPatch,
+    GermanHardcodedUIPatch,
     LocaleBootstrap,
     SocketClient
 ) {
@@ -77,6 +79,7 @@ define([
             WorldHelperStartupPatch.apply();
             GermanSectorDescription.apply();
             GermanGameplayPatch.apply();
+            GermanHardcodedUIPatch.apply();
             LocaleBootstrap.init();
             SocketClient.init();
 

@@ -56,10 +56,13 @@ async function reconnectDatabase({ force = false } = {}) {
 
 try {
   runtimeState.installation = await runtimeConfig.loadInstallation();
-  if (runtimeState.installation?.database) await reconnectDatabase({ force: true });
 } catch (error) {
   runtimeState.databaseError = error;
   console.error('[sublevel] installation configuration failed:', error.message);
+}
+
+if (runtimeState.installation?.database) {
+  reconnectDatabase({ force: true }).catch(() => {});
 }
 
 const auth = createAuthService(database);

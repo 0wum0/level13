@@ -24,17 +24,42 @@ const database = new DatabaseManager();
 const runtimeState = {
   installation: null,
   databaseError: null,
+  reconnectPromise: null,
+  nextReconnectAt: 0,
 };
+
+async function reconnectDatabase({ force = false } = {}) {
+  if (database.isReady) return true;
+  if (!runtimeState.installation?.database) return false;
+  if (runtimeState.reconnectPromise) return runtimeState.reconnectPromise;
+  if (!force && Date.now() < runtimeState.nextReconnectAt) return false;
+
+  runtimeState.nextReconnectAt = Date.now() + 10_000;
+  runtimeState.reconnectPromise = database.connect(runtimeState.installation.database)
+    .then(() => database.migrate())
+    .then(() => {
+      runtimeState.databaseError = null;
+      console.log('[sublevel] database connection restored');
+      return true;
+    })
+    .catch(error => {
+      runtimeState.databaseError = error;
+      console.error('[sublevel] database connection failed:', error.message);
+      return false;
+    })
+    .finally(() => {
+      runtimeState.reconnectPromise = null;
+    });
+
+  return runtimeState.reconnectPromise;
+}
 
 try {
   runtimeState.installation = await runtimeConfig.loadInstallation();
-  if (runtimeState.installation?.database) {
-    await database.connect(runtimeState.installation.database);
-    await database.migrate();
-  }
+  if (runtimeState.installation?.database) await reconnectDatabase({ force: true });
 } catch (error) {
   runtimeState.databaseError = error;
-  console.error('[sublevel] database startup failed:', error.message);
+  console.error('[sublevel] installation configuration failed:', error.message);
 }
 
 const auth = createAuthService(database);
@@ -55,6 +80,18 @@ app.use((request, response, next) => {
 
 app.use(express.json({ limit: '3mb', strict: true }));
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
+app.use(async (request, _response, next) => {
+  const needsDatabase = runtimeState.installation && !database.isReady && (
+    request.path === '/'
+    || request.path === '/index.html'
+    || request.path === '/login'
+    || request.path === '/guardian'
+    || request.path === '/healthz'
+    || request.path.startsWith('/api/')
+  );
+  if (needsDatabase) await reconnectDatabase();
+  next();
+});
 app.use(auth.loadSession);
 
 app.get('/healthz', (_request, response) => {
@@ -63,6 +100,7 @@ app.get('/healthz', (_request, response) => {
     service: 'sublevel',
     installed: Boolean(runtimeState.installation),
     databaseConnected: database.isReady,
+    databaseError: runtimeState.databaseError ? runtimeState.databaseError.code || 'connection_failed' : null,
     node: process.version,
     uptimeSeconds: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),

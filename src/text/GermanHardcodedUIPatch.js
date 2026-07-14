@@ -1,6 +1,7 @@
 define([
     'text/Text',
     'game/GameGlobals',
+    'game/constants/GameConstants',
     'game/UIFunctions',
     'game/helpers/PlayerHelper',
     'game/helpers/ui/UIPopupManager',
@@ -9,6 +10,7 @@ define([
 ], function (
     Text,
     GameGlobals,
+    GameConstants,
     UIFunctions,
     PlayerHelper,
     UIPopupManager,

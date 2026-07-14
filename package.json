@@ -1,6 +1,6 @@
 {
   "name": "sublevel-game",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "description": "Sublevel browser game with installer, database-backed accounts, saves and Guardian administration.",
   "type": "module",

@@ -77,7 +77,8 @@ app.use(express.static(rootDirectory, {
 
 app.use((request, response, next) => {
   const acceptsHtml = request.method === "GET" && request.accepts("html");
-  if (!acceptsHtml || request.path.startsWith("/socket.io/")) {
+  const hasFileExtension = path.extname(request.path) !== "";
+  if (!acceptsHtml || hasFileExtension || request.path.startsWith("/socket.io/")) {
     next();
     return;
   }

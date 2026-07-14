@@ -30,7 +30,7 @@ app.use((request, response, next) => {
 app.get("/healthz", (_request, response) => {
   response.json({
     ok: true,
-    service: "level13",
+    service: "sublevel",
     node: process.version,
     uptimeSeconds: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
@@ -67,8 +67,9 @@ app.use(express.static(rootDirectory, {
   lastModified: true,
   maxAge: process.env.NODE_ENV === "production" ? "1h" : 0,
   setHeaders(response, filePath) {
-    if (filePath.endsWith("index.html") || filePath.endsWith("config.js")) {
-      response.setHeader("Cache-Control", "no-cache");
+    const isTranslationFile = filePath.includes(`${path.sep}strings${path.sep}`) && filePath.endsWith(".json");
+    if (filePath.endsWith("index.html") || filePath.endsWith("config.js") || isTranslationFile) {
+      response.setHeader("Cache-Control", "no-cache, must-revalidate");
     } else if (/\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|mp3|ogg|wav)$/i.test(filePath)) {
       response.setHeader("Cache-Control", "public, max-age=604800, immutable");
     }
@@ -113,16 +114,15 @@ const socketRuntime = configureSocketServer(io, {
 });
 
 httpServer.listen(port, "0.0.0.0", () => {
-  console.log(`[level13] listening on http://0.0.0.0:${port} (${process.version})`);
+  console.log(`[sublevel] listening on http://0.0.0.0:${port} (${process.version})`);
 });
 
 function shutdown(signal) {
-  console.log(`[level13] received ${signal}, shutting down`);
+  console.log(`[sublevel] received ${signal}, shutting down`);
   socketRuntime.close();
   io.close(() => {
     httpServer.close(() => process.exit(0));
   });
-
   setTimeout(() => process.exit(1), 10_000).unref();
 }
 

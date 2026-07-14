@@ -4,6 +4,7 @@ define([
     'core/ConsoleLogger',
     'game/level13',
     'game/constants/GameConstants',
+    'game/helpers/WorldHelperStartupPatch',
     'text/Text',
     'text/TextBuilder',
     'text/lang/LangGerman',
@@ -15,6 +16,7 @@ define([
     ConsoleLogger,
     Level13,
     GameConstants,
+    WorldHelperStartupPatch,
     Text,
     TextBuilder,
     LangGerman,
@@ -67,8 +69,10 @@ define([
             TextBuilder.isDebugMode = config.isDebugVersion;
             TextBuilder.language = LangGerman;
 
-            // Install visible branding and error localization before asynchronous game setup
-            // begins, so even an early startup problem is understandable to the player.
+            // Install migration guards, visible branding and error localization before
+            // asynchronous game setup starts. Legacy saves may not contain a valid world
+            // template, but that must not prevent Sublevel from loading the generated world.
+            WorldHelperStartupPatch.apply();
             LocaleBootstrap.init();
             SocketClient.init();
 

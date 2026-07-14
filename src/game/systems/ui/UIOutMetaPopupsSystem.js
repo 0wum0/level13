@@ -153,7 +153,7 @@ define([
             return d1.displayName === d2.displayName && d1.value === d2.value && d1.isDisabled === d2.isDisabled;
         },
 
-        saveSettings: function () {
+        saveSettings: function (markLanguageExplicit) {
             GameGlobals.gameState.settings.sfxEnabled = $('#settings-checkbox-sfx-enabled').is(':checked');
             GameGlobals.gameState.settings.hotkeysEnabled = $('#settings-checkbox-hotkeys-enabled').is(':checked');
             GameGlobals.gameState.settings.hotkeysNumpad = $('#settings-checkbox-hotkeys-numpad').is(':checked');
@@ -162,6 +162,10 @@ define([
             if (language) {
                 GameGlobals.metaState.settings = GameGlobals.metaState.settings || {};
                 GameGlobals.metaState.settings.language = language;
+                GameGlobals.metaState.settings.languagePreferenceVersion = GameGlobals.textLoader.languagePreferenceVersion;
+                if (markLanguageExplicit) {
+                    GameGlobals.metaState.settings.languageManuallySelected = true;
+                }
             }
         },
 
@@ -172,13 +176,13 @@ define([
         },
 
         onSettingToggled: function () {
-            this.saveSettings();
+            this.saveSettings(false);
             this.updateSettingsValues();
             this.updateHotkeyList();
         },
 
         onLanguageChanged: function () {
-            this.saveSettings();
+            this.saveSettings(true);
             GlobalSignals.settingsChangedSignal.dispatch();
         },
 
@@ -188,7 +192,7 @@ define([
 
         onPopupClosed: function (popupID) {
             if (popupID === 'settings-popup') {
-                this.saveSettings();
+                this.saveSettings(false);
                 GameGlobals.uiFunctions.updateHotkeyHints();
                 GlobalSignals.settingsChangedSignal.dispatch();
             }

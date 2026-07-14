@@ -13,15 +13,24 @@ define([
 
         defaultLanguage: 'DE_DE',
         languagePreferenceVersion: 2,
-        translationVersion: 'sublevel-0.7.2',
+        translationVersion: 'sublevel-0.7.4',
 
         constructor: function () { },
 
         textSources: {
-            default: { language: 'default', source: '/strings/strings.json', name: 'Fallback' },
-            DE_DE: { language: 'DE_DE', source: '/strings/strings-de.json', name: 'Deutsch' },
-            EN_GB: { language: 'EN_GB', source: '/strings/strings.json', name: 'English' },
-            FI_FI: { language: 'FI_FI', source: '/strings/strings-fi.json', name: 'suomi' }
+            default: { language: 'default', sources: ['/strings/strings.json'], name: 'Fallback' },
+            DE_DE: {
+                language: 'DE_DE',
+                name: 'Deutsch',
+                sources: [
+                    '/strings/strings-de.json',
+                    '/strings/de/game.json',
+                    '/strings/de/story.json',
+                    '/strings/de/ui.json'
+                ]
+            },
+            EN_GB: { language: 'EN_GB', sources: ['/strings/strings.json'], name: 'English' },
+            FI_FI: { language: 'FI_FI', sources: ['/strings/strings-fi.json'], name: 'suomi' }
         },
 
         isSupportedLanguage: function (language) {
@@ -37,9 +46,6 @@ define([
             const hasManualPreference = settings.languageManuallySelected === true;
             let language = settings.language;
 
-            // Older saves usually contain EN_GB only because English used to be the technical
-            // default. Migrate those saves to German once, but keep a language the player has
-            // explicitly selected in the new language menu.
             if (!hasCurrentPreference && !hasManualPreference) {
                 language = this.defaultLanguage;
             }
@@ -71,68 +77,70 @@ define([
         loadTexts: function () {
             const language = this.getCurrentLanguage();
             this.applyLanguageRules(language);
-
-            // Always finish loading the English fallback first. This makes the startup
-            // deterministic and guarantees usable text even when an optional locale file
-            // is temporarily unavailable on the host.
             return this.loadDefaultTexts()
                 .then(() => this.loadCurrentLanguageTexts(language));
         },
 
         loadDefaultTexts: function () {
-            let sys = this;
-            return new Promise((resolve, reject) => {
-                if (Text.hasDefaultTexts()) {
-                    resolve();
-                    return;
-                }
-
-                sys.loadTextsFile(sys.textSources.default).then(resolve).catch(reject);
-            });
+            if (Text.hasDefaultTexts()) return Promise.resolve();
+            return this.loadTextsSource(this.textSources.default);
         },
 
         loadCurrentLanguageTexts: function (language) {
-            let sys = this;
             language = language || this.getCurrentLanguage();
             this.applyLanguageRules(language);
 
-            return new Promise((resolve, reject) => {
-                if (Text.hasCurrentLanguage(language)) {
-                    resolve();
-                    return;
-                }
+            if (Text.hasCurrentLanguage(language)) return Promise.resolve();
+            if (!this.isSupportedLanguage(language)) {
+                return Promise.reject(new Error('Unsupported language: ' + language));
+            }
 
-                if (!sys.isSupportedLanguage(language)) {
-                    reject(new Error('Unsupported language: ' + language));
-                    return;
-                }
+            return this.loadTextsSource(this.textSources[language])
+                .catch(error => {
+                    log.w('Locale files unavailable, using fallback: ' + language);
+                    Text.setTexts(language, {});
+                });
+        },
 
-                sys.loadTextsFile(sys.textSources[language])
-                    .then(resolve)
-                    .catch(error => {
-                        // A missing locale must never stop Sublevel from starting. The full
-                        // English file is already loaded and remains the safe fallback.
-                        log.w('Locale file unavailable, using fallback: ' + language);
-                        Text.setTexts(language, {});
-                        resolve();
-                    });
+        mergeDeep: function (target, source) {
+            if (!source || typeof source !== 'object') return target;
+            for (const key of Object.keys(source)) {
+                const value = source[key];
+                if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    target[key] = this.mergeDeep(target[key] || {}, value);
+                } else {
+                    target[key] = value;
+                }
+            }
+            return target;
+        },
+
+        loadTextsSource: function (source) {
+            const urls = source.sources || (source.source ? [source.source] : []);
+            const merged = {};
+            let chain = Promise.resolve();
+
+            urls.forEach(url => {
+                chain = chain.then(() => this.loadJSON(url))
+                    .then(json => this.mergeDeep(merged, json));
+            });
+
+            return chain.then(() => {
+                Text.setTexts(source.language, merged);
             });
         },
 
-        loadTextsFile: function (source) {
+        loadJSON: function (source) {
             return new Promise((resolve, reject) => {
-                const separator = source.source.indexOf('?') >= 0 ? '&' : '?';
-                const url = source.source + separator + 'v=' + this.translationVersion;
+                const separator = source.indexOf('?') >= 0 ? '&' : '?';
+                const url = source + separator + 'v=' + this.translationVersion;
                 log.i('Loading texts: ' + url, 'text');
                 if (GameConstants.isDebugVersion) $.ajaxSetup({ cache: false });
-                $.getJSON(url, function (json) {
-                    Text.setTexts(source.language, json);
-                    resolve();
-                })
-                .fail(function (jqxhr, textStatus, error) {
-                    log.e('Failed to load texts: ' + error);
-                    reject(new Error('Failed to load translations: ' + url));
-                });
+                $.getJSON(url, resolve)
+                    .fail(function (jqxhr, textStatus, error) {
+                        log.e('Failed to load translations: ' + url + ' (' + error + ')');
+                        reject(new Error('Failed to load translations: ' + url));
+                    });
             });
         }
 

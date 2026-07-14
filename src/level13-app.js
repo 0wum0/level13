@@ -8,6 +8,8 @@ define([
     'text/Text',
     'text/TextBuilder',
     'text/lang/LangGerman',
+    'text/GermanSectorDescription',
+    'text/GermanGameplayPatch',
     'text/LocaleBootstrap',
     'network/SocketClient'
 ], function (
@@ -20,6 +22,8 @@ define([
     Text,
     TextBuilder,
     LangGerman,
+    GermanSectorDescription,
+    GermanGameplayPatch,
     LocaleBootstrap,
     SocketClient
 ) {
@@ -69,10 +73,10 @@ define([
             TextBuilder.isDebugMode = config.isDebugVersion;
             TextBuilder.language = LangGerman;
 
-            // Install migration guards, visible branding and error localization before
-            // asynchronous game setup starts. Legacy saves may not contain a valid world
-            // template, but that must not prevent Sublevel from loading the generated world.
+            // Install migration and localization guards before asynchronous game setup.
             WorldHelperStartupPatch.apply();
+            GermanSectorDescription.apply();
+            GermanGameplayPatch.apply();
             LocaleBootstrap.init();
             SocketClient.init();
 

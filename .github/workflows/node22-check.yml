@@ -1,0 +1,49 @@
+name: Node 22 check
+
+on:
+  push:
+    branches:
+      - master
+      - "agent/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Check JavaScript and translations
+        run: npm run check
+
+      - name: Smoke-test Express and Socket.IO server
+        shell: bash
+        run: |
+          node server.js > /tmp/level13-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true; cat /tmp/level13-server.log' EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3000/healthz > /tmp/level13-health.json; then
+              break
+            fi
+            sleep 0.5
+          done
+
+          node -e "const health=require('/tmp/level13-health.json'); if (!health.ok || health.service !== 'level13') process.exit(1);"
+          curl --fail --silent http://127.0.0.1:3000/socket.io/socket.io.js > /dev/null

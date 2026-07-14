@@ -23,3 +23,6 @@ node_modules/
 npm-debug.log*
 coverage/
 .DS_Store
+
+# Generated installer secrets and encrypted database configuration
+.sublevel-data/

@@ -12,6 +12,8 @@ define([
     let TextLoader = Ash.Class.extend({
 
         defaultLanguage: 'DE_DE',
+        languagePreferenceVersion: 2,
+        translationVersion: 'sublevel-0.7.2',
 
         constructor: function () { },
 
@@ -27,14 +29,27 @@ define([
         },
 
         getCurrentLanguage: function () {
+            GameGlobals.metaState = GameGlobals.metaState || {};
             GameGlobals.metaState.settings = GameGlobals.metaState.settings || {};
 
-            let language = GameGlobals.metaState.settings.language;
-            if (!this.isSupportedLanguage(language)) {
+            const settings = GameGlobals.metaState.settings;
+            const hasCurrentPreference = settings.languagePreferenceVersion === this.languagePreferenceVersion;
+            const hasManualPreference = settings.languageManuallySelected === true;
+            let language = settings.language;
+
+            // Older saves usually contain EN_GB only because English used to be the technical
+            // default. Migrate those saves to German once, but keep a language the player has
+            // explicitly selected in the new language menu.
+            if (!hasCurrentPreference && !hasManualPreference) {
                 language = this.defaultLanguage;
-                GameGlobals.metaState.settings.language = language;
             }
 
+            if (!this.isSupportedLanguage(language)) {
+                language = this.defaultLanguage;
+            }
+
+            settings.language = language;
+            settings.languagePreferenceVersion = this.languagePreferenceVersion;
             return language;
         },
 
@@ -56,18 +71,23 @@ define([
         loadTexts: function () {
             const language = this.getCurrentLanguage();
             this.applyLanguageRules(language);
-            return Promise.all([this.loadDefaultTexts(), this.loadCurrentLanguageTexts(language)]);
+
+            // Always finish loading the English fallback first. This makes the startup
+            // deterministic and guarantees usable text even when an optional locale file
+            // is temporarily unavailable on the host.
+            return this.loadDefaultTexts()
+                .then(() => this.loadCurrentLanguageTexts(language));
         },
 
         loadDefaultTexts: function () {
             let sys = this;
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 if (Text.hasDefaultTexts()) {
                     resolve();
                     return;
                 }
 
-                resolve(sys.loadTextsFile(sys.textSources.default));
+                sys.loadTextsFile(sys.textSources.default).then(resolve).catch(reject);
             });
         },
 
@@ -87,13 +107,22 @@ define([
                     return;
                 }
 
-                resolve(sys.loadTextsFile(sys.textSources[language]));
+                sys.loadTextsFile(sys.textSources[language])
+                    .then(resolve)
+                    .catch(error => {
+                        // A missing locale must never stop Sublevel from starting. The full
+                        // English file is already loaded and remains the safe fallback.
+                        log.w('Locale file unavailable, using fallback: ' + language);
+                        Text.setTexts(language, {});
+                        resolve();
+                    });
             });
         },
 
         loadTextsFile: function (source) {
             return new Promise((resolve, reject) => {
-                const url = source.source;
+                const separator = source.source.indexOf('?') >= 0 ? '&' : '?';
+                const url = source.source + separator + 'v=' + this.translationVersion;
                 log.i('Loading texts: ' + url, 'text');
                 if (GameConstants.isDebugVersion) $.ajaxSetup({ cache: false });
                 $.getJSON(url, function (json) {

@@ -25,6 +25,9 @@ define([
                 sources: [
                     '/strings/strings-de.json',
                     '/strings/de/game.json',
+                    '/strings/de/game-items.json',
+                    '/strings/de/game-world.json',
+                    '/strings/de/game-upgrades.json',
                     '/strings/de/story.json',
                     '/strings/de/ui.json'
                 ]
@@ -46,13 +49,8 @@ define([
             const hasManualPreference = settings.languageManuallySelected === true;
             let language = settings.language;
 
-            if (!hasCurrentPreference && !hasManualPreference) {
-                language = this.defaultLanguage;
-            }
-
-            if (!this.isSupportedLanguage(language)) {
-                language = this.defaultLanguage;
-            }
+            if (!hasCurrentPreference && !hasManualPreference) language = this.defaultLanguage;
+            if (!this.isSupportedLanguage(language)) language = this.defaultLanguage;
 
             settings.language = language;
             settings.languagePreferenceVersion = this.languagePreferenceVersion;
@@ -65,11 +63,7 @@ define([
             TextBuilder.language = languageRules;
 
             if (typeof document !== 'undefined') {
-                const languageTags = {
-                    DE_DE: 'de-DE',
-                    EN_GB: 'en-GB',
-                    FI_FI: 'fi-FI'
-                };
+                const languageTags = { DE_DE: 'de-DE', EN_GB: 'en-GB', FI_FI: 'fi-FI' };
                 document.documentElement.lang = languageTags[language] || 'de-DE';
             }
         },
@@ -77,8 +71,7 @@ define([
         loadTexts: function () {
             const language = this.getCurrentLanguage();
             this.applyLanguageRules(language);
-            return this.loadDefaultTexts()
-                .then(() => this.loadCurrentLanguageTexts(language));
+            return this.loadDefaultTexts().then(() => this.loadCurrentLanguageTexts(language));
         },
 
         loadDefaultTexts: function () {
@@ -91,15 +84,12 @@ define([
             this.applyLanguageRules(language);
 
             if (Text.hasCurrentLanguage(language)) return Promise.resolve();
-            if (!this.isSupportedLanguage(language)) {
-                return Promise.reject(new Error('Unsupported language: ' + language));
-            }
+            if (!this.isSupportedLanguage(language)) return Promise.reject(new Error('Unsupported language: ' + language));
 
-            return this.loadTextsSource(this.textSources[language])
-                .catch(error => {
-                    log.w('Locale files unavailable, using fallback: ' + language);
-                    Text.setTexts(language, {});
-                });
+            return this.loadTextsSource(this.textSources[language]).catch(error => {
+                log.w('Locale files unavailable, using fallback: ' + language);
+                Text.setTexts(language, {});
+            });
         },
 
         mergeDeep: function (target, source) {
@@ -121,13 +111,10 @@ define([
             let chain = Promise.resolve();
 
             urls.forEach(url => {
-                chain = chain.then(() => this.loadJSON(url))
-                    .then(json => this.mergeDeep(merged, json));
+                chain = chain.then(() => this.loadJSON(url)).then(json => this.mergeDeep(merged, json));
             });
 
-            return chain.then(() => {
-                Text.setTexts(source.language, merged);
-            });
+            return chain.then(() => Text.setTexts(source.language, merged));
         },
 
         loadJSON: function (source) {
@@ -136,11 +123,10 @@ define([
                 const url = source + separator + 'v=' + this.translationVersion;
                 log.i('Loading texts: ' + url, 'text');
                 if (GameConstants.isDebugVersion) $.ajaxSetup({ cache: false });
-                $.getJSON(url, resolve)
-                    .fail(function (jqxhr, textStatus, error) {
-                        log.e('Failed to load translations: ' + url + ' (' + error + ')');
-                        reject(new Error('Failed to load translations: ' + url));
-                    });
+                $.getJSON(url, resolve).fail(function (jqxhr, textStatus, error) {
+                    log.e('Failed to load translations: ' + url + ' (' + error + ')');
+                    reject(new Error('Failed to load translations: ' + url));
+                });
             });
         }
 

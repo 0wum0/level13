@@ -219,14 +219,22 @@ const socketRuntime = configureSocketServer(io, {
   sessionTtlMs: process.env.LIVE_SESSION_TTL_MS,
 });
 
-httpServer.on('error', error => {
-  console.error('[sublevel] HTTP server failed:', error);
-  throw error;
+await new Promise((resolve, reject) => {
+  function onError(error) {
+    httpServer.removeListener('error', onError);
+    reject(error);
+  }
+  httpServer.once('error', onError);
+  httpServer.listen(port, '0.0.0.0', () => {
+    httpServer.removeListener('error', onError);
+    console.log(`[sublevel] listening on http://0.0.0.0:${port} (${process.version})`);
+    console.log(`[sublevel] installation=${Boolean(runtimeState.installation)} database=${database.isReady}`);
+    resolve();
+  });
 });
 
-httpServer.listen(port, '0.0.0.0', () => {
-  console.log(`[sublevel] listening on http://0.0.0.0:${port} (${process.version})`);
-  console.log(`[sublevel] installation=${Boolean(runtimeState.installation)} database=${database.isReady}`);
+httpServer.on('error', error => {
+  console.error('[sublevel] HTTP server error:', error.message);
 });
 
 async function shutdown(signal) {

@@ -1,6 +1,6 @@
 {
   "name": "sublevel-game",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "description": "Sublevel browser game with installer, database-backed accounts, saves and Guardian administration.",
   "type": "module",
@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check:syntax": "node --check server.js && node --check server/socket-server.js && node --check server/runtime-config.js && node --check server/database.js && node --check server/security.js && node --check server/auth-service.js && node --check server/api-routes.js && node --check server/page-routes.js && node --check auth/installer.js && node --check auth/login.js && node --check auth/guardian.js && node --check src/network/SublevelAPI.js && node --check src/network/GuardianCommandClient.js && node --check src/network/SocketClient.js && node --check src/text/Text.js && node --check src/text/LocaleBootstrap.js && node --check src/text/TextLoader.js && node --check src/text/lang/LangGerman.js && node --check src/text/GermanSectorDescription.js && node --check src/text/GermanGameplayPatch.js && node --check src/text/GermanHardcodedUIPatch.js && node --check src/game/helpers/WorldHelperStartupPatch.js && node --check src/level13-app.js && node --check src/game/systems/SaveSystem.js && node --check src/game/systems/ui/UIOutMetaPopupsSystem.js && node --check src/config.js && node --check tools/check-translations.mjs",
+    "check:syntax": "node --check server.js && node --check server-main.js && node --check server/socket-server.js && node --check server/runtime-config.js && node --check server/database.js && node --check server/security.js && node --check server/auth-service.js && node --check server/api-routes.js && node --check server/page-routes.js && node --check auth/installer.js && node --check auth/login.js && node --check auth/guardian.js && node --check src/network/SublevelAPI.js && node --check src/network/GuardianCommandClient.js && node --check src/network/SocketClient.js && node --check src/text/Text.js && node --check src/text/LocaleBootstrap.js && node --check src/text/TextLoader.js && node --check src/text/lang/LangGerman.js && node --check src/text/GermanSectorDescription.js && node --check src/text/GermanGameplayPatch.js && node --check src/text/GermanHardcodedUIPatch.js && node --check src/game/helpers/WorldHelperStartupPatch.js && node --check src/level13-app.js && node --check src/game/systems/SaveSystem.js && node --check src/game/systems/ui/UIOutMetaPopupsSystem.js && node --check src/config.js && node --check tools/check-translations.mjs",
     "check:translations": "node tools/check-translations.mjs",
     "check": "npm run check:syntax && npm run check:translations"
   },

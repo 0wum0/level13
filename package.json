@@ -1,6 +1,6 @@
 {
   "name": "sublevel-game",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "private": true,
   "description": "Sublevel browser game served by Node.js 22, Express and Socket.IO.",
   "type": "module",
@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check:syntax": "node --check server.js && node --check server/socket-server.js && node --check src/network/SocketClient.js && node --check src/text/Text.js && node --check src/text/LocaleBootstrap.js && node --check src/text/TextLoader.js && node --check src/text/lang/LangGerman.js && node --check src/text/GermanSectorDescription.js && node --check src/text/GermanGameplayPatch.js && node --check src/game/helpers/WorldHelperStartupPatch.js && node --check src/level13-app.js && node --check src/game/systems/SaveSystem.js && node --check src/game/systems/ui/UIOutMetaPopupsSystem.js && node --check src/config.js && node --check tools/check-translations.mjs",
+    "check:syntax": "node --check server.js && node --check server/socket-server.js && node --check src/network/SocketClient.js && node --check src/text/Text.js && node --check src/text/LocaleBootstrap.js && node --check src/text/TextLoader.js && node --check src/text/lang/LangGerman.js && node --check src/text/GermanSectorDescription.js && node --check src/text/GermanGameplayPatch.js && node --check src/text/GermanHardcodedUIPatch.js && node --check src/game/helpers/WorldHelperStartupPatch.js && node --check src/level13-app.js && node --check src/game/systems/SaveSystem.js && node --check src/game/systems/ui/UIOutMetaPopupsSystem.js && node --check src/config.js && node --check tools/check-translations.mjs",
     "check:translations": "node tools/check-translations.mjs",
     "check": "npm run check:syntax && npm run check:translations"
   },

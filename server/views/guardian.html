@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de-DE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sublevel – Wächterzentrale</title>
+  <link rel="stylesheet" href="/auth/sublevel-auth.css?v=0.8.0-sublevel">
+</head>
+<body>
+  <div class="guardian-shell">
+    <aside class="guardian-sidebar">
+      <div class="brand"><div class="brand-mark">S</div><div><strong>Sublevel</strong><div style="color:var(--muted);font-size:.82rem" data-i18n="guardianCenter">Wächterzentrale</div></div></div>
+      <nav class="guardian-nav" aria-label="Wächter-Navigation">
+        <button class="active" data-view="dashboard" data-i18n="navDashboard">Übersicht</button>
+        <button data-view="users" data-i18n="navUsers">Spieler</button>
+        <button data-view="items" data-i18n="navItems">Gegenstände</button>
+        <button data-view="commands" data-i18n="navCommands">Befehle</button>
+        <button data-view="announcements" data-i18n="navAnnouncements">Meldungen</button>
+        <button data-view="settings" data-i18n="navSettings">Einstellungen</button>
+        <button data-view="audit" data-i18n="navAudit">Protokoll</button>
+      </nav>
+      <div class="guardian-sidebar-footer"><a class="button secondary" href="/" data-i18n="backToGame">Zum Spiel</a><button id="logout-button" class="button danger" type="button" data-i18n="logout">Abmelden</button></div>
+    </aside>
+
+    <main class="guardian-main">
+      <header class="guardian-topbar">
+        <div><h1 id="view-title" data-i18n="dashboardTitle">Wächterübersicht</h1><p id="view-subtitle" data-i18n="dashboardSubtitle">Systemstatus, Benutzer und Spielverwaltung.</p></div>
+        <div class="toolbar"><div class="language-switch"><button type="button" data-language="DE_DE" class="active">DE</button><button type="button" data-language="EN_GB">EN</button></div><span id="current-user" class="badge"></span></div>
+      </header>
+      <div id="global-notice" class="notice" role="status"></div>
+
+      <section class="view active" data-view-panel="dashboard">
+        <div id="metric-grid" class="metric-grid"></div>
+        <div class="section-card"><div class="section-header"><h2 data-i18n="recentUsers">Neue Benutzer</h2><button class="button small secondary" data-open-view="users" data-i18n="showAll">Alle anzeigen</button></div><div class="table-wrap"><table><thead><tr><th data-i18n="username">Benutzer</th><th data-i18n="role">Rolle</th><th data-i18n="status">Status</th><th data-i18n="lastLogin">Letzte Anmeldung</th></tr></thead><tbody id="recent-users-body"></tbody></table></div></div>
+      </section>
+
+      <section class="view" data-view-panel="users">
+        <div class="section-card"><div class="section-header"><h2 data-i18n="usersTitle">Spieler und Wächter</h2><div class="toolbar"><input id="user-search" data-i18n-placeholder="searchUsers" placeholder="Benutzer suchen"><button id="new-user-button" class="button primary" type="button" data-i18n="newUser">Benutzer anlegen</button></div></div><div class="table-wrap"><table><thead><tr><th data-i18n="username">Benutzer</th><th data-i18n="email">E-Mail</th><th data-i18n="role">Rolle</th><th data-i18n="status">Status</th><th data-i18n="save">Spielstand</th><th data-i18n="actions">Aktionen</th></tr></thead><tbody id="users-body"></tbody></table></div></div>
+      </section>
+
+      <section class="view" data-view-panel="items">
+        <div class="section-card"><div class="section-header"><h2 data-i18n="itemsTitle">Gegenstandskatalog</h2><button id="new-item-button" class="button primary" type="button" data-i18n="newItem">Gegenstand hinzufügen</button></div><div class="section-body"><p style="color:var(--muted);margin-top:0" data-i18n="itemsInfo">Verwalte bekannte Spiel-Gegenstände, eigene Metadaten und die Freigabe. Gegenstände können anschließend über Wächterbefehle an Spieler verteilt werden.</p></div><div class="table-wrap"><table><thead><tr><th>ID</th><th data-i18n="name">Name</th><th data-i18n="category">Kategorie</th><th data-i18n="status">Status</th><th data-i18n="actions">Aktionen</th></tr></thead><tbody id="items-body"></tbody></table></div></div>
+      </section>
+
+      <section class="view" data-view-panel="commands">
+        <div class="section-card"><div class="section-header"><h2 data-i18n="commandsTitle">Wächterbefehle</h2><button id="new-command-button" class="button primary" type="button" data-i18n="newCommand">Befehl erstellen</button></div><div class="section-body"><p style="color:var(--muted);margin-top:0" data-i18n="commandsInfo">Sende einem Spieler Ressourcen, Gegenstände oder eine persönliche Nachricht. Der Befehl wird beim nächsten Spielstart automatisch ausgeführt und protokolliert.</p></div><div class="table-wrap"><table><thead><tr><th>ID</th><th data-i18n="target">Ziel</th><th data-i18n="type">Typ</th><th data-i18n="status">Status</th><th data-i18n="created">Erstellt</th><th data-i18n="actions">Aktionen</th></tr></thead><tbody id="commands-body"></tbody></table></div></div>
+      </section>
+
+      <section class="view" data-view-panel="announcements">
+        <div class="section-card"><div class="section-header"><h2 data-i18n="announcementsTitle">Spielmeldungen</h2><button id="new-announcement-button" class="button primary" type="button" data-i18n="newAnnouncement">Meldung erstellen</button></div><div class="table-wrap"><table><thead><tr><th data-i18n="title">Titel</th><th data-i18n="period">Zeitraum</th><th data-i18n="status">Status</th><th data-i18n="actions">Aktionen</th></tr></thead><tbody id="announcements-body"></tbody></table></div></div>
+      </section>
+
+      <section class="view" data-view-panel="settings"><div class="section-card"><div class="section-header"><h2 data-i18n="settingsTitle">Systemeinstellungen</h2></div><div id="settings-container" class="section-body"></div></div></section>
+
+      <section class="view" data-view-panel="audit">
+        <div class="section-card"><div class="section-header"><h2 data-i18n="auditTitle">Wächterprotokoll</h2><button id="refresh-audit-button" class="button secondary" type="button" data-i18n="refresh">Aktualisieren</button></div><div class="table-wrap"><table><thead><tr><th data-i18n="created">Zeit</th><th data-i18n="actor">Wächter</th><th data-i18n="action">Aktion</th><th data-i18n="entity">Objekt</th><th data-i18n="details">Details</th></tr></thead><tbody id="audit-body"></tbody></table></div></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true"><div class="modal"><header class="modal-header"><h2 id="modal-title"></h2><button id="modal-close" class="button small secondary" type="button">×</button></header><div id="modal-body" class="modal-body"></div></div></div>
+  <script src="/auth/guardian.js?v=0.8.0-sublevel" defer></script>
+</body>
+</html>

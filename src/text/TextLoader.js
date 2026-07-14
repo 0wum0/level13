@@ -32,6 +32,9 @@ define([
                     '/strings/de/story-dialogue-2.json',
                     '/strings/de/story-dialogue-3.json',
                     '/strings/de/story-dialogue-4.json',
+                    '/strings/de/story-dialogue-5.json',
+                    '/strings/de/story-dialogue-6.json',
+                    '/strings/de/story-dialogue-7.json',
                     '/strings/de/story-other.json',
                     '/strings/de/ui.json'
                 ]

@@ -66,7 +66,7 @@ function startDiagnosticServer(error) {
 
   server.on('error', serverError => {
     console.error('[sublevel] diagnostic server failed:', serverError);
-    process.exitCode = 1;
+    process.exit(1);
   });
 
   server.listen(port, '0.0.0.0', () => {

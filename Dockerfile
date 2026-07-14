@@ -5,7 +5,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm install --omit=dev --ignore-scripts --no-audit --no-fund \
     && npm cache clean --force
 

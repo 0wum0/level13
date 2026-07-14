@@ -13,7 +13,7 @@ define([
 
         defaultLanguage: 'DE_DE',
         languagePreferenceVersion: 2,
-        translationVersion: 'sublevel-0.7.4',
+        translationVersion: 'sublevel-0.7.5',
 
         constructor: function () { },
 

@@ -109,13 +109,38 @@ define([
         return 'de-DE';
     }
 
-    function translateTextNode(node, dictionary) {
-        if (!originalText.has(node)) originalText.set(node, node.nodeValue);
-        const source = originalText.get(node);
+    function replaceTrimmed(source, replacement) {
         const trimmed = source.trim();
-        const translation = dictionary && dictionary[trimmed];
-        const nextValue = translation ? source.replace(trimmed, translation) : source;
-        if (node.nodeValue !== nextValue) node.nodeValue = nextValue;
+        return trimmed ? source.replace(trimmed, replacement) : source;
+    }
+
+    function translateTextNode(node, dictionary) {
+        const current = node.nodeValue;
+        const currentTrimmed = current.trim();
+        const savedOriginal = originalText.get(node);
+
+        if (!dictionary) {
+            if (!savedOriginal) return;
+            const germanTranslation = dictionaries.DE_DE[savedOriginal.trim()];
+            if (germanTranslation && currentTrimmed === germanTranslation) {
+                node.nodeValue = savedOriginal;
+            }
+            return;
+        }
+
+        if (savedOriginal) {
+            const originalTrimmed = savedOriginal.trim();
+            const savedTranslation = dictionary[originalTrimmed];
+            if (savedTranslation && (currentTrimmed === originalTrimmed || currentTrimmed === savedTranslation)) {
+                node.nodeValue = replaceTrimmed(savedOriginal, savedTranslation);
+            }
+            return;
+        }
+
+        const translation = dictionary[currentTrimmed];
+        if (!translation) return;
+        originalText.set(node, current);
+        node.nodeValue = replaceTrimmed(current, translation);
     }
 
     function shouldSkipElement(element) {
